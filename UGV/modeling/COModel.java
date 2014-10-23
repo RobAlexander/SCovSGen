@@ -1703,8 +1703,8 @@ public class COModel extends SimState
 			int targetId = ((UGV)ugvs.get(0)).getTargetID();
 			Double2D targetLoc = new Double2D(-1,-1);
 			Double2D UGVLoc = ((UGV)ugvs.get(0)).location;
-			int noRoadHits = 0;
-			int noNonRoadHits = 0;
+			double noRoadHits = 0;
+			double noNonRoadHits = 0;
 
 			// Find the target from the bag of all entities and store location
 			for(int i = 0; i < allEntities.size(); i++)

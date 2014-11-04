@@ -99,9 +99,12 @@ public class Road extends Line2D.Double implements Steppable
 		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
 		Rectangle2D.Double roadSurface = getSurface();
 		
-		return roadSurface.contains(coord.x, coord.y);
-	}	
-	
+		// HH 4.11.14 - Replace old contains function as doesn't include points which are on the 
+		// eastern and southern boundaries of the shape
+		//return roadSurface.contains(coord.x, coord.y);
+		return Utility.betterContains(roadSurface, coord);
+	}
+		
 	/**
 	 * Method returns true if rectangle intersects with the road object (when extended by required width), false otherwise
 	 */

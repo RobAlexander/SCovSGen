@@ -1855,4 +1855,115 @@ public class COModel extends SimState
 		}
 		return -1;
 	}
+
+	// HH 3/11/14 Calculate the separation between each adjacent junction on the network and return a string
+	// with comma-separated occurence counts in the following 8 categories (including lower bound but excluding
+	// upper: <3m, 3-6m, 6-12m, 12-23m, 23-46m, 46-100m, 100-150m, >150m 
+	public String getJunctionSep() {
+		
+		int[] sepCount = new int[8];
+		Double2D startJunctionLoc;
+		Double2D endJunctionLoc;
+		Double2D tempJctLoc;
+		Road tempRoad;
+		boolean middleJct;
+		double sepDist;
+		
+		// Loop through all the junctions
+		for (int j = 0; j < junctions.size(); j++)
+		{
+			startJunctionLoc = ((Junction) junctions.get(j)).getLocation();
+			
+			// Test each junction against all the other junctions that are
+			// of a higher index (because we don't want to count any twice)
+			for(int k = j+1; k < junctions.size(); k++)
+			{
+				endJunctionLoc = ((Junction) junctions.get(k)).getLocation();
+				
+				// Loop through all the roads and see if there is a road on which 
+				// both the junctions appear
+				for (int r = 0; r < roads.size(); r++)
+				{
+					tempRoad = (Road) roads.get(r);
+					
+					if (tempRoad.inShape(startJunctionLoc) && tempRoad.inShape(endJunctionLoc))
+					{
+						// The two junctions are on the same road, now we need to know whether there
+						// are any intermediate junctions
+						middleJct = false;
+						
+						for (int x = 0; x < junctions.size(); x++)
+						{
+							if (x != j && x != k)
+							{
+								tempJctLoc = ((Junction) junctions.get(x)).getLocation();
+								
+								if (tempRoad.inShape(tempJctLoc))
+								{
+									// Check to see if the junction is actually between the 
+									// two other junctions
+									// TODO - If we want to move to non-grid roads then this method
+									// will have to be updated
+									if (startJunctionLoc.x == endJunctionLoc.x)
+									{
+										// N/S so check the y values
+										if ((startJunctionLoc.y > tempJctLoc.y && endJunctionLoc.y < tempJctLoc.y) || 
+										     (startJunctionLoc.y < tempJctLoc.y && endJunctionLoc.y > tempJctLoc.y))
+										{
+											// tempJctLoc is in the middle
+											middleJct = true;
+										}
+									} else {
+										// E/W so check the x values
+										if ((startJunctionLoc.x > tempJctLoc.x && endJunctionLoc.x < tempJctLoc.x) || 
+											     (startJunctionLoc.x < tempJctLoc.x && endJunctionLoc.x > tempJctLoc.x))
+										{
+											// tempJctLoc is in the middle
+											middleJct = true;
+										}
+									}
+								}
+							}
+						}
+						
+						if (middleJct == false)
+						{
+							// We didn't find a junction in the middle, so calculate the distance between the
+							// two points and store it in the appropriate 'bin'
+							sepDist = startJunctionLoc.distance(endJunctionLoc);
+							
+							if (sepDist < 3) {
+								sepCount[0]++;
+							} else if (sepDist < 6) {
+								sepCount[1]++;
+							} else if (sepDist < 12) {
+								sepCount[2]++;
+							} else if (sepDist < 23) {
+								sepCount[3]++;
+							} else if (sepDist < 46) {
+								sepCount[4]++;
+							} else if (sepDist < 100) {
+								sepCount[5]++;
+							} else if (sepDist < 150) {
+								sepCount[6]++;
+							} else {
+								sepCount[7]++;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		String retString = "" + sepCount[0];
+		// Iterate through the array, constructing the string
+		for (int i = 1; i < 8; i++)
+		{
+			retString = retString + ", ";
+			retString = retString + sepCount[i];
+		}
+		
+		return retString;
+	}
+
 }

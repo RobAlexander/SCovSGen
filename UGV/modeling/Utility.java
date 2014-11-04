@@ -5,6 +5,7 @@ package modeling;
 
 import java.awt.geom.Area;
 import java.awt.geom.PathIterator;
+import java.awt.geom.Rectangle2D;
 
 import sim.util.Double2D;
 
@@ -162,6 +163,39 @@ public class Utility {
 		}
 		
 		return new Double2D(xMax, yMax);
+	}
+	
+	// HH 4.11.14 - As the basic contains method does not include points which are located *on* the eastern and
+	//southern boundaries of the rectangular shape
+	public static boolean betterContains(Rectangle2D.Double testRect, Double2D testPt)
+	{
+		// Simple case
+		if (testRect.contains(testPt.x, testPt.y) == true)
+		{
+			return true;
+		}
+		
+		// Otherwise see if the point is on the eastern boundary
+		double xE = testRect.x + testRect.width;
+		double yE1 = testRect.y;
+		double yE2 = testRect.y + testRect.height;
+		
+		if (testPt.x == xE && testPt.y >= yE1 && testPt.y <= yE2)
+		{
+			return true;
+		}
+		
+		// Otherwise see if the point is on the southern boundary
+		double xS1 = testRect.x;
+		double xS2 = xE;
+		double yS = yE2;
+		
+		if (testPt.y == yS && testPt.x >= xS1 && testPt.x <= xS2)
+		{
+			return true;
+		}		
+		
+		return false; // if we get here, it's definitely not contained
 	}
 	
 }

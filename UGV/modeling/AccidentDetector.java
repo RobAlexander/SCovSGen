@@ -240,11 +240,11 @@ public class AccidentDetector implements Constants,Steppable {
 		ps.println("*** New Run, Seed = "+ sim.seed() + "*** External Seed = " + sim.getExternalSeed() + 
 			"; Start time = " + timeToString() + ".");
 		
-		ps.println("Map/Network Complexity Measures: MinJunctSep = " + sim.getMinJctSeparation() +
-				   "; UGVTargetSep = " + sim.getUGVTargetSeparation() + "; TargetObstacleSep = " +
-				   sim.getMinTargetObsSeparation() + "; UGVTargetRoadSep = " + sim.getUGVTargetRoadSeparation() +
-				   "; CriticalObsSep = " + sim.getCriticalObsSeparation() + "; MinTargetCentreSep = " +
-				   sim.getMinTargetCentreSeparation() + "; MinTargetKerbSep = " + sim.getMinTargetKerbSeparation() + ".");
+		ps.println("Map/Network Complexity Measures: MinJunctSep = " + sim.HgetMinJctSeparation() +
+				   "; UGVTargetSep = " + sim.HgetUGVTargetSeparation() + "; TargetObstacleSep = " +
+				   sim.HgetMinTargetObsSeparation() + "; UGVTargetRoadSep = " + sim.HgetUGVTargetRoadSeparation() +
+				   "; CriticalObsSep = " + sim.HgetCriticalObsSeparation() + "; MinTargetCentreSep = " +
+					sim.HgetMinTargetCentreSeparation() + "; MinTargetKerbSep = " + sim.HgetMinTargetKerbSeparation() + ".");
 		
 		// HH 28.8.14 - reset the summary string, and start to add information to it.  We'll 
 		// write it all out in one go at the end
@@ -260,13 +260,13 @@ public class AccidentDetector implements Constants,Steppable {
 		summaryString += sim.roads.size() + ", ";
 		summaryString += sim.noObstacles + ", ";
 		summaryString += sim.noCars + ", ";
-		summaryString += sim.getMinJctSeparation() + ", ";
-		summaryString += sim.getUGVTargetSeparation() + ", ";
-		summaryString += sim.getMinTargetObsSeparation() + ", ";
-		summaryString += sim.getUGVTargetRoadSeparation()  + ", ";
-		summaryString += sim.getCriticalObsSeparation()  + ", ";
-		summaryString += sim.getMinTargetCentreSeparation()  + ", ";
-		summaryString += sim.getMinTargetKerbSeparation()  + ", ";
+		summaryString += sim.HgetMinJctSeparation() + ", ";
+		summaryString += sim.HgetUGVTargetSeparation() + ", ";
+		summaryString += sim.HgetMinTargetObsSeparation() + ", ";
+		summaryString += sim.HgetUGVTargetRoadSeparation()  + ", ";
+		summaryString += sim.HgetCriticalObsSeparation()  + ", ";
+		summaryString += sim.HgetMinTargetCentreSeparation()  + ", ";
+		summaryString += sim.HgetMinTargetKerbSeparation()  + ", ";
 	}
 	
 	/** HH 17/7/14 - Adds footer information to file to report the number of accidents
@@ -284,7 +284,7 @@ public class AccidentDetector implements Constants,Steppable {
 			}
 		}
 		
-		ps.println(state.getUGVTargetSuccess()); // HH 22.7.14 Add extra footer re: targets found
+		ps.println(state.HgetUGVTargetSuccess()); // HH 22.7.14 Add extra footer re: targets found
 		
 		ps.println("*** End of run, Seed = "+ sim.seed() + ", External Seed = " + sim.getExternalSeed()  + 
 				"*** NoCars = " + sim.noCars + "; CarMaxDeceleration = " + sim.getCarMaxDecceleration() + 

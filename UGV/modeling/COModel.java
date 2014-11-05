@@ -332,7 +332,7 @@ public class COModel extends SimState
 		// HH end		
 		
 		aDetector.addHeader(this); // HH 30/4/14 - Add header to accident log file
-		aDetector.addString(this, getFaultArrayAsString()); // HH 22/7/14 - Add the fault array to the accident log file
+		aDetector.addString(this, HgetFaultArrayAsString()); // HH 22/7/14 - Add the fault array to the accident log file
 	}
 	
 	/**
@@ -346,7 +346,7 @@ public class COModel extends SimState
 		
 		// HH 22/7/14 Update for faults (do this before adding the footer to aDetector so the faultCalled array can
 		// be logged to file).
-		aDetector.addString(this, getFaultCalledAsString());
+		aDetector.addString(this, HgetFaultCalledAsString());
 		// HH end	
 		
 		// Add Header information to the Accident Log file
@@ -520,7 +520,7 @@ public class COModel extends SimState
     /*
      * HH 22/7/14 - Return a string which represents the fault array, and can be output to e.g. the Accident Log
      */
-	public String getFaultArrayAsString() {
+	public String HgetFaultArrayAsString() {
 		
 		String retString = new String("Fault Array: "); // Start by describing what is being output
 		
@@ -534,7 +534,7 @@ public class COModel extends SimState
     /*
      * HH 22/7/14 - Return a string which represents the faultsCalled array, and can be output to e.g. the Accident Log
      */
-	public String getFaultCalledAsString() {
+	public String HgetFaultCalledAsString() {
 		
 		String retString = new String("Faults Called: "); // Start by describing what is being output
 		
@@ -548,7 +548,7 @@ public class COModel extends SimState
     /*
      * HH 22/7/14 - Return a string which represents which UGV targets have been found, and can be output to e.g. the Accident Log
      */
-	public String getUGVTargetSuccess() {
+	public String HgetUGVTargetSuccess() {
 		
 		String retString = new String("Targets Found: "); // Start by describing what is being output
 		
@@ -1475,7 +1475,7 @@ public class COModel extends SimState
     }
     
     // HH 27.8.14 - Return complexity metrics, as required for sit coverage experiments
-    public double getMinJctSeparation() // Return minimum distance between junctions (assess all pairs)
+    public double HgetMinJctSeparation() // Return minimum distance between junctions (assess all pairs)
     {
     	double retVal = Math.max(Constants.WorldXVal, Constants.WorldYVal);
     	double tempDist = 0;
@@ -1497,7 +1497,7 @@ public class COModel extends SimState
     	return retVal;
     }
     
-    public double getUGVTargetSeparation() // Return initial separation (crow flies) between target and UGV
+    public double HgetUGVTargetSeparation() // Return initial separation (crow flies) between target and UGV
     {
     	double retVal = Math.max(Constants.WorldXVal, Constants.WorldYVal); // default return value
     	
@@ -1526,7 +1526,7 @@ public class COModel extends SimState
 		return retVal;		
     }
 
-    public double getMinTargetObsSeparation() // Return minimum distance between target and all static obstacles
+    public double HgetMinTargetObsSeparation() // Return minimum distance between target and all static obstacles
     {
     	double retVal = Math.max(Constants.WorldXVal, Constants.WorldYVal);
 		
@@ -1565,7 +1565,7 @@ public class COModel extends SimState
     // HH end - 27.8.14
     
     // HH 2.9.14 Addition of more network/map complexity measures
-    public double getMinTargetKerbSeparation() // Return minimum separation (crow flies) between target and kerb
+    public double HgetMinTargetKerbSeparation() // Return minimum separation (crow flies) between target and kerb
     {
     	double retVal = Math.max(Constants.WorldXVal, Constants.WorldYVal); // default return value
 		
@@ -1618,7 +1618,7 @@ public class COModel extends SimState
 		return retVal;		
     }
     
-    public double getMinTargetCentreSeparation() // Return minimum separation (crow flies) between target and kerb
+    public double HgetMinTargetCentreSeparation() // Return minimum separation (crow flies) between target and kerb
     {
     	double retVal = Math.max(Constants.WorldXVal, Constants.WorldYVal); // default return value
 		
@@ -1669,7 +1669,7 @@ public class COModel extends SimState
     
     // Return number of obstacles which are separated by between 1 car length and 2 car lengths (actually test for
     // between Obs.length + UGV.length and Obs.length + 2*UGV.length as Obstacle location is centre of obs)
-    public int getCriticalObsSeparation() 
+    public int HgetCriticalObsSeparation() 
     {
     	int retVal = 0;
     	double tempDist = 0;
@@ -1695,7 +1695,7 @@ public class COModel extends SimState
     // Return proportion of initial separation (crow flies) between target and UGV that is actually on the road surface
     // We make an approximation to this value by incrementally testing locations on the line between the two objects
     // to see if they fall on the road surface.
-    public double getUGVTargetRoadSeparation() 
+    public double HgetUGVTargetRoadSeparation() 
     {
 		if (ugvs.size() > 0)
 		{

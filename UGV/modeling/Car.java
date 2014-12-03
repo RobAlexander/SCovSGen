@@ -83,21 +83,10 @@ public abstract class Car extends Entity implements Oriented2D
 		// HH 18.9.14 - For some reason, the orientation of the vehicle seems to be displayed 
 		// relative to zero degrees along the increasing x axis.  As a result, we need to flip 
 		// the compass over the 45/225 degree bisection to convert between the two systems.
-		return Math.toRadians(correctAngle(90-this.direction));
+		return Math.toRadians(Utility.correctAngle(90-this.direction));
 	}
 
-	/*
-	 * HH 13.10.14 - returns the current orientation of the object in radians (as per
-	 * OrientedPortrayal2D) for the supplied bearing
-	 */
-	public static double getOrientation2D(double inBearing)
-	{
-		
-		// For some reason, the orientation of the vehicle seems to be displayed 
-		// relative to zero degrees along the increasing x axis.  As a result, we need to flip 
-		// the compass over the 45/225 degree bisection to convert between the two systems.
-		return Math.toRadians(correctAngle(90-inBearing));
-	}
+
 	
 	/**
 	 * Method which calculated the stopping distance of the car at a particular speed
@@ -168,7 +157,7 @@ public abstract class Car extends Entity implements Oriented2D
 			dealWithTerrain();
 					
 			//see if on course to target
-			if (direction == calculateAngle(me, targetCoor))
+			if (direction == Utility.calculateAngle(me, targetCoor))
 			{
 				if (checkCourse(obstacles, direction)) 
 				{
@@ -223,8 +212,8 @@ public abstract class Car extends Entity implements Oriented2D
 			
 			//call the operations to calculate how much the car moves in the x
 			//and y directions.
-			moveV = yMovement(direction, speed);
-			moveH = xMovement(direction, speed);
+			moveV = Utility.yMovement(direction, speed);
+			moveH = Utility.xMovement(direction, speed);
 			
 			sumForces.addIn(new Double2D(moveH, moveV));	
 	        sumForces.addIn(me);
@@ -312,7 +301,7 @@ public abstract class Car extends Entity implements Oriented2D
 	 */
 	protected void setDirection(Double2D loc, Double2D targ) // HH 7.5.14 - changed this from private to protected
 	{
-		double idealDirection = calculateAngle(loc, targ);
+		double idealDirection = Utility.calculateAngle(loc, targ);
 		
 		//first the ideal bearing for the car to get to it's target must be calculated
 		//System.out.println("x: " + Double.toString(loc.x) + " y: " + Double.toString(loc.y));
@@ -354,61 +343,6 @@ public abstract class Car extends Entity implements Oriented2D
 	}
 
 
-	/**
-	 * Calculates the bearing the vehicle should be travelling on to move directly
-	 * from a location to another.
-	 * 
-	 * @param point1
-	 * @param point2
-	 * @return 
-	 */
-	//protected double calculateAngle(Double2D point1, Double2D point2) // HH 7.5.14 - changed this from private to protected
-	public static double calculateAngle(Double2D point1, Double2D point2) // HH 2.9.14 - Changed to public static
-	{
-		Double2D vector = point2.subtract(point1);
-		double angle;
-		if(vector.y != 0)
-		{
-			angle = Math.toDegrees(Math.atan(vector.x / vector.y));
-			
-			if(vector.x >0)
-			{
-				if (vector.y <0) 
-				{	
-					angle +=180;
-					
-				} 
-				
-			}
-			else
-			{
-				if (vector.y <0) 
-				{	
-					angle +=180;
-					
-				}
-				else
-				{
-					angle +=360;
-				}
-			}
-			
-			
-		
-		} else {
-			//the car is either in line with the target horizontally or vertically
-			if (vector.x >0)
-			{
-			    angle = 90;			    
-			}
-			else
-			{
-				angle = 270;
-			}
-		}
-		
-		return angle;
-}
 	
 	
 	/**
@@ -426,7 +360,7 @@ public abstract class Car extends Entity implements Oriented2D
 		{
 			direction += this.performance.getCurrentMaxTurning();
 		}
-		this.direction = correctAngle(direction);
+		this.direction = Utility.correctAngle(direction);
 	}
 	
 	
@@ -447,7 +381,7 @@ public abstract class Car extends Entity implements Oriented2D
 			direction -= this.performance.getCurrentMaxTurning();
 		}
 		
-		this.direction = correctAngle(direction);
+		this.direction = Utility.correctAngle(direction);
 	}
 	
 	
@@ -465,78 +399,8 @@ public abstract class Car extends Entity implements Oriented2D
 //		
 //		direction = correctBearing(direction);
 //	}
-	
-	
-	/** 
-	 * A method which changes a bearing to be in the range of 0 (inclusive) to 360 (exclusive)
-	 * 
-	 * @param b the bearing to be corrected
-	 * @return a bearing equivalent to b which has been converted to be in the correct range
-	 */
-	protected static double correctAngle(double b) // HH 7.5.14 - Changed from private to protected
-	{
-		if (b >= 360)
-		{
-			return (b - 360);
-		}
 		
-		if (b < 0)
-		{
-			return (b + 360);
-		}
-		
-		return b;
-	}
-	
-	
-    /**
-     * A function which based on the direction the car is facing and the speed it
-	 * is travelling at 
-	 * it returns a value for how much the x position should change in one step.
-	 * 
-	 * @param speed the speed
-     * @return the change in x coordinate of the car in the world
-     */
-	//protected double xMovement(double angle, double speed) // HH 7.5.14 - Changed from private to protected
-	public static double xMovement(double angle, double speed) // HH 2.9.14 - Changed to public static
-	{
-		double xChange;
-		
-		if (angle <= 90) 
-		{
-			xChange = (speed * Math.sin(Math.toRadians(angle)));
-		} else if (angle <= 180) {
-			xChange = (speed * Math.sin(Math.toRadians(180 - angle)));
-		} else if (angle <= 270) {
-			xChange = (-1 * speed * Math.cos(Math.toRadians(270 - angle)));
-		} else {
-			xChange = (-1 * speed * Math.sin(Math.toRadians(360 - angle)));
-		}	
-		return xChange;
-    }
-	
-    
-	/**
-	 * The y axis equivalent of the xMovement method
-	 * 
-	 * @return the change in y coordinate of the car in the world
-	 */
-	//protected double yMovement(double angle, double speed) // HH 7.5.14 - Changed from private to protected
-	public static double yMovement(double angle, double speed) // HH 2.9.14 - Changed to public static
-	{
-		double yChange;
-		if (angle <= 90) 
-		{
-			yChange = (speed * Math.cos(Math.toRadians(angle)));
-		} else if (angle <= 180) {
-			yChange = (-1 * speed * Math.cos(Math.toRadians(180 - angle)));
-		} else if (angle <= 270) {
-			yChange = (-1 * speed * Math.sin(Math.toRadians(270 - angle)));
-		} else {
-			yChange = (speed * Math.cos(Math.toRadians(360 - angle)));
-		}	
-		return yChange;
-    }
+
 	
 	
 	/**
@@ -680,14 +544,14 @@ public abstract class Car extends Entity implements Oriented2D
 		
 		for(double i = 0; i < (performance.getCurrentMaxTurning() - 5); i += resolution)
 		{
-			if (checkCourse(obstacles, correctAngle(direction - i)) == false)
+			if (checkCourse(obstacles, Utility.correctAngle(direction - i)) == false)
 			{
 				//then moving right gives a clear path
 				//set wp and return
 				
 				//first must find out where to put wp
-				xComponent = xMovement(correctAngle(direction - (i+5)), (viewingRange / 1));
-				yComponent = yMovement(correctAngle(direction - (i+5)), (viewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(direction - (i+5)), (viewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(direction - (i+5)), (viewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, targetID);
 				wp.setLocation(new Double2D(coord));
@@ -695,12 +559,12 @@ public abstract class Car extends Entity implements Oriented2D
 				sim.environment.setObjectLocation(wp, new Double2D(coord));
 				return;
 				
-			} else if (checkCourse(obstacles, correctAngle(direction + i)) == false) {
+			} else if (checkCourse(obstacles, Utility.correctAngle(direction + i)) == false) {
 				//then moving left gives a clear path
 				//set wp and return
 				
-				xComponent = xMovement(correctAngle(direction + (i+5)), (viewingRange / 1));
-				yComponent = yMovement(correctAngle(direction + (i+5)), (viewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(direction + (i+5)), (viewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(direction + (i+5)), (viewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, targetID);
 				wp.setLocation(new Double2D(coord));
@@ -715,15 +579,15 @@ public abstract class Car extends Entity implements Oriented2D
 		//if it can't be immediately turned onto
 		for(double i = (performance.getCurrentMaxTurning()-5); i < (viewingAngle / 2); i += resolution)
 		{
-			if (checkCourse(obstacles, correctAngle(direction - i)) == false)
+			if (checkCourse(obstacles, Utility.correctAngle(direction - i)) == false)
 			{
 				//then moving right gives a clear path
 				//set wp and return
 				
 				//first must find out where to put wp
 				
-				xComponent = xMovement(correctAngle(direction - (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
-				yComponent = yMovement(correctAngle(direction - (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(direction - (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(direction - (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, targetID);
 				wp.setLocation(new Double2D(coord));
@@ -731,12 +595,12 @@ public abstract class Car extends Entity implements Oriented2D
 				sim.environment.setObjectLocation(wp, new Double2D(coord));
 				return;
 				
-			} else if (checkCourse(obstacles, correctAngle(direction + i)) == false) {
+			} else if (checkCourse(obstacles, Utility.correctAngle(direction + i)) == false) {
 				//then moving left gives a clear path
 				//set wp and return
 				
-				xComponent = xMovement(correctAngle(direction + (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
-				yComponent = yMovement(correctAngle(direction + (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(direction + (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(direction + (performance.getCurrentMaxTurning()+5)), (viewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, targetID);
 				wp.setLocation(new Double2D(coord));
@@ -783,7 +647,7 @@ public abstract class Car extends Entity implements Oriented2D
 		//the viewing range away from the target in certain increments and see 
 		//if they're in the obstacle
 		MutableDouble2D testCoord = new MutableDouble2D();
-		Double2D amountAdd = new Double2D(xMovement(bearing, sensitivityForCollisions), yMovement(bearing, sensitivityForCollisions));
+		Double2D amountAdd = new Double2D(Utility.xMovement(bearing, sensitivityForCollisions), Utility.yMovement(bearing, sensitivityForCollisions));
 		testCoord.addIn(location);
 		
 		for(double i = 0; i < viewingRange; i += sensitivityForCollisions)
@@ -1315,13 +1179,17 @@ public abstract class Car extends Entity implements Oriented2D
 	 * HH 15.7.14 - Create a new waypoint, and do all the associated manipulation
 	 * HH 26.8.14 - Moved from UGV to Car so can be used by DumbCar; private => protected,
 	 *              ALSO changed faults so only occur for type == UGV
+	 * HH 21.11.14 - Added params so that we can use the WP creation as a replacement for the
+	 * 			     existing WP, rather than inserting it between the UGV and the current WP
 	 * 
 	 * @param Double2D: location for new WP
 	 * @param sim: COModel parameter
 	 * @param Double2D: current location
+	 * @param boolean: isReplacement HH 21.11.14 [true = should replace existing and steal its next point]
+	 * @param Waypoint: eTarget_current HH 21.11.14 [current WP so we don't have to search through all entities to find it]
 	 * @return Waypoint: the waypoint that is created
 	 */
-	protected Waypoint createWaypoint(Double2D WPlocation, COModel sim, Double2D location, int type)
+	protected Waypoint createWaypoint(Double2D WPlocation, COModel sim, Double2D location, int type, boolean isReplacement, Entity eTarget_current)
 	{
 		int wpID = sim.getNewID();
 		
@@ -1331,7 +1199,27 @@ public abstract class Car extends Entity implements Oriented2D
 			sim.setFault(5);
 		}
 		
-		Waypoint wp = new Waypoint(wpID, getTargetID(), type);
+		// HH 21.11.14 If this new WP is to replace the previous one, we need to find out which
+		// next point it was using so that we can copy it to the new WP
+		Waypoint wp;
+		if (isReplacement == true)
+		{
+			// HH 21.11.14 - We can't cast the incoming argument for eTarget_current to a Waypoint, as it is possible for this
+			// to be a Target, instead of a Waypoint (so we wouldn't be able to call the getNextPoint method on it anyway)
+			int nextP = 0;
+			if (eTarget_current.getType() == Constants.TTARGET)
+			{
+				nextP = eTarget_current.getID();
+			} else if (eTarget_current.getType() == Constants.TWAYPOINT) { // HH 27.11.14 Check the type is Waypoint before cast or might get exception
+				nextP = ((Waypoint) eTarget_current).getNextPoint();
+				sim.environment.remove(eTarget_current); // Now that we are done with the old point, remove it.
+			}
+			
+			wp = new Waypoint(wpID, nextP, type); // Use the current next point as the new next point (replace current WP)
+		} else {
+			wp = new Waypoint(wpID, getTargetID(), type); // Regular case, using the current targetID as the next point (add WP on way to current WP)
+		}
+				
 		Double2D tempLoc = new Double2D(WPlocation.x, WPlocation.y); // copy the desired location
 		
 		// Faults #6,7,8,9 - 22/7/14 - Displace the location for the WP	
@@ -1380,7 +1268,7 @@ public abstract class Car extends Entity implements Oriented2D
 		
 		// HH 13.8.14 Need to restrict the obstacle checks to those which are in the same lane as
 		// the UGV, so need to know direction in order to restrict in method below
-		UGV_Direction direction = UGV.getDirection(getDirection()); // Returns a compass direction rather than angle
+		UGV_Direction direction = Utility.getDirection(getDirection()); // Returns a compass direction rather than angle
 		
 		// HH 9.9.14 Need to work out the bounds for the lane that we are searching in, by checking the
 		// road markings.  If we are looking for vehicles in the same lane, search should be bounded by 
@@ -1430,10 +1318,10 @@ public abstract class Car extends Entity implements Oriented2D
 			// that we are going to use for this iteration
 			testCoord.setTo(0,0);
 			testCoord.addIn(sensorLoc); // HH 25.9.14 Displaced to model sensor on front of vehicle
-			newBearing = correctAngle(getDirection() + i);
+			newBearing = Utility.correctAngle(getDirection() + i);
 			
 			// Construct the x an y increments for each iteration below
-			amountAdd = new Double2D(xMovement(newBearing, rangeSensitivity), yMovement(newBearing, rangeSensitivity));
+			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 						
 //			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
 //			if (sim.getFault(21) == true) {
@@ -1516,8 +1404,8 @@ public abstract class Car extends Entity implements Oriented2D
 		
 		// Calculate the location of the sensor, assuming it is on the front offside corner of the vehicle
 		Double2D sensorLoc;
-		double xDispl = xMovement(correctAngle(getDirection() - 90), UGV_WIDTH/2);
-		double yDispl = yMovement(correctAngle(getDirection() - 90), UGV_WIDTH/2);
+		double xDispl = Utility.xMovement(Utility.correctAngle(getDirection() - 90), UGV_WIDTH/2);
+		double yDispl = Utility.yMovement(Utility.correctAngle(getDirection() - 90), UGV_WIDTH/2);
 		sensorLoc = new Double2D(location.x + xDispl, location.y + yDispl);
 		
 		Double2D currentDistanceCoord; 
@@ -1669,9 +1557,9 @@ public abstract class Car extends Entity implements Oriented2D
 			// of the vehicle (sensor)
 			testCoord.setTo(0,0);
 			testCoord.addIn(location);
-			newBearing = correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
+			newBearing = Utility.correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
 			
-			amountAdd = new Double2D(xMovement(newBearing, rangeSensitivity), yMovement(newBearing, rangeSensitivity));
+			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 			
 //			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
 //			if (sim.getFault(21) == true) {

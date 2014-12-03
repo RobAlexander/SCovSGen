@@ -117,6 +117,62 @@ public class COModelWithUI extends GUIState
 	{		
 		COModel simulation = (COModel) state;
 		
+		// HH 6.11.14 Moved the background images portrayals to be drawn first to try and improve appearance of vehicles driving
+		// over the Junction Approaches - they currently change colour due to the transparency of the approaches
+		
+		// HH 30/4/14 Roads portrayal
+		roadsPortrayal.setField(simulation.roadMap);
+		roadsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
+				0,
+				Constants.DUALTWOWAY,
+				new Color(0,0,0,0),
+				new Color(0,0,255,255)
+				));
+
+		// draw the junction approaches (ordering here not important though)
+		jctApproachPortrayal.setField(simulation.jctApproachMap);
+		jctApproachPortrayal.setMap(new sim.util.gui.SimpleColorMap(
+				0,
+				1,
+				new Color(0,0,0,0),
+				new Color(102,51,0,50) // slightly opaque
+				));
+		
+		// draw the junctions
+		junctionsPortrayal.setField(simulation.junctionMap);
+		junctionsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
+				0,
+				1,
+				new Color(0,0,0,0),
+				new Color(102,51,0,60) // slightly opaque
+				));
+		
+		// HH - 17.6.14 - add the road markings
+		roadMarkingPortrayal.setField(simulation.roadMarkingMap);
+		roadMarkingPortrayal.setMap(new sim.util.gui.SimpleColorMap(
+				0,
+				Constants.WHITERPAINT,
+				new Color(0,0,0,0),
+				new Color(255,255,255,255)
+				));
+		
+		obstaclesPortrayal.setField(simulation.obstacleMap);
+		obstaclesPortrayal.setMap(new sim.util.gui.SimpleColorMap(
+				0,
+				1,
+				new Color(0,0,0,0),
+				new Color(0,0,255,255)
+				));
+        
+		wallPortrayal.setField(simulation.wallMap);
+		wallPortrayal.setMap(new sim.util.gui.SimpleColorMap(
+				0,
+				1,
+				new Color(0,0,0,0),
+				new Color(255,0,0,255)
+				));		
+				
+		// HH 6.11.14 - Portrayals for DumbCar i.e. the Moving Obstacles
 		// tell the portrayals what to portray and how to portray them
 		environmentPortrayal.setField( simulation.environment );	
 		environmentPortrayal.setPortrayalForClass(DumbCar.class, new OrientedPortrayal2D( new LabelledPortrayal2D( new RectanglePortrayal2D(Constants.OBSTACLE_WIDTH * 6)
@@ -125,14 +181,12 @@ public class COModelWithUI extends GUIState
 			{
 				if(((Car)object).isActive==true)
 				{
-					graphics.setPaint(new Color(0, 255, 255, 255)); // Turquoise
+					graphics.setPaint(new Color(0, 255, 0, 255)); // Green
 				}
 				else
 				{
 					graphics.setPaint(new Color(0,0,0));
 				}
-				
-				//UGV_Direction carDir = UGV.getDirection(((Car) object).getDirection());
 				
 				// HH 18.9.14 Create a rectangle object that we can rotate to point in the right direction
 				Rectangle2D.Double carRectangle = new Rectangle2D.Double();
@@ -142,52 +196,11 @@ public class COModelWithUI extends GUIState
 				carRectangle = new Rectangle2D.Double((info.draw.x - ((Constants.OBSTACLE_LENGTH)*info.draw.width)), (info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.height)), 
 				(info.draw.width*Constants.OBSTACLE_LENGTH), 
 				(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-				
-//				carRectangle = new Rectangle2D.Double((int)(info.draw.x - ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), (int)(info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), 
-//				(int)(info.draw.width*Constants.OBSTACLE_LENGTH), 
-//				(int)(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-			
-				
-//				switch (carDir) 
-//				{ 
-//				
-//				case NORTH :
-//					carRectangle = new Rectangle2D.Double((int)(info.draw.x - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), (int)(info.draw.y - ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), 
-//							(int)(info.draw.width*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)), 
-//							(int)(info.draw.height*Constants.OBSTACLE_LENGTH));
-////					graphics.fillRect((int)(info.draw.x - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), (int)(info.draw.y - ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), 
-////							(int)(info.draw.width*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)), 
-////							(int)(info.draw.height*Constants.OBSTACLE_LENGTH));					
-//					break;
-//				case EAST :
-//					carRectangle = new Rectangle2D.Double((int)(info.draw.x + ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), (int)(info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), 
-//							(int)(info.draw.width*Constants.OBSTACLE_LENGTH), 
-//							(int)(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-////					graphics.fillRect((int)(info.draw.x + ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), (int)(info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), 
-////							(int)(info.draw.width*Constants.OBSTACLE_LENGTH), 
-////							(int)(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-//					break;
-//				case SOUTH :
-//					carRectangle = new Rectangle2D.Double((int)(info.draw.x - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), (int)(info.draw.y - ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), 
-//							(int)(info.draw.width*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)), 
-//							(int)(info.draw.height*Constants.OBSTACLE_LENGTH));
-////					graphics.fillRect((int)(info.draw.x - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), (int)(info.draw.y - ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), 
-////							(int)(info.draw.width*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)), 
-////							(int)(info.draw.height*Constants.OBSTACLE_LENGTH));				
-//					break;
-//				case WEST :
-//					 carRectangle = new Rectangle2D.Double((int)(info.draw.x + ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), (int)(info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), 
-//								(int)(info.draw.width*Constants.OBSTACLE_LENGTH), 
-//								(int)(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-////					 graphics.fillRect((int)(info.draw.x + ((Constants.OBSTACLE_LENGTH/2)*info.draw.height)), (int)(info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.width)), 
-////							(int)(info.draw.width*Constants.OBSTACLE_LENGTH), 
-////							(int)(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-//					break;
-//				}
-				
+								
 				AffineTransform rotateTransform = AffineTransform.getRotateInstance(((Car) object).orientation2D(), ((Car)object).getLocation().x*6, ((Car)object).getLocation().y*6);
 				Shape carShape = rotateTransform.createTransformedShape(carRectangle);
 				graphics.draw(carShape);
+				graphics.fill(carShape); // HH 6.11.14 Added to make Shape more visible
 
 			}
 		}, null, new Color(0, 0, 0), false), 0, 2)
@@ -203,19 +216,18 @@ public class COModelWithUI extends GUIState
 			{
 				if(((UGV)object).isActive==true)
 				{
-					paint = new Color(255, 0, 255, 255); // Pink
+					graphics.setPaint(new Color(255, 128, 0, 255)); // Orange
 				}
 				else
 				{
-					paint = new Color(0,0,0);
+					graphics.setPaint(new Color(0,0,0));
 				}
 				
 				AffineTransform rotateTransform = AffineTransform.getRotateInstance(((Car) object).orientation2D(), ((Car)object).getLocation().x*6, ((Car)object).getLocation().y*6);
 				Shape carShape = rotateTransform.createTransformedShape(new Rectangle2D.Double((info.draw.x - ((Constants.UGV_WIDTH)*info.draw.width)), (info.draw.y - ((Constants.UGV_WIDTH/2)*info.draw.height)), 
 						(info.draw.width*Constants.UGV_WIDTH), (info.draw.height*Constants.UGV_WIDTH)));
 				graphics.draw(carShape);
-				
-			    //super.draw(object, graphics, info);
+				graphics.fill(carShape); // HH 6.11.14 Add fill
 			}
 		}, 0, 2)
 		
@@ -238,20 +250,20 @@ public class COModelWithUI extends GUIState
 		);
 		// HH - end
 
-		// HH 18.9.14 - Added portrayal for ParkedCars (so we don't have the silly dot in the middle of the drawn car)
-		// tell the portrayals what to portray and how to portray them
-		environmentPortrayal.setField( simulation.environment );	
-		environmentPortrayal.setPortrayalForClass(ParkedCar.class, (new RectanglePortrayal2D(0)
-		{
-			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
-			{
-				//paint = new Color(255, 255, 0, 255); // Yellow
-												
-			    //super.draw(object, graphics, info);
-			}
-		})
-		
-		);
+//		// HH 18.9.14 - Added portrayal for ParkedCars (so we don't have the silly dot in the middle of the drawn car)
+//		// tell the portrayals what to portray and how to portray them
+//		environmentPortrayal.setField( simulation.environment );	
+//		environmentPortrayal.setPortrayalForClass(ParkedCar.class, (new RectanglePortrayal2D(0)
+//		{
+//			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
+//			{
+//				//paint = new Color(255, 255, 0, 255); // Yellow
+//												
+//			    //super.draw(object, graphics, info);
+//			}
+//		})
+//		
+//		);
 		// HH - end
 		
 		// HH 7.5.14 - Added portrayal for Failures
@@ -284,84 +296,12 @@ public class COModelWithUI extends GUIState
 		{
 			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
 			{
-				paint = new Color(255, 0, 255, 255); // Purple/Pink			
+				paint = new Color(0, 0, 0, 255); // Black			
 			    super.draw(object, graphics, info);
 			}
 		}, "T", new Color(0, 0, 0), false) 
 				
 		);
-		
-		// HH 30/4/14 Roads portrayal
-		roadsPortrayal.setField(simulation.roadMap);
-		roadsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-				0,
-				Constants.DUALTWOWAY,
-				new Color(0,0,0,0),
-				new Color(0,0,255,255)
-				));
-
-		// draw the junction approaches (ordering here not important though)
-		jctApproachPortrayal.setField(simulation.jctApproachMap);
-		jctApproachPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-				0,
-				1,
-				new Color(0,0,0,0),
-				new Color(0,255,0,50) // slightly opaque
-				));
-		
-		// draw the junctions
-		junctionsPortrayal.setField(simulation.junctionMap);
-		junctionsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-				0,
-				1,
-				new Color(0,0,0,0),
-				new Color(255,0,0,50) // slightly opaque
-				));
-		
-		// HH - 17.6.14 - add the road markings
-		roadMarkingPortrayal.setField(simulation.roadMarkingMap);
-		roadMarkingPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-				0,
-				Constants.WHITERPAINT,
-				new Color(0,0,0,0),
-				new Color(255,255,255,255)
-				));
-		
-		obstaclesPortrayal.setField(simulation.obstacleMap);
-		obstaclesPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-				0,
-				1,
-				new Color(0,0,0,0),
-				new Color(0,0,255,255)
-				));
-
-//		// HH 24.9.14 - For testing Moving Obstacles Portrayal
-//		dumbCarsPortrayal.setField(simulation.dumbCarMap);
-//		dumbCarsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-//				0,
-//				1,
-//				new Color(0,0,0,0),
-//				new Color(0,0,255,100)
-//				));
-		
-		
-		//terrainPortrayal.setField(simulation.terrainMap);
-		//terrainPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-		//		0,
-		//		Constants.GRAVEL,
-		//		new Color(0,0,0,0),
-		//		new Color(0,255,0,255)
-		//		));
-		
-		// HH end
-        
-		wallPortrayal.setField(simulation.wallMap);
-		wallPortrayal.setMap(new sim.util.gui.SimpleColorMap(
-				0,
-				1,
-				new Color(0,0,0,0),
-				new Color(255,0,0,255)
-				));		
 		
 
 		

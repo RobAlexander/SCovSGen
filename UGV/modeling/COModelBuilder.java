@@ -327,6 +327,14 @@ public class COModelBuilder
 					x1 = cRoad.x1;
 					y1 = Math.min(cRoad.y1, cRoad.y2) + jct;
 					do {
+						
+						// HH 16.7.14 Once we get half-way through the allocated number of tries, try adding roads in the other direction
+						// HH 26.11.14 Moved this to the start so that don't inadverently change dirLen in the middle of the loop (when
+						// we use it to sort out the direction of the junction at the end)
+						if (noSmallIterations == 10) {
+							dirLen = -dirLen;
+						}
+						
 						length = dirLen * mapGenRandom.nextDouble() * Constants.WorldXVal;
 						
 						// HH 16.7.14 - Constrain the road to end at the edge of the map.  Note: roads can go right to the edge of the map
@@ -338,11 +346,6 @@ public class COModelBuilder
 						}						
 						
 						noSmallIterations += 1; // HH 16.7.14 Increment counter so we don't get stuck in an infinite loop
-					
-						// HH 16.7.14 Once we get half-way through the allocated number of tries, try adding roads in the other direction
-						if (noSmallIterations == 10) {
-							dirLen = -dirLen;
-						}
 						
 						// HH 16.7.14 - Updated to check enclosing rectangle for overlaps during the loop
 					} while ((Math.abs(length) < Junction.jctApproachLen || sim.roadAtPoint(new Rectangle2D.Double((length > 0 ? x1-(Road.roadWidth/2) : x1+length), y1-(Road.roadWidth/2), Math.abs(length), Road.roadWidth), sim.roads, r)) && noSmallIterations < 20);
@@ -370,6 +373,14 @@ public class COModelBuilder
 					x1 = Math.min(cRoad.x1, cRoad.x2) + jct;
 					y1 = cRoad.y1;
 					do {
+
+						// HH 16.7.14 Once we get half-way through the allocated number of tries, try adding roads in the other direction
+						// HH 26.11.14 Moved this to the start so that don't inadverently change dirLen in the middle of the loop (when
+						// we use it to sort out the direction of the junction at the end)
+						if (noSmallIterations == 10) {
+							dirLen = -dirLen;
+						}
+						
 						length = dirLen * mapGenRandom.nextDouble() * Constants.WorldYVal;
 						
 						// HH 16.7.14 - Constrain the road to end at the edge of the map.  Note: roads can go right to the edge of the map
@@ -382,10 +393,6 @@ public class COModelBuilder
 						
 						noSmallIterations += 1; // HH 16.7.14 Increment counter so we don't get stuck in an infinite loop
 						
-						// HH 16.7.14 Once we get half-way through the allocated number of tries, try adding roads in the other direction
-						if (noSmallIterations == 10) {
-							dirLen = -dirLen;
-						}
 						
 						// HH 16.7.14 - Updated to check enclosing rectangle for overlaps during the loop					
 					} while ((Math.abs(length) < Junction.jctApproachLen || sim.roadAtPoint(new Rectangle2D.Double(x1-(Road.roadWidth/2), (length > 0 ? y1-(Road.roadWidth/2) : y1+length), Road.roadWidth, Math.abs(length)), sim.roads, r)) && noSmallIterations < 20);

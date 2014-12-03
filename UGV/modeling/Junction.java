@@ -360,6 +360,11 @@ public class Junction extends Entity
 		Double2D tempCoords = new Double2D(0,0);
 		int loopCount = 0;
 		
+		// HH 24.11.14 Actually need to know which direction the Car is facing in order to
+		// ensure that it can leave the junction at a dead-end, but that it cannot 
+		// perform a u-turn to exit from a dead-end at which it has only just joined.
+		UGV_Direction carDir = Utility.getDirection(theCar.getDirection());
+		
 		// Work out if this is a dead-end (used to permit the dead-end to be used as an exit by a DumbCar)
 		UGV_Direction selected = UGV_Direction.NORTH;
 		int dirCount = 0;
@@ -391,23 +396,24 @@ public class Junction extends Entity
 			
 			// HH 16.10.14 - To fix a bug, with newly entering vehicles doing immediate UTurns, swapped
 			// the && selected == UGV_Direction.NORTH and && selected == UGV_Direction.SOUTH in the code
-			// below.
-			if ((lengthDir[T_EAST] > 0 || (dirCount == 1 && selected == UGV_Direction.WEST)) && dir == 1) {
+			// below. 24.11.14 - This was not really a bug fix, it probably introduced a different bug and
+			// only half-addressed the perceived one.
+			if ((lengthDir[T_EAST] > 0 || (dirCount == 1 && lengthDir[T_EAST] == 0 && carDir == UGV_Direction.EAST)) && dir == 1) {
 				tempCoords = new Double2D(x+laneWidth, y-(laneWidth/2));
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x + offset, tempCoords.y);
 				}
-			} else if ((lengthDir[T_SOUTH] > 0 || (dirCount == 1 && selected == UGV_Direction.SOUTH)) && dir == 2) {
+			} else if ((lengthDir[T_SOUTH] > 0 || (dirCount == 1 && lengthDir[T_SOUTH] == 0 & carDir == UGV_Direction.SOUTH)) && dir == 2) {
 				tempCoords = new Double2D(x+(laneWidth/2), y+laneWidth);
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y + offset);
 				}
-			} else if ((lengthDir[T_WEST] > 0 || (dirCount == 1 && selected == UGV_Direction.EAST)) && dir == 3) {
+			} else if ((lengthDir[T_WEST] > 0 || (dirCount == 1 && lengthDir[T_WEST] == 0 && carDir == UGV_Direction.WEST)) && dir == 3) {
 				tempCoords = new Double2D(x-laneWidth, y+(laneWidth/2));
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x - offset, tempCoords.y);
 				}
-			} else if ((lengthDir[T_NORTH] > 0 || (dirCount == 1 && selected == UGV_Direction.NORTH)) && dir == 4) {
+			} else if ((lengthDir[T_NORTH] > 0 || (dirCount == 1 && lengthDir[T_NORTH] == 0 && carDir == UGV_Direction.NORTH)) && dir == 4) {
 				tempCoords = new Double2D(x-(laneWidth/2), y-laneWidth);
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y - offset);

@@ -91,6 +91,40 @@ public class COModel extends SimState
 	//public IntGrid2D dumbCarMap;
 	//private int dumbCarMapResolution = 3; //multiplier used to change resolution of obstacles image
 	
+	// HH 6.11.14 An array for storing the Junction-Junction links that have been traversed during the simulation
+	// this is for the purpose of collecting an IN-RUN coverage criterion for Junction Separation distances
+	public class jctPairInfo {
+		public Double2D startLoc;
+		public Double2D endLoc;
+				
+		public jctPairInfo ()
+		{
+			startLoc = new Double2D(-1,-1);
+			endLoc = new Double2D(-1,-1);
+		}
+		
+		public jctPairInfo (Double2D inStartLoc, Double2D inEndLoc) {
+			startLoc = inStartLoc;
+			endLoc = inEndLoc;
+		}
+	}
+	
+	// HH 25.11.14 A class for storing the information about the target location relative to 
+	// adjacent junctions
+	public class targetInfo {
+		public double fromPrevJct; // distance in m from previous junction
+		public double toNextJct; // distance in m to next junction
+		
+		public targetInfo()
+		{
+			fromPrevJct = 0.0;
+			toNextJct = 0.0;
+		}
+	}
+	
+	private jctPairInfo[] junctionArray[] = new jctPairInfo[100][100];
+	// HH end
+	
 	// HH 19.6.14
 	public class initialInfo {
 		public initialInfo(Double2D inStartLoc, double inStartBearing) {
@@ -409,18 +443,29 @@ public class COModel extends SimState
 	/**
 	 * HH 21/7/14 - Method to provide the location of the target, original required for logging information
 	 * in the event that the TIMEOUT - event occurs.
+	 * 
+	 * HH 26.11.14 Updated this because it hasn't worked since we added Parked Cars: the Target is no longer the first item 
+	 * added to the allEntities Bag.  We're going to loop through the Bag instead and return the first target that we find
 	 */
 	public Double2D getTargetLoc()
 	{
-		if (allEntities.size() > 0) {
-			if (((Entity) allEntities.get(0)).type == Constants.TTARGET) {
-				return ((Entity) allEntities.get(0)).getLocation();
-			} else {
-				return new Double2D(-1,-1);
-			}
-		} else {
-			return new Double2D(-1,-1);
+		for (int i=0; i< allEntities.size(); i++) {
+			if (((Entity) allEntities.get(i)).type == Constants.TTARGET) {
+				return ((Entity) allEntities.get(i)).getLocation();
+			}			
 		}
+		
+		return new Double2D(-1,-1);
+		
+//		if (allEntities.size() > 0) {
+//			if (((Entity) allEntities.get(0)).type == Constants.TTARGET) {
+//				return ((Entity) allEntities.get(0)).getLocation();
+//			} else {
+//				return new Double2D(-1,-1);
+//			}
+//		} else {
+//			return new Double2D(-1,-1);
+//		}
 	}
 			
 	
@@ -889,18 +934,29 @@ public class COModel extends SimState
 	 */
 	public boolean obstacleNearPoint(Double2D coord, Bag obstacles, Bag roads)
 	{
+		Double2D inCoord = snapToKerb(coord.x, coord.y);
 		Double2D testLoc;
+		Double testDistance = Constants.OBSTACLE_LENGTH;
 		
 		for (int i = 0; i < obstacles.size(); i++)
 		{
 			testLoc = ((Obstacle) (obstacles.get(i))).getLocation();
 			
-			//for all of the obstacles check if the provided point is in it
-			//[TODO] this might not work in all cases, not 100% sure of maths behind it - could be overly strong
-			if (Math.abs(testLoc.x - coord.x) < Constants.OBSTACLE_LENGTH && Math.abs(testLoc.y - coord.y) < Constants.OBSTACLE_LENGTH) 
+			// HH 24.11.14 Updated so that when we are comparing obstacles that are in different lanes we ensure a
+			// separation of 1.5 * Constants.OBSTACLE_LENGTH so that it is possible for the UGV to execute an overtake
+			
+			if (testLoc.x == inCoord.x || testLoc.y == inCoord.y) {
+				testDistance = Constants.OBSTACLE_LENGTH;
+			} else {
+				testDistance = Constants.OBSTACLE_LENGTH * 1.5;
+			}
+			
+			// HH 24.11.14 Updated so that compare the 'snapped to kerb' value and use a different test distance if we are comparing
+			// vehicles that are in the same lane.
+			if (Math.abs(testLoc.x - inCoord.x) < testDistance && Math.abs(testLoc.y - inCoord.y) < testDistance) 
 			{
 				// Check the coordinates are on the same roads
-				if (getRoadIdAtPoint(testLoc, roads) == getRoadIdAtPoint(coord, roads)) {
+				if (getRoadIdAtPoint(testLoc, roads) == getRoadIdAtPoint(inCoord, roads)) {
 					return true;
 				}
 			}
@@ -1396,6 +1452,9 @@ public class COModel extends SimState
 			//for all of the obstacles check if the provided point is in it
 			if (((Junction) (junctions.get(i))).inApproach(coord)) //[TODO] this might not work it depends on if whatever the object is will override inShape
 			{
+				//if (((Junction)junctions.get(i)).ID ==
+				
+				
 				return true;
 			}
 		}
@@ -1719,9 +1778,9 @@ public class COModel extends SimState
 			if (targetLoc.x != -1) {
 
 				// Work out bearing from UGVLoc to targetLoc
-				double angle = Car.calculateAngle(UGVLoc, targetLoc);
-				double moveV = Car.yMovement(angle, 1);
-				double moveH = Car.xMovement(angle, 1);
+				double angle = Utility.calculateAngle(UGVLoc, targetLoc);
+				double moveV = Utility.yMovement(angle, 1);
+				double moveH = Utility.xMovement(angle, 1);
 
 				MutableDouble2D sumForces = new MutableDouble2D();
 				sumForces.addIn(UGVLoc);
@@ -1966,4 +2025,185 @@ public class COModel extends SimState
 		return retString;
 	}
 
+	// HH 6.11.14 Method to store a pair of junctions in the jctArray to facilitate the IN-RUN
+	// recording of the situation coverage measure of junction separation
+	public void HsetJctArray(int prevJct, int currentJct, jctPairInfo inJctLocs) 
+	{
+		// Check that we haven't been supplied with invalid values (we'll just ignore them if we have)
+		if (prevJct == -1 || currentJct == -1 || prevJct == currentJct) {
+			// DO nothing
+		} else {
+			// We've got valid data, so update the array accordingly (don't need to check what is currently there, we're only
+			// ever storing true values to overwrite the original false values, so there is no danger of overwriting a true 
+			// with a false)
+			junctionArray[prevJct][currentJct] = inJctLocs;
+		}
+	}
+	
+	// HH 6/11/14 Calculate the separation between each adjacent junction pair that IS ACTUALLY VISITED BY THE UGV and return a string
+	// with comma-separated occurrence counts in the following 8 categories (including lower bound but excluding
+	// upper: <3m, 3-6m, 6-12m, 12-23m, 23-46m, 46-100m, 100-150m, >150m 
+	public String HgetIRJunctionSep() {
+		
+		int[] sepCount = new int[8];
+		Double2D startJunctionLoc;
+		Double2D endJunctionLoc;
+		double sepDist;
+		
+		// Loop through the junctionArray
+		for (int j = 0; j < 100; j++)
+		{
+			// Test each junction against all the other junctions that are
+			// of a higher index (because we don't want to count any twice)
+			for(int k = 0; k < j; k++)
+			{
+				// Check to see if we have actually visited this pair of locations
+				if (junctionArray[j][k] != null)
+				{
+					startJunctionLoc = junctionArray[j][k].startLoc;
+					endJunctionLoc = junctionArray[j][k].endLoc;
+					
+					sepDist = startJunctionLoc.distance(endJunctionLoc); // Find out what the distance between the two locations is
+					
+					if (sepDist < 3) {
+						sepCount[0]++;
+					} else if (sepDist < 6) {
+						sepCount[1]++;
+					} else if (sepDist < 12) {
+						sepCount[2]++;
+					} else if (sepDist < 23) {
+						sepCount[3]++;
+					} else if (sepDist < 46) {
+						sepCount[4]++;
+					} else if (sepDist < 100) {
+						sepCount[5]++;
+					} else if (sepDist < 150) {
+						sepCount[6]++;
+					} else {
+						sepCount[7]++;
+					}
+				}
+			}
+		}
+		
+		String retString = "" + sepCount[0];
+		// Iterate through the array, constructing the string
+		for (int i = 1; i < 8; i++)
+		{
+			retString = retString + ", ";
+			retString = retString + sepCount[i];
+		}
+		
+		return retString;	
+	}
+	
+	// HH 25.11.14 Work out how far the target is from the junctions in the downstream and upstream directions
+	// return an object containing both of these measurements in metres.  If the return values are both zero
+	// this indicates an error condition e.g. the road on which the target is located could not be identified.
+	public targetInfo HgetTargetSeparations(Double2D targetLoc)
+	{
+		targetInfo retVal = new targetInfo();
+		Double2D tempJunctionLoc;
+		Road currentRoad = null;
+		boolean roadFound = false;
+		
+		// Find out which road the target is on - it can only be on one road as it can't be added in a 
+		// junction.
+		for (int r = 0; r < roads.size(); r++)
+		{
+			currentRoad = (Road) roads.get(r);
+			
+			if (currentRoad.inShape(targetLoc) == true)
+			{
+				roadFound = true;
+				break;
+			}
+		}
+		
+		// Just check that we actually found the road
+		if (roadFound == false)
+		{
+			return retVal; // both values are still set to zero (which is not a possible result) so can test 
+		}
+		
+		double plusDistance = Constants.WorldXVal; // the distance to the junction that is in the positive direction
+		double minusDistance = Constants.WorldXVal; // the distance to the junction that is in the negative direction
+		double tempDistance;
+		
+		// Loop through all the junctions and work out which junctions are on the same road as the target
+		for (int j = 0; j < junctions.size(); j++)
+		{
+			tempJunctionLoc = ((Junction) junctions.get(j)).getLocation();
+			tempDistance = Math.abs(tempJunctionLoc.distance(targetLoc));
+			
+			if (currentRoad.inShape(tempJunctionLoc) == true)
+			{
+				// Depending on the orientation of the road, work out which
+				// side of the Target the junction is on (increasing/decreasing x/y)
+				if (currentRoad.getIsNS() == true)
+				{
+					// is it in the positive direction
+					if (tempJunctionLoc.y - targetLoc.y > 0)
+					{
+						if (tempDistance < plusDistance)
+						{
+							plusDistance = tempDistance;
+						}
+					} else {// it is in the negative direction
+						if (tempDistance < minusDistance)
+						{
+							minusDistance = tempDistance;
+						}
+					}
+				} else {
+					// is it in the positive direction
+					if (tempJunctionLoc.x - targetLoc.x > 0)
+					{
+						if (tempDistance < plusDistance)
+						{
+							plusDistance = tempDistance;
+						}
+					} else {// it is in the negative direction
+						if (tempDistance < minusDistance)
+						{
+							minusDistance = tempDistance;
+						}
+					}
+				}
+			}
+		}
+		
+		// Work out whether it is the increasing x/y direction or the decreasing x/y direction that is the 
+		// prev/next measurement.  This depends on the 'direction' of the target, or more accurately the 
+		// direction of the lane in which the Target is located.
+		
+		// Returns 1 for N/E or 2 for S/W
+		if (currentRoad.getLane(targetLoc) == 1) {
+			// North or East
+			if (currentRoad.getIsNS() == true) {
+				// Target 'facing' North
+				retVal.fromPrevJct = plusDistance;
+				retVal.toNextJct = minusDistance;
+			} else {
+				// Target 'facing' East
+				retVal.fromPrevJct = minusDistance;
+				retVal.toNextJct = plusDistance;
+			}
+		} else {
+			// South or West
+			if (currentRoad.getIsNS() == true) {
+				// Target 'facing' South
+				retVal.fromPrevJct = minusDistance;
+				retVal.toNextJct = plusDistance;
+			} else {
+				// Target 'facing' West
+				retVal.fromPrevJct = plusDistance;
+				retVal.toNextJct = minusDistance;
+			}
+		}
+		
+		return retVal;
+	}
+	
+	
 }

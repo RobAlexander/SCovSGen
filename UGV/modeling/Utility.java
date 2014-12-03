@@ -7,6 +7,7 @@ import java.awt.geom.Area;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 
+import modeling.Constants.UGV_Direction;
 import sim.util.Double2D;
 
 /**
@@ -198,4 +199,183 @@ public class Utility {
 		return false; // if we get here, it's definitely not contained
 	}
 	
+	// HH 21.11.14 - Seven static direction methods (below) moved from UGV/Car class.
+	
+	/** 
+	 * HH 18.6.14 - Work out which direction the vehicle is pointing in, based on its heading
+	 * 
+	 * @param bearing
+	 * @return either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
+	 */
+	public static UGV_Direction getDirection(double bearing)
+	{
+		if (correctAngle(bearing) >= 315 || correctAngle(bearing) < 45)	{
+			return UGV_Direction.SOUTH;
+		} else if (correctAngle(bearing) < 135) {
+			return UGV_Direction.EAST;
+		} else if (correctAngle(bearing) < 225) {
+			return UGV_Direction.NORTH;
+		} else { // must be between 225 and 315 
+			return UGV_Direction.WEST;
+		}
+	}
+
+	/** 
+	 * HH 21.11.14 - Work out which direction the vehicle is pointing in, based on its heading,
+	 * but return the degrees-equivalent for this compass direction
+	 * 
+	 * @param bearing
+	 * @return either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
+	 */
+	public static int getDirectionDeg(double bearing)
+	{
+		if (correctAngle(bearing) >= 315 || correctAngle(bearing) < 45)	{
+			return 0;
+		} else if (correctAngle(bearing) < 135) {
+			return 90;
+		} else if (correctAngle(bearing) < 225) {
+			return 180;
+		} else { // must be between 225 and 315 
+			return 270;
+		}
+	}
+	
+	/** 
+	 * A method which changes a bearing to be in the range of 0 (inclusive) to 360 (exclusive)
+	 * 
+	 * @param b the bearing to be corrected
+	 * @return a bearing equivalent to b which has been converted to be in the correct range
+	 */
+	protected static double correctAngle(double b) // HH 7.5.14 - Changed from private to protected
+	{
+		if (b >= 360)
+		{
+			return (b - 360);
+		}
+		
+		if (b < 0)
+		{
+			return (b + 360);
+		}
+		
+		return b;
+	}
+	
+	/*
+	 * HH 13.10.14 - returns the current orientation of the object in radians (as per
+	 * OrientedPortrayal2D) for the supplied bearing
+	 */
+	public static double getOrientation2D(double inBearing)
+	{
+		
+		// For some reason, the orientation of the vehicle seems to be displayed 
+		// relative to zero degrees along the increasing x axis.  As a result, we need to flip 
+		// the compass over the 45/225 degree bisection to convert between the two systems.
+		return Math.toRadians(correctAngle(90-inBearing));
+	}
+	
+	/**
+	 * Calculates the bearing the vehicle should be travelling on to move directly
+	 * from a location to another.
+	 * 
+	 * @param point1
+	 * @param point2
+	 * @return 
+	 */
+	//protected double calculateAngle(Double2D point1, Double2D point2) // HH 7.5.14 - changed this from private to protected
+	public static double calculateAngle(Double2D point1, Double2D point2) // HH 2.9.14 - Changed to public static
+	{
+		Double2D vector = point2.subtract(point1);
+		double angle;
+		if(vector.y != 0)
+		{
+			angle = Math.toDegrees(Math.atan(vector.x / vector.y));
+			
+			if(vector.x >0)
+			{
+				if (vector.y <0) 
+				{	
+					angle +=180;
+					
+				} 
+				
+			}
+			else
+			{
+				if (vector.y <0) 
+				{	
+					angle +=180;
+					
+				}
+				else
+				{
+					angle +=360;
+				}
+			}
+			
+			
+		
+		} else {
+			//the car is either in line with the target horizontally or vertically
+			if (vector.x >0)
+			{
+			    angle = 90;			    
+			}
+			else
+			{
+				angle = 270;
+			}
+		}
+		
+		return angle;
+	}
+
+    /**
+     * A function which based on the direction the car is facing and the speed it
+	 * is travelling at 
+	 * it returns a value for how much the x position should change in one step.
+	 * 
+	 * @param speed the speed
+     * @return the change in x coordinate of the car in the world
+     */
+	//protected double xMovement(double angle, double speed) // HH 7.5.14 - Changed from private to protected
+	public static double xMovement(double angle, double speed) // HH 2.9.14 - Changed to public static
+	{
+		double xChange;
+		
+		if (angle <= 90) 
+		{
+			xChange = (speed * Math.sin(Math.toRadians(angle)));
+		} else if (angle <= 180) {
+			xChange = (speed * Math.sin(Math.toRadians(180 - angle)));
+		} else if (angle <= 270) {
+			xChange = (-1 * speed * Math.cos(Math.toRadians(270 - angle)));
+		} else {
+			xChange = (-1 * speed * Math.sin(Math.toRadians(360 - angle)));
+		}	
+		return xChange;
+    }
+	
+    
+	/**
+	 * The y axis equivalent of the xMovement method
+	 * 
+	 * @return the change in y coordinate of the car in the world
+	 */
+	//protected double yMovement(double angle, double speed) // HH 7.5.14 - Changed from private to protected
+	public static double yMovement(double angle, double speed) // HH 2.9.14 - Changed to public static
+	{
+		double yChange;
+		if (angle <= 90) 
+		{
+			yChange = (speed * Math.cos(Math.toRadians(angle)));
+		} else if (angle <= 180) {
+			yChange = (-1 * speed * Math.cos(Math.toRadians(180 - angle)));
+		} else if (angle <= 270) {
+			yChange = (-1 * speed * Math.sin(Math.toRadians(270 - angle)));
+		} else {
+			yChange = (speed * Math.cos(Math.toRadians(360 - angle)));
+		}	
+		return yChange;
+    }
 }

@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Calendar;
 
+import modeling.COModel.targetInfo;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.util.Bag;
@@ -93,7 +94,8 @@ public class AccidentDetector implements Constants,Steppable {
 		
 		// HH 28.8.14 - Add some header information to the summary file
 		psSummary.println("RandomSeed, ExternalRandomSeed, #Junctions, #Roads, #Obstacles, #Cars, MinJunctionSep, DistanceUGVtoTarget, " +
-						  "DistanceTargetToObs, UGVTargetRoadSep, CriticalObsSep, MinTargetCentreSep, MinTargetKerbSep, #Faults, " +
+						  "DistanceTargetToObs, UGVTargetRoadSep, CriticalObsSep, MinTargetCentreSep, MinTargetKerbSep, JctSep<3m, JctSep3-6m, " +
+						  "JctSep6-12m, JctSep12-23m, JctSep23-46m, JctSep46-100m, JctSep100-150m, JctSep150m+, #Faults, " +
 						  "#Steps, #Accidents, #LeaveRoad, #CrossCentre, #CrossSE, #CrossNW, #CrashObs, #CrashCar, #Timeout");
 	}
 
@@ -121,6 +123,9 @@ public class AccidentDetector implements Constants,Steppable {
 					addLog(AccidentType.CLASHWITHOBSTACLE, car1.getID(), sim.schedule.getSteps(), car1.getLocation(), "with obstacle id = "+ obstacle.getID() ); // HH 30/4/14 - Corrected typo
 					noAccidents++;
 					AccCrashObs++;
+					
+					// HH 13.11.14 - Updated so have visualisation of crashes with obstacles
+					sim.recordCrash(car1.getLocation()); // TO DO : Update to actual collision point between vehicles
 					// HH 7.8.14 Reinstate this so detect collisions with obstacles
 					//car1.isActive=false;
 					//trackedCars.remove(car1);
@@ -237,6 +242,9 @@ public class AccidentDetector implements Constants,Steppable {
 	{
 		sim = (COModel)state;
 	
+		// HH 26.11.14 Added some more logging
+		targetInfo myTargetInfo = sim.HgetTargetSeparations(sim.getTargetLoc());
+		
 		ps.println("*** New Run, Seed = "+ sim.seed() + "*** External Seed = " + sim.getExternalSeed() + 
 			"; Start time = " + timeToString() + ".");
 		
@@ -244,13 +252,15 @@ public class AccidentDetector implements Constants,Steppable {
 				   "; UGVTargetSep = " + sim.HgetUGVTargetSeparation() + "; TargetObstacleSep = " +
 				   sim.HgetMinTargetObsSeparation() + "; UGVTargetRoadSep = " + sim.HgetUGVTargetRoadSeparation() +
 				   "; CriticalObsSep = " + sim.HgetCriticalObsSeparation() + "; MinTargetCentreSep = " +
-					sim.HgetMinTargetCentreSeparation() + "; MinTargetKerbSep = " + sim.HgetMinTargetKerbSeparation() + ".");
+					sim.HgetMinTargetCentreSeparation() + "; MinTargetKerbSep = " + sim.HgetMinTargetKerbSeparation() + 
+					"; DistPrevJctToTarget = " + myTargetInfo.fromPrevJct + "; DistTargetToNextJct = " + myTargetInfo.toNextJct + ".");
 		
 		// HH 28.8.14 - reset the summary string, and start to add information to it.  We'll 
 		// write it all out in one go at the end
 		// FORMAT:
 		// "RandomSeed, ExternalRandomSeed, #Junctions, #Roads, #Obstacles, #Cars, MinJunctionSep, DistanceUGVtoTarget, " +
 		// "DistanceTargetToObs, UGVTargetRoadSep, CriticalObsSep, MinTargetCentreSep, MinTargetKerbSep, "
+		// "DistPrevJctToTarget, DistTargetToNextJct, "
 		// "#Faults, #Steps, #Accidents, #LeaveRoad, #CrossCentre, #CrossSE, #CrossNW, #CrashObs, #CrashCar");
 		
 		summaryString = "";
@@ -267,6 +277,10 @@ public class AccidentDetector implements Constants,Steppable {
 		summaryString += sim.HgetCriticalObsSeparation()  + ", ";
 		summaryString += sim.HgetMinTargetCentreSeparation()  + ", ";
 		summaryString += sim.HgetMinTargetKerbSeparation()  + ", ";
+		
+		// HH 26.11.14 Added some more logging
+		summaryString += myTargetInfo.fromPrevJct + ", ";
+		summaryString += myTargetInfo.toNextJct + ", ";
 	}
 	
 	/** HH 17/7/14 - Adds footer information to file to report the number of accidents
@@ -300,6 +314,7 @@ public class AccidentDetector implements Constants,Steppable {
 		// "RandomSeed, #Junctions, #Roads, #Obstacles, #Cars, MinJunctionSep, DistanceUGVtoTarget, DistanceTargetToObs, " +
 		// "#Faults, #Steps, #Accidents, #LeaveRoad, #CrossCentre, #CrossSE, #CrossNW, #CrashObs, #CrashCar");
 		
+		summaryString += sim.HgetIRJunctionSep() + ", "; // HH 6.11.14 Output the different categories of junctionSeparation
 		summaryString += noFaults + ", ";
 		summaryString += sim.schedule.getSteps()  + ", ";
 		summaryString += sim.aDetector.getNoAccidents() + ", "; // TOTAL
@@ -310,7 +325,7 @@ public class AccidentDetector implements Constants,Steppable {
 		summaryString += sim.aDetector.AccCrashObs + ", "; // CrashObs
 		summaryString += sim.aDetector.AccCrashCar + ", "; // CrashCar
 		summaryString += sim.aDetector.AccTimeout; // Timeout
-		
+				
 		psSummary.println(summaryString);
 		
 		// Reset noAccidents // HH 28.8.14 and associated measures

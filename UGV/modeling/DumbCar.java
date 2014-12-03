@@ -100,13 +100,7 @@ public class DumbCar extends Car {
 			// Check to see whether we are already executing a turning manoeuvre, if so, 
 			// don't need to check the junctions as it's immaterial until we have finished the turn.
 			boolean inJunctionOrApproach = false;
-			
-			// TODO - Remove: for debug only
-			if (this.ID == 259)
-			{
-				inJunctionOrApproach = false;
-			}
-			
+					
 			if (eTarget.getType() != TUTURNWP)
 			{
 				for(int i = 0; i < sim.junctions.size(); i++) 
@@ -147,7 +141,7 @@ public class DumbCar extends Car {
 							startWaiting();
 							
 						} else {
-							eTarget = createWaypoint(junctionWP, sim, me, TUTURNWP); //set eTarget to be new WP
+							eTarget = createWaypoint(junctionWP, sim, me, TUTURNWP, false, null); //set eTarget to be new - HH 21.11.14 add new params
 							
 							goSlow();
 						}
@@ -170,17 +164,6 @@ public class DumbCar extends Car {
 									
 			if (eTarget.getType() == TUTURNWP && isWaiting() == false) 
 			{				
-				// HH 3.9.14 - Moved above, and redundant check removed
-				//// Try to ensure turn is as tight as possible
-				//if (eTarget.getType() == TUTURNWP) {
-				//	goSlow(sim);
-				//}
-				
-				// HH 29.9.14 Moved this below to try and solve the strange junction behaviour
-				//setDirection(me, eTarget.getLocation());
-				
-				// HH 29.9.14 - Added a restriction to prevent clearing the junction WP until have left junction
-				//if (me.distance(eTarget.getLocation()) < 1.5 && sim.junctionAtPoint(me, sim.junctions) == false)  
 				// HH 30.9.14 - If we have left the junction, assume we can clear the WP - regardless of the
 				// distance separation.
 				// HH 16.10.14 If two junctions are close together/overlapping, then the vehicle
@@ -298,8 +281,8 @@ public class DumbCar extends Car {
 				// vehicle to align with the perpendicular road.
 				// Work out where a vehicle at this location and with this bearing would
 				// be on a next step at max speed
-				moveV = yMovement(this.getDirection(), sim.getCarMaxSpeed());
-				moveH = xMovement(this.getDirection(), sim.getCarMaxSpeed());
+				moveV = Utility.yMovement(this.getDirection(), sim.getCarMaxSpeed());
+				moveH = Utility.xMovement(this.getDirection(), sim.getCarMaxSpeed());
 				sumForces.zero();
 				sumForces.addIn(new Double2D(moveH, moveV));	
 		        sumForces.addIn(me);
@@ -322,8 +305,8 @@ public class DumbCar extends Car {
 
 		        		// Work out where a vehicle at this location and with this bearing would
 		        		// be on a next step at max speed
-		        		moveV = yMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
-		        		moveH = xMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
+		        		moveV = Utility.yMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
+		        		moveH = Utility.xMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
 		        		sumForces.zero();
 		        		sumForces.addIn(new Double2D(moveH, moveV));	
 		        		sumForces.addIn(desiredLoc.startLoc);
@@ -346,8 +329,8 @@ public class DumbCar extends Car {
 			
 			//call the operations to calculate how much the car moves in the x
 			//and y directions.  
-			moveV = yMovement(getDirection(), getSpeed());
-			moveH = xMovement(getDirection(), getSpeed());
+			moveV = Utility.yMovement(getDirection(), getSpeed());
+			moveH = Utility.xMovement(getDirection(), getSpeed());
 			
 			sumForces.zero(); // Before we use it again, make sure it has been reset
 			sumForces.addIn(new Double2D(moveH, moveV));	

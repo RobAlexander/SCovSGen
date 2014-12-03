@@ -46,6 +46,6 @@ public abstract class Obstacle extends Entity implements Oriented2D
 		// HH 2.10.14 - For some reason, the orientation of the vehicle seems to be displayed 
 		// relative to zero degrees along the increasing x axis.  As a result, we need to flip 
 		// the compass over the 45/225 degree bisection to convert between the two systems.
-		return Math.toRadians(Car.correctAngle(90-direction));
+		return Math.toRadians(Utility.correctAngle(90-direction));
 	}	
 }

@@ -4,6 +4,7 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 
+import modeling.COModel.jctPairInfo;
 import modeling.Constants.UGV_Direction;
 import modeling.Constants.genLineType;
 import sim.engine.SimState;
@@ -41,6 +42,9 @@ public class UGV extends Car {
 	private boolean targetFound = false;
 	
 	private OvertakeStage overtakeStage = OvertakeStage.NOT_OVERTAKING;
+	
+	private int prevJct = -1;
+	private Double2D prevJctLoc;
 	
 	// HH 18.6.14 - New constructor to allow initialisation of direction/bearing
 	// HH 22.7.14 - Added COModel as argument to allow faults
@@ -131,7 +135,7 @@ public class UGV extends Car {
 			Entity e;
 			
 			Entity eTarget = new Entity(-1, TOTHER); //this id for the target is illegal, to get ids one should use COModel.getNewID()
-					
+							
 			// Find the target from the bag of all entities (is probably item 0)
 			for(int i = 0; i < everything.size(); i++)
 			{
@@ -197,6 +201,7 @@ public class UGV extends Car {
 						if (i == (sim.junctions.size()/2)) {
 							break;
 						}
+						sim.setFault(12); // HH 13.11.14 Added
 					}
 										
 					// ARE WE INSIDE A JUNCTION
@@ -232,7 +237,23 @@ public class UGV extends Car {
 							if (ptOnRoad(sim.roads, junctionWP) == true) 
 							{
 								// HH 15.7.14 Created generic method to create and return the new waypoint
-								eTarget = createWaypoint(junctionWP, sim, me, TUTURNWP); //set eTarget to be new WP
+								eTarget = createWaypoint(junctionWP, sim, me, TUTURNWP, false, null); //set eTarget to be new WP - HH 21.11.14 added new params
+								
+								// HH 6.11.14 Store the combination of prevJct and thisJct so that we can use it to calculate IN_RUN
+								// Situation Metrics
+								int currentJct = ((Junction)sim.junctions.get(i)).getID();
+								Double2D currentLoc = ((Junction)sim.junctions.get(i)).getLocation();
+								if (prevJct > -1 && prevJct != currentJct)
+								{
+									jctPairInfo jctLocs = sim.new jctPairInfo(prevJctLoc, currentLoc);
+									
+									sim.HsetJctArray(prevJct, currentJct, jctLocs);
+									prevJct = currentJct; // Update for next Junction
+									prevJctLoc = currentLoc;
+								} else {
+									prevJct = currentJct; // This must be the first time we have encountered a junction
+									prevJctLoc = currentLoc;
+								}
 							}
 							
 							goSlow();
@@ -241,7 +262,7 @@ public class UGV extends Car {
 						// HH 24.7.14 - To try and work out why vehicles are leaving the road during turns, create
 						// a log of the speed, location, and bearing of the UGV when it enters a junction
 						sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-								this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + ".");
+								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + ".");
 						
 						// ARE WE INSIDE A JUNCTION APPROACH
 					} else if (((Junction) sim.junctions.get(i)).inApproach(me)) {
@@ -277,7 +298,7 @@ public class UGV extends Car {
 						Double2D uTurnWP = getUTurn(me, this.getDirection());
 
 						// HH 15.7.14 Created generic method to create and return the new waypoint
-						eTarget = createWaypoint(uTurnWP, sim, me, TUTURNWP); //set eTarget to be new WP
+						eTarget = createWaypoint(uTurnWP, sim, me, TUTURNWP, false, null); //set eTarget to be new WP - HH 21.11.14 added new params
 
 						//inJunction = true; // same behaviour required as for junction, i.e. skip below code
 					}
@@ -290,13 +311,27 @@ public class UGV extends Car {
 			// rules of the road and not parking near or in junctions)
 			if (eTarget.getType() != TUTURNWP && isWaiting() == false) { 
 				
-				// Look for an obstacle in front and evaluate the distance
-				Double2D maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true);
-				Double2D minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false);
+				// HH 21.11.14 Need these outside of the if stmt below
+				Double2D maxDistanceToObsCoord;
+				Double2D minDistanceToObsCoord;
 				
+				// HH 21.11.14 Add a seedable fault to replicate a bug found in the code
+				if (sim.getFault(31) == true) {
+					// Look for an obstacle in front and evaluate the distance
+					maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true);
+					minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false);
+					sim.setFault(31);
+				} else {
+					// HH 21.11.14 Try this with the bearing instead as we can't see obstacles properly once
+					// we have pulled out into the overtake as we are not looking in the direction of travel
+					// anymore - (but our sensor could be)
+					maxDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), true);
+					minDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), false);
+				}
+
 				// HH 9.9.14 Look for a moving obstacle in the next lane
-				Double2D minDistanceToMovObsCoord = this.checkAllMovingObstacles(sim, sim.cars, false, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);
-				
+				Double2D minDistanceToMovObsCoord = this.checkAllMovingObstacles(sim, sim.cars, false, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);			
+								
 				// Check to see if we are already in a parked car manoeuvre
 				if (eTarget.getType() == TPARKEDCAR) {				
 				
@@ -311,31 +346,40 @@ public class UGV extends Car {
 							// parked vehicle with the sensor, so add the second waypoint and remove this one
 							Double2D pCarWP = new Double2D(-1,-1);  // This will be set below
 							
+							// HH 18.11.14 Discovered some strange behaviour in the code below, so have replaced one of the 
+							// conditions so the second if condition is only triggered in the presence of a seeded fault. 
+							// Various edits have been made to the code below to support this:
+							
 							// HH 19.8.14 Need to check whether we are seeing the back of this vehicle, or some point
 							// on a subsequent parked car.  For simplicity, just use some rough boundary conditions
-							if (me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH + 1)) {
+							if (me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH + 1) || 
+								//((me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH * 3) && sim.getFault(29) == false))) {
+								((me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(29) == false))) {
 								
 								// HH 21.8.14 - Changed so that use the location of the START waypoint to determine the location
 								// of the new waypoint
-								pCarWP = getOvertakeWP(me, getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_PULLEDOUT);
-								//pCarWP = getOvertakeWP(eTarget.getLocation(), getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_PULLEDOUT);
+								//pCarWP = getOvertakeWP(me, getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_PULLEDOUT);
+								pCarWP = getOvertakeWP(eTarget.getLocation(), getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_PULLEDOUT);
 								overtakeStage = OvertakeStage.OVERTAKE_PULLEDOUT;
 								
 								// HH 18.8.14 - To try and work out why vehicles are leaving the road during overtakes
 								sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-										this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+										this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 										". Entering overtake stage: PULLED OUT.");
-							} else if (me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH * 3)) {
+							//} else if (me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH * 3) && sim.getFault(29) == true) {
+							} else if (me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(29) == true) {
 								// HH 21.8.14 - Changed so that use the location of the START waypoint to determine the location
 								// of the new waypoint
-								pCarWP = getOvertakeWP(me, getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_START);
-								//pCarWP = getOvertakeWP(eTarget.getLocation(), getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_START);
+								//pCarWP = getOvertakeWP(me, getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_START);
+								pCarWP = getOvertakeWP(eTarget.getLocation(), getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_START);
 								
 								// HH 18.8.14 - To try and work out why vehicles are leaving the road during overtakes
 								sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-										this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+										this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 										". Extending overtake stage: START, another obstacle detected ahead.");
 								// NOTE - keep overtakeStage as OVERTAKE_START
+								sim.setFault(29); // HH 18.11.14 - Update fault called
+								
 							} else {
 								// We don't want to offset the next waypoint to be as far away as the max distance as the
 								// UGV should pull back into its lane between obstacles.  NOTE: there is a danger with this 
@@ -346,7 +390,7 @@ public class UGV extends Car {
 								// uses one of the dimensions of the point (depending on the direction of travel of the UGV)
 								Double2D tempObstaclePt;
 								
-								if (UGV.getDirection(this.getDirection()) == UGV_Direction.EAST || UGV.getDirection(this.getDirection()) == UGV_Direction.SOUTH ) {
+								if (Utility.getDirection(this.getDirection()) == UGV_Direction.EAST || Utility.getDirection(this.getDirection()) == UGV_Direction.SOUTH ) {
 									tempObstaclePt = new Double2D(me.x + Constants.OBSTACLE_LENGTH, me.y + Constants.OBSTACLE_LENGTH);
 								} else {
 									tempObstaclePt = new Double2D(me.x - Constants.OBSTACLE_LENGTH, me.y - Constants.OBSTACLE_LENGTH);
@@ -354,28 +398,28 @@ public class UGV extends Car {
 								
 								// HH 21.8.14 - Changed so that use the location of the START waypoint to determine the location
 								// of the new waypoint
-								pCarWP = getOvertakeWP(me, getDirection(), tempObstaclePt, OvertakeStage.OVERTAKE_PULLEDOUT);
-								//pCarWP = getOvertakeWP(eTarget.getLocation(), getDirection(), tempObstaclePt, OvertakeStage.OVERTAKE_PULLEDOUT);
+								//pCarWP = getOvertakeWP(me, getDirection(), tempObstaclePt, OvertakeStage.OVERTAKE_PULLEDOUT);
+								pCarWP = getOvertakeWP(eTarget.getLocation(), getDirection(), tempObstaclePt, OvertakeStage.OVERTAKE_PULLEDOUT);
 								overtakeStage = OvertakeStage.OVERTAKE_PULLEDOUT;
 								
 								// HH 18.8.14 - To try and work out why vehicles are leaving the road during overtakes
 								sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-										this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+										this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 										". Entering overtake stage: PULLED OUT, but obstacle detected ahead.");
 							}
 														
-							eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR); //set eTarget to be new WP						
+							eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR, true, eTarget); //set eTarget to be new WP - HH 21.11.14 - added new params				
 							
 						} else if (overtakeStage == OvertakeStage.OVERTAKE_PULLEDOUT) {
 							
 							// We may have finished the overtaking manoeuvre, but need to make sure we are
 							// tracking back to the appropriate offset from the kerb.  
 							Double2D pCarWP = getOvertakeWP(me, getDirection(), new Double2D(Constants.OBSTACLE_HEADWAY, Constants.OBSTACLE_HEADWAY), OvertakeStage.OVERTAKE_FINISH);
-							eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR); //set eTarget to be new WP		
+							eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR, true, eTarget); //set eTarget to be new WP - HH 21.11.14 - added new params		
 
 							// HH 18.8.14 - To try and work out why vehicles are leaving the road during overtakes
 							sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-									this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+									this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 									". Entering overtake stage: FINISH.");
 							
 							overtakeStage = OvertakeStage.OVERTAKE_FINISH;
@@ -383,7 +427,7 @@ public class UGV extends Car {
 
 							// HH 18.8.14 - To try and work out why vehicles are leaving the road during overtakes
 							sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-									this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+									this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 									". Entering overtake stage: NOT OVERTAKING.");
 							
 							overtakeStage = OvertakeStage.NOT_OVERTAKING;
@@ -392,6 +436,16 @@ public class UGV extends Car {
 							setTargetID(((Waypoint) eTarget).getNextPoint());
 							environment.remove(eTarget);
 						}
+						
+					} else if (sim.getFault(30) == false) {
+						// HH 18.11.14 - we want to make sure that the UGV is continuing to turn towards its WP
+						setDirection(me, eTarget.getLocation());
+						
+						sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
+								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+								". Continuing in current overtaking stage.");
+					} else {
+						sim.setFault(30); // HH 18.11.14 Call above must not have happened, so log the fault
 					}
 					
 				} 
@@ -417,12 +471,12 @@ public class UGV extends Car {
 								// Insert a waypoint at this distance, but offset from the kerb by the 
 								// obstacle width + half UGV width + obstacle safety margin
 								Double2D pCarWP = getOvertakeWP(me, getDirection(), minDistanceToObsCoord, OvertakeStage.OVERTAKE_START);
-								eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR); //set eTarget to be new WP
+								eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR, true, eTarget); //set eTarget to be new WP - HH 21.11.14 - added new params	
 								//changeSpeed(ACCELERATE); // We want to be at max speed for an overtake
 								
 								// HH 18.8.14 - To try and work out why vehicles are leaving the road during overtakes
 								sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-										this.getDirection() + " : " + UGV.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+										this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 										". Entering overtake stage: START.");
 								
 								overtakeStage = OvertakeStage.OVERTAKE_START;
@@ -430,7 +484,7 @@ public class UGV extends Car {
 						} else {
 							
 							// Check to see if we are at the point where we have to actually stop to be able to complete
-							// the manouevre safely
+							// the manoeuvre safely
 							if (me.distance(minDistanceToObsCoord) <= (Constants.OBSTACLE_HEADWAY + getSpeed()))
 							{
 								double overshoot = emergencyStop();
@@ -465,8 +519,8 @@ public class UGV extends Car {
 				// vehicle to align with the perpendicular road.
 				// Work out where a vehicle at this location and with this bearing would
 				// be on a next step at max speed
-				moveV = yMovement(this.getDirection(), sim.getCarMaxSpeed());
-				moveH = xMovement(this.getDirection(), sim.getCarMaxSpeed());
+				moveV = Utility.yMovement(this.getDirection(), sim.getCarMaxSpeed());
+				moveH = Utility.xMovement(this.getDirection(), sim.getCarMaxSpeed());
 				sumForces.zero();
 				sumForces.addIn(new Double2D(moveH, moveV));	
 		        sumForces.addIn(me);
@@ -482,8 +536,8 @@ public class UGV extends Car {
 
 		        		// Work out where a vehicle at this location and with this bearing would
 		        		// be on a next step at max speed
-		        		moveV = yMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
-		        		moveH = xMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
+		        		moveV = Utility.yMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
+		        		moveH = Utility.xMovement(desiredLoc.startBearing, sim.getCarMaxSpeed());
 		        		sumForces.zero();
 		        		sumForces.addIn(new Double2D(moveH, moveV));	
 		        		sumForces.addIn(desiredLoc.startLoc);
@@ -516,11 +570,31 @@ public class UGV extends Car {
 			
 			// HH 23.9.14 Regardless of what is going on - if there is another moving vehicle on the road ahead, and within 10m of us, then we need to slow down.
 			// TO DO: 10m is sort of arbitrary at the moment (COModel sim, boolean sameLane, double inAngle, double inRange, double inSensitivity)
-			if (location.distance(checkAllMovingObstacles(sim, sim.cars, true, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking)) < 10)
+			// TO DO: Maybe make this so that we slow down if we are going faster than the car in front - so maybe keep track of the distance to the car in front
+			// but should be allowed to keep travelling at the speed of the car in front, with a separation of about 2m if we are e.g. in a junction approach, or 
+			// travelling at low speeds.
+			if (location.distance(checkAllMovingObstacles(sim, sim.cars, true, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking)) < 20) // HH 17.11.14 Changed to 20m so have time to slow down
 			{
 				goSlowStop();
 			} else {
 				goFaster(false); // HH 23.9.14 - This is just a vote to speed up, in case the vehicle has got stuck
+			}
+			
+			// HH 13.11.14 We need to ensure that when a vehicle is supposed to be waiting at a junction, it must
+			// not be allowed to *creep* forward 
+			if (isWaiting() == true)
+			{
+				// HH 13.11.14 This was a fault that was found during testing so it has been inserted as a seeded fault
+				// so if the fault is active, we don't slow down in waiting mode, but in most cases (when fault inactive)
+				// the UGV will slow to a stop in waiting mode.
+				
+				// FAULT #28 - HH 17/11/14 - Don't enforce the slow down to zero condition (can cause creep through jct)
+				if (sim.getFault(28) == true) {
+					// We're in the fault condition, so don't slow the vehicle down.
+					sim.setFault(28);
+				} else {
+					goSlowStop(); // Make sure that we actually slow down to 0
+				}
 			}
 			
 			// TO DO - Fix this, bit of a botch to enforce termination as waypoint locations mean that the vehicle
@@ -559,7 +633,11 @@ public class UGV extends Car {
 					} else if (getSpeed() < 1) {
 						goFaster(false); // HH 22.9.14 - Replaced the below
 						//changeSpeed(ACCELERATE);
-					}					
+					}	
+					
+					if (sim.getFault(27) == true) {
+						sim.setFault(27); // HH 13.11.14 Added
+					}
 				}
 			// HH 1.10.14 - Updated to try and fix null ptr bug	
 //			} else if (((me.distance(eTarget.getLocation()) > 3 && eTarget.getType() != TUTURNWP && inJunctionApproach == false) ||
@@ -645,22 +723,29 @@ public class UGV extends Car {
 			//call the operations to calculate how much the car moves in the x
 			//and y directions.
 
+			// HH 18.11.14 Don't want to contravene any laws of motion using the commented out code below so have changed the code 
+			// so that we only request a slow down if we are going to overshoot
+			if (getSpeed() >= tempDist && eTarget.getType() == TPARKEDCAR)
+			{
+				goSlow(); // Request a slow down before we do the speed calcs and move the UGV
+			}
+			
 			// HH 22.9.14 - Sort out all the speed requirements
 			doSpeedCalcs();			
 			
 			// HH 18.8.14 - reduce the distance to travel if we are going to overshoot the waypoint
 //			if (getSpeed() >= location.distance(eTarget.getLocation()) && eTarget.getType() == TPARKEDCAR)
-			if (getSpeed() >= tempDist && eTarget.getType() == TPARKEDCAR)
-			{
-				// HH - we're going to overshoot, so restrict our movement to the distance to the waypoint (and 
-				// hope this doesn't contravene too many laws of motion TO DO - May want to revisit this...
-				moveV = yMovement(getDirection(), location.distance(eTarget.getLocation()));
-				moveH = xMovement(getDirection(), location.distance(eTarget.getLocation()));
-			} else {
+//			if (getSpeed() >= tempDist && eTarget.getType() == TPARKEDCAR)
+//			{
+//				// HH - we're going to overshoot, so restrict our movement to the distance to the waypoint (and 
+//				// hope this doesn't contravene too many laws of motion TO DO - May want to revisit this...
+//				moveV = yMovement(getDirection(), location.distance(eTarget.getLocation()));
+//				moveH = xMovement(getDirection(), location.distance(eTarget.getLocation()));
+//			} else {
 				// HH - original methods for determining movement
-				moveV = yMovement(getDirection(), getSpeed());
-				moveH = xMovement(getDirection(), getSpeed());
-			}
+				moveV = Utility.yMovement(getDirection(), getSpeed());
+				moveH = Utility.xMovement(getDirection(), getSpeed());
+//			}
 			
 			sumForces.zero();
 			sumForces.addIn(new Double2D(moveH, moveV));	
@@ -756,6 +841,7 @@ public class UGV extends Car {
 				if (i == (sim.roads.size()/2)) {
 					break;
 				}
+				sim.setFault(13); // HH 13.11.14 Added
 			}			
 			
 			if (onCourse((Road) roads.get(i), bearing, sim))
@@ -792,6 +878,7 @@ public class UGV extends Car {
 				if (i == (roads.size()/2)) {
 					break;
 				}
+				sim.setFault(14); // HH 13.11.14 Added
 			}
 			
 			if (((Road)roads.get(i)).inShape(me) == true ) 
@@ -838,7 +925,7 @@ public class UGV extends Car {
 		//the viewing range away from the target in certain increments and see 
 		//if they're on the road
 		MutableDouble2D testCoord = new MutableDouble2D();
-		Double2D amountAdd = new Double2D(xMovement(bearing, sensitivityForRoadTracking), yMovement(bearing, sensitivityForRoadTracking));
+		Double2D amountAdd = new Double2D(Utility.xMovement(bearing, sensitivityForRoadTracking), Utility.yMovement(bearing, sensitivityForRoadTracking));
 		testCoord.addIn(location);
 		double startAngle = 0; // HH 28.7.14 - added to replace fixed start for iteration of i=0 (supports fault insertion)
 		double sensorSensitivity = sensitivityForRoadTracking; // HH 28.7.14 - added to replace fixed sensitivity (supports fault insertion)
@@ -846,11 +933,13 @@ public class UGV extends Car {
 		// FAULT #16 - HH 28/7/14 - Force the loop to start half-way through
 		if (sim.getFault(16) == true) {
 			startAngle = UGVViewingRange/2;
+			sim.setFault(16); // HH 13.11.14 Added
 		} 
 
 		// FAULT #20 - HH 28/7/14 - Force the sensor to operate with degraded vision sensitivity
 		if (sim.getFault(20) == true) {
 			sensorSensitivity = sensitivityForRoadTracking*2;
+			sim.setFault(20); // HH 13.11.14 Added
 		} 
 		
 		for(double i = startAngle; i < UGVViewingRange; i += sensorSensitivity)
@@ -860,6 +949,7 @@ public class UGV extends Car {
 				if (i == (UGVViewingRange/2)) {
 					break;
 				}
+				sim.setFault(15); // HH 13.11.14 Added
 			}
 			
 			//keep adding the amountAdd on and seeing if the coordinate is on the road
@@ -887,7 +977,7 @@ public class UGV extends Car {
 	private boolean checkWallClose(double bearing)
 	{
 		Double2D me = this.location;
-		UGV_Direction myDirection = getDirection(bearing);
+		UGV_Direction myDirection = Utility.getDirection(bearing);
 		
 		if(me.x <= UGVViewingRange && myDirection == UGV_Direction.WEST)
 		{
@@ -947,16 +1037,19 @@ public class UGV extends Car {
 		// FAULT #17 - HH 28/7/14 - Force the angle loop to start half-way through
 		if (sim.getFault(17) == true) {
 			startAngle = 0;
+			sim.setFault(17); // HH 13.11.14 Added
 		} 
 
 		// FAULT #18 - HH 28/7/14 - Force the angle loop to end half-way through
 		if (sim.getFault(18) == true) {
 			endAngle = 0;
+			sim.setFault(18); // HH 13.11.14 Added
 		} 
 		
 		// FAULT #19 - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
 		if (sim.getFault(19) == true) {
 			resolution = resolution*2;
+			sim.setFault(19); // HH 13.11.14 Added
 		} 
 		
 		for(double i = startAngle; i < endAngle; i += resolution)
@@ -965,25 +1058,28 @@ public class UGV extends Car {
 			// of the vehicle (sensor)
 			testCoord.setTo(0,0);
 			testCoord.addIn(location);
-			newBearing = correctAngle(bearing + i); // HH 6.8.14 - Reset the bearing for this iteration
+			newBearing = Utility.correctAngle(bearing + i); // HH 6.8.14 - Reset the bearing for this iteration
 			
 			// HH 6.8.14 - Looks like this was happening with the wrong resolution - should be the range we adjust
 			//amountAdd = new Double2D(xMovement(newBearing, resolution), yMovement(newBearing, resolution));
-			amountAdd = new Double2D(xMovement(newBearing, rangeSensitivity), yMovement(newBearing, rangeSensitivity));
+			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 			
 			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
 			if (sim.getFault(21) == true) {
 				startRange = UGVViewingRange/2;
+				sim.setFault(21); // HH 13.11.14 Added
 			} 
 
 			// FAULT #22 - HH 28/7/14 - Force the angle loop to end half-way through
 			if (sim.getFault(22) == true) {
 				endRange = UGVViewingRange/2;
+				sim.setFault(22); // HH 13.11.14 Added
 			} 
 			
 			// FAULT #23 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
 			if (sim.getFault(23) == true) {
 				rangeSensitivity = sensitivityForRoadTracking*2;
+				sim.setFault(23); // HH 13.11.14 Added
 			} 
 						
 			// HH 6.8.14 - we don't use j, this just ensures we run the loop the right num
@@ -993,7 +1089,7 @@ public class UGV extends Car {
 				// depending on which direction we are facing, we will either need to look at the 
 				// neside road markings (which is actually equivalent to the NORTH/EAST side of the road), 
 				// or the offside road markings (SOUTH/WEST side of the road)
-				if (getDirection(bearing) == UGV_Direction.NORTH || getDirection(bearing) == UGV_Direction.EAST) {
+				if (Utility.getDirection(bearing) == UGV_Direction.NORTH || Utility.getDirection(bearing) == UGV_Direction.EAST) {
 					myNearside = LineType.NWSIDE;
 				} else { // must be travelling SOUTH or WEST
 					myNearside = LineType.SESIDE;
@@ -1170,8 +1266,8 @@ public class UGV extends Car {
 	
 		// Work out which direction we would need to turn in to be closer to the actual destination ('real' target)
 		// code inspired by Car.setDirection (Robert Lee)
-		double idealDirection = calculateAngle(me, destination);
-		double reqDirection = correctAngle(idealDirection - getDirection());
+		double idealDirection = Utility.calculateAngle(me, destination);
+		double reqDirection = Utility.correctAngle(idealDirection - getDirection());
 		int iMult = 0;
 		
 		if (reqDirection >= 0 && reqDirection < 180) {
@@ -1190,29 +1286,32 @@ public class UGV extends Car {
 		// FAULT #24 - HH 28/7/14 - Force the angle loop to start half-way through
 		if (sim.getFault(24) == true) {
 			minTurn = (getStats().getCurrentMaxTurning() - 5)/2;
+			sim.setFault(24); // HH 13.11.14 Added
 		} 
 
 		// FAULT #25 - HH 28/7/14 - Force the angle loop to end half-way through
 		if (sim.getFault(25) == true) {
 			maxTurn = (getStats().getCurrentMaxTurning() - 5)/2;
+			sim.setFault(25);
 		} 
 		
 		// FAULT #26 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
 		if (sim.getFault(26) == true) {
 			turnResolution = resolution*2;
+			sim.setFault(26); // HH 13.11.14 Added
 		} 
 				
 		for(double i = minTurn; i < maxTurn; i += turnResolution) // HH - TO DO - Why do we -5 here?  To ensure we turn at least 5 degrees?
 		{		
 			
-			if (checkRoads(roads, correctAngle(getDirection() - (i*iMult)), sim) == true)
+			if (checkRoads(roads, Utility.correctAngle(getDirection() - (i*iMult)), sim) == true)
 			{
 				//then moving right gives a clear path
 				//set wp and return
 				
 				//first must find out where to put wp
-				xComponent = xMovement(correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
-				yComponent = yMovement(correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, getTargetID());
 				wp.setLocation(new Double2D(coord));
@@ -1220,12 +1319,12 @@ public class UGV extends Car {
 				environment.setObjectLocation(wp, new Double2D(coord));
 				return;
 				
-			} else if (checkRoads(roads, correctAngle(getDirection() + (i*iMult)), sim) == true) {
+			} else if (checkRoads(roads, Utility.correctAngle(getDirection() + (i*iMult)), sim) == true) {
 				//then moving left gives a clear path
 				//set wp and return
 				
-				xComponent = xMovement(correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
-				yComponent = yMovement(correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, getTargetID());
 				wp.setLocation(new Double2D(coord));
@@ -1240,15 +1339,15 @@ public class UGV extends Car {
 		//if it can't be immediately turned onto
 		for(double i = (getStats().getCurrentMaxTurning()-5); i < (UGVViewingAngle / 2); i += resolution)
 		{
-			if (checkRoads(roads, correctAngle(getDirection() - i), sim) == true)
+			if (checkRoads(roads, Utility.correctAngle(getDirection() - i), sim) == true)
 			{
 				//then moving right gives a clear path
 				//set wp and return
 				
 				//first must find out where to put wp
 				
-				xComponent = xMovement(correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
-				yComponent = yMovement(correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, getTargetID());
 				wp.setLocation(new Double2D(coord));
@@ -1256,12 +1355,12 @@ public class UGV extends Car {
 				environment.setObjectLocation(wp, new Double2D(coord));
 				return;
 				
-			} else if (checkRoads(roads, correctAngle(getDirection() + i), sim) == true) {
+			} else if (checkRoads(roads, Utility.correctAngle(getDirection() + i), sim) == true) {
 				//then moving left gives a clear path
 				//set wp and return
 				
-				xComponent = xMovement(correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
-				yComponent = yMovement(correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
 				coord.addIn(xComponent, yComponent);
 				wp = new Waypoint(wpID, getTargetID());
 				wp.setLocation(new Double2D(coord));
@@ -1299,7 +1398,7 @@ public class UGV extends Car {
 	
 		// Work out which direction we would need to turn in to be closer to the supplied destination (whether it be
 		// the target, or an arbitrary future point to help with lane tracking) code inspired by Car.setDirection (Robert Lee)
-		double idealDirection = calculateAngle(me, destination);
+		double idealDirection = Utility.calculateAngle(me, destination);
 
 		// If the ideal direction and the current direction are within 5 degrees of one another, there is no point turning
 		// yet, so exit this method.
@@ -1401,26 +1500,7 @@ public class UGV extends Car {
 //			}
 //		}
 	}
-	
-	/** 
-	 * HH 18.6.14 - Work out which direction the vehicle is pointing in, based on its heading
-	 * 
-	 * @param bearing
-	 * @return either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
-	 */
-	public static UGV_Direction getDirection(double bearing)
-	{
-		if (correctAngle(bearing) >= 315 || correctAngle(bearing) < 45)	{
-			return UGV_Direction.SOUTH;
-		} else if (correctAngle(bearing) < 135) {
-			return UGV_Direction.EAST;
-		} else if (correctAngle(bearing) < 225) {
-			return UGV_Direction.NORTH;
-		} else { // must be between 225 and 315 
-			return UGV_Direction.WEST;
-		}
-	}
-	
+		
 	/** 
 	 * HH 10.7.14 - Work out a new waypoint location to allow a U-turn (based on current location and heading)
 	 * should just be a 180 degree flip, but need to know whether this equates to a translation in the N, E, S
@@ -1432,7 +1512,7 @@ public class UGV extends Car {
 	 */
 	public Double2D getUTurn(Double2D me, double bearing)
 	{
-		UGV_Direction direction = getDirection(bearing);
+		UGV_Direction direction = Utility.getDirection(bearing);
 		
 		switch (direction) {
 		
@@ -1473,15 +1553,15 @@ public class UGV extends Car {
 	 */
 	public Double2D getOvertakeWP(Double2D me, double bearing, Double2D distancePt, OvertakeStage inStage)
 	{
-		UGV_Direction direction = getDirection(bearing);
+		UGV_Direction direction = Utility.getDirection(bearing);
 		
 		// Work out the offset that should be used into the lane (added to the current vehicle position within lane)
-		double laneOffset = Constants.OBSTACLE_WIDTH; // Pull out to avoid the obstacle
+		double laneOffset = Constants.OBSTACLE_WIDTH + 0.5; // Pull out to avoid the obstacle - HH 18.11.14 Added an extra 0.5m buffer as obstacle is 0.325m from kerb
 		
 		if (inStage == OvertakeStage.OVERTAKE_PULLEDOUT) {
 			laneOffset = 0; // Remain at same offset, to avoid the obstacle
 		} else if (inStage == OvertakeStage.OVERTAKE_FINISH) {
-			laneOffset = -Constants.OBSTACLE_WIDTH; // NOTE - this is a negative offset! Return to original lane, obstacle passed
+			laneOffset = -(Constants.OBSTACLE_WIDTH + 0.5); // NOTE - this is a negative offset! Return to original lane, obstacle passed - HH 18.11.14 Added an extra 0.5m buffer as obstacle is 0.325m from kerb
 		}
 			
 		double distanceOffset;
@@ -1574,7 +1654,7 @@ public class UGV extends Car {
 		
 		double offset = 2;
 		
-		UGV_Direction direction = getDirection(bearing);
+		UGV_Direction direction = Utility.getDirection(bearing);
 		
 		switch (direction) {
 		
@@ -1592,7 +1672,7 @@ public class UGV extends Car {
 				break;
 		}	
 		
-		return !onRoad(roads, getShapeAtOffset(offsetLocation, getOrientation2D(bearing)));
+		return !onRoad(roads, getShapeAtOffset(offsetLocation, Utility.getOrientation2D(bearing)));
 	}
 	
 	/** 
@@ -1676,7 +1756,7 @@ public class UGV extends Car {
 		
 		// HH 13.8.14 Need to restrict the obstacle checks to those which are in the same lane as
 		// the UGV, so need to know direction in order to restrict in method below
-		UGV_Direction direction = getDirection(bearing);
+		UGV_Direction direction = Utility.getDirection(bearing);
 		
 		// For each angle that the sensor is able to view, turning in realistic increments
 		double resolution = 0.5;
@@ -1716,10 +1796,10 @@ public class UGV extends Car {
 			// that we are going to use for this iteration
 			testCoord.setTo(0,0);
 			testCoord.addIn(location);
-			newBearing = correctAngle(bearing + i);
+			newBearing = Utility.correctAngle(bearing + i);
 			
 			// Construct the x an y increments for each iteration below
-			amountAdd = new Double2D(xMovement(newBearing, rangeSensitivity), yMovement(newBearing, rangeSensitivity));
+			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 						
 //			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
 //			if (sim.getFault(21) == true) {
@@ -2124,7 +2204,7 @@ public class UGV extends Car {
 	 */
 	private boolean overshotWaypoint(Double2D WPlocation, double bearing)
 	{
-		UGV_Direction direction = getDirection(bearing);
+		UGV_Direction direction = Utility.getDirection(bearing);
 		
 		switch (direction) {
 		

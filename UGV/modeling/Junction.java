@@ -62,6 +62,7 @@ public class Junction extends Entity
 		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
 		Rectangle2D.Double junctionArea = getJunctionArea();
 		
+		// TODO - DOes this method need to be updated?
 		return junctionArea.contains(coord.x, coord.y);
 	}	
 	
@@ -73,6 +74,7 @@ public class Junction extends Entity
 		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
 		Path2D.Double junctionApproach= getJunctionApproach();
 		
+		// TODO - DOes this method need to be updated?
 		return junctionApproach.contains(coord.x, coord.y);
 	}
 	
@@ -85,6 +87,7 @@ public class Junction extends Entity
 		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
 		Path2D.Double junctionExit = getJunctionExit();
 		
+		// TODO - DOes this method need to be updated?
 		return junctionExit.contains(coord.x, coord.y);
 	}
 	

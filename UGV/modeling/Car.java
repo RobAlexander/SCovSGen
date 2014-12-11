@@ -1034,18 +1034,18 @@ public abstract class Car extends Entity implements Oriented2D
 			if (getSpeed() < MinSpeed) {
 				changeSpeed(ACCELERATE);
 				
-				// Fault #10 - 22/7/14 - Repeat the command to increase speed again
-				if (sim.getFault(10) == true) {
+				// New Fault #5 (Fault #10) - 22/7/14 - Repeat the command to increase speed again
+				if (sim.getFault(5) == true) {
 					changeSpeed(ACCELERATE);
-					sim.setFault(10);
+					sim.setFault(5);
 				}
 			} else if (getSpeed() >= MaxSpeed*2) {
 				changeSpeed(DECELERATE);
 				
-				// Fault #11 - 22/7/14 - Repeat the command to reduce speed again
-				if (sim.getFault(11) == true) {
+				// New Fault #6 (Fault #11) - 22/7/14 - Repeat the command to reduce speed again
+				if (sim.getFault(6) == true) {
 					changeSpeed(DECELERATE);
-					sim.setFault(11);
+					sim.setFault(6);
 				}
 			}
 		} else if (voteSlow > 0 && voteSpeedUp >= 0) { // HH 24.9.14 - force a speed up under certain conditions
@@ -1055,22 +1055,8 @@ public abstract class Car extends Entity implements Oriented2D
 			
 			if (getSpeed() < MinSpeed) {
 				changeSpeed(ACCELERATE);
-				
-//				// Fault #10 - 22/7/14 - Repeat the command to increase speed again
-//				if (sim.getFault(10) == true) {
-//					changeSpeed(ACCELERATE);
-//					sim.setFault(10);
-//				}
 			} else if (getSpeed() >= MaxSpeed) {
 				changeSpeed(DECELERATE);
-				
-//				// Fault #11 - 22/7/14 - Repeat the command to reduce speed again
-//				if (sim.getFault(11) == true) {
-//					changeSpeed(DECELERATE);
-//					sim.setFault(11);
-//				}
-				
-				// TO DO - these faults could be reinstated if they are given different numbering
 			}
 		} else if (voteSpeedUp > 0 || voteSpeedUp == -1) { // HH 24.9.14 - Allow for the negative flag
 			changeSpeed(ACCELERATE);
@@ -1084,30 +1070,6 @@ public abstract class Car extends Entity implements Oriented2D
 	protected void goSlow()
 	{
 		voteSlow++;
-		
-		// HH 22.9.14 - prevent over-acceleration/braking
-//		// Adjust here to change performance while cornering 
-//		final double MinSpeed = 0.5; // HH 31/7/14 - changed from 0.2
-//		final double MaxSpeed = 0.5;
-//		
-//		
-//		if (getSpeed() < MinSpeed) {
-//			changeSpeed(ACCELERATE);
-//			
-//			// Fault #10 - 22/7/14 - Repeat the command to increase speed again
-//			if (sim.getFault(10) == true) {
-//				changeSpeed(ACCELERATE);
-//				sim.setFault(10);
-//			}
-//		} else if (getSpeed() >= MaxSpeed) {
-//			changeSpeed(DECELERATE);
-//			
-//			// Fault #11 - 22/7/14 - Repeat the command to reduce speed again
-//			if (sim.getFault(11) == true) {
-//				changeSpeed(DECELERATE);
-//				sim.setFault(11);
-//			}
-//		}
 	}
 
 	/** 
@@ -1137,30 +1099,6 @@ public abstract class Car extends Entity implements Oriented2D
 	protected void goReallySlow()
 	{
 		voteReallySlow++;
-		
-		// HH 22.9.14 - prevent over-acceleration/braking
-//		// Adjust here to change performance while cornering 
-//		final double MinSpeed = sim.getCarMaxDecceleration(); // HH 31/7/14 - changed from 0.2
-//		final double MaxSpeed = sim.getCarMaxDecceleration();
-//		
-//		
-//		if (getSpeed() < MinSpeed) {
-//			changeSpeed(ACCELERATE);
-//			
-//			// Fault #10 - 22/7/14 - Repeat the command to increase speed again
-//			if (sim.getFault(10) == true) {
-//				changeSpeed(ACCELERATE);
-//				sim.setFault(10);
-//			}
-//		} else if (getSpeed() >= MaxSpeed) {
-//			changeSpeed(DECELERATE);
-//			
-//			// Fault #11 - 22/7/14 - Repeat the command to reduce speed again
-//			if (sim.getFault(11) == true) {
-//				changeSpeed(DECELERATE);
-//				sim.setFault(11);
-//			}
-//		}
 	}
 	
 	/** 
@@ -1193,10 +1131,10 @@ public abstract class Car extends Entity implements Oriented2D
 	{
 		int wpID = sim.getNewID();
 		
-		// Fault #5 - 22/7/14 - Overwrite the previous id
-		if (sim.getFault(5) == true && this.getType() == TUGV) {
+		// New Fault #0 (Fault #5) - 22/7/14 - Overwrite the previous id
+		if (sim.getFault(0) == true && this.getType() == TUGV) {
 			wpID --;
-			sim.setFault(5);
+			sim.setFault(0);
 		}
 		
 		// HH 21.11.14 If this new WP is to replace the previous one, we need to find out which
@@ -1222,19 +1160,19 @@ public abstract class Car extends Entity implements Oriented2D
 				
 		Double2D tempLoc = new Double2D(WPlocation.x, WPlocation.y); // copy the desired location
 		
-		// Faults #6,7,8,9 - 22/7/14 - Displace the location for the WP	
-		if (sim.getFault(6) == true && this.getType() == TUGV) {
+		// New Faults #1,2,3,4 (Faults #6,7,8,9) - 22/7/14 - Displace the location for the WP	
+		if (sim.getFault(1) == true && this.getType() == TUGV) {
 			tempLoc = new Double2D(WPlocation.x+1, WPlocation.y+1);
-			sim.setFault(6);
-		} else if (sim.getFault(7) == true && this.getType() == TUGV) {
+			sim.setFault(1);
+		} else if (sim.getFault(2) == true && this.getType() == TUGV) {
 			tempLoc = new Double2D(WPlocation.x+1, WPlocation.y-1);
-			sim.setFault(7);
-		} else if (sim.getFault(8) == true && this.getType() == TUGV) {
+			sim.setFault(2);
+		} else if (sim.getFault(3) == true && this.getType() == TUGV) {
 			tempLoc = new Double2D(WPlocation.x-1, WPlocation.y+1);
-			sim.setFault(8);
-		} else if (sim.getFault(9) == true && this.getType() == TUGV) {
+			sim.setFault(3);
+		} else if (sim.getFault(4) == true && this.getType() == TUGV) {
 			tempLoc = new Double2D(WPlocation.x-1, WPlocation.y-1);
-			sim.setFault(9);
+			sim.setFault(4);
 		}
 				
 		wp.setLocation(tempLoc);
@@ -1343,6 +1281,13 @@ public abstract class Car extends Entity implements Oriented2D
 												
 				testCoord.addIn(amountAdd);  // move the test location outwards on the chosen bearing
 				
+				// HH 4.12.14 Ensure that our test coordinate is between us and the edge of the road,
+				// as soon as we hit a point that is no longer on the road surface then we should 
+				// discontinue our search.
+				if (sim.roadAtPoint(new Double2D(testCoord), sim.roads) == false) {
+					break; // Try searching again at the next bearing.
+				}
+								
 				// HH 13.8.14 Ensure that the our test coordinate is within our test bounds
 				boolean inLane = false;
 				
@@ -1455,12 +1400,23 @@ public abstract class Car extends Entity implements Oriented2D
 	 * @param sim // HH 28.7.14 - added for fault insertion
 	 * @param reqLine - which line are we searching for (nearside, offside, centre)
 	 * @return coordinates of the furthermost road marking detected.
+	 * 
+	 * HH 3.12.14 Changed to Protected
 	 */
-	private Double2D locateRoadMarkings_AllRoads(Bag roads, boolean findNearest, COModel sim, genLineType reqLine, double inAngle, double inRange, double inSensitivity)
+	protected Double2D locateRoadMarkings_AllRoads(Bag roads, boolean findNearest, COModel sim, genLineType reqLine, double inAngle, double inRange, double inSensitivity)
 	{
 		Double2D currentXY = new Double2D(0,0);
-		Double2D requiredXY = new Double2D(0,0);
-
+		
+		// HH 4.12.14 Initialisation matters here or the conditions below won't evaluate correctly
+		Double2D requiredXY;
+		if (findNearest == false) {
+			// Want to find the largest value, so the closest one would be the current location
+			requiredXY = location;
+		} else {
+			// Want to find the furthest value, and can't be any further away than fictional point 2x max X/Y
+			requiredXY = new Double2D((2 * Constants.WorldXVal),(2 * Constants.WorldYVal));
+		}
+		
 		// Check all the roads as the UGV doesn't *know* which one it is on
 		for(int i = 0; i < roads.size(); i++)
 		{
@@ -1535,21 +1491,24 @@ public abstract class Car extends Entity implements Oriented2D
 			endAngle = 0; // HH 23.9.14 - Swapped these over
 		}
 		
-//		// FAULT #17 - HH 28/7/14 - Force the angle loop to start half-way through
-//		if (sim.getFault(17) == true) {
-//			startAngle = 0;
-//		} 
-//
-//		// FAULT #18 - HH 28/7/14 - Force the angle loop to end half-way through
-//		if (sim.getFault(18) == true) {
-//			endAngle = 0;
-//		} 
-//		
-//		// FAULT #19 - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
-//		if (sim.getFault(19) == true) {
-//			resolution = resolution*2;
-//		} 
+		// New Fault #8 (FAULT #17) - HH 28/7/14 - Force the angle loop to start half-way through
+		if (sim.getFault(8) == true) {
+			startAngle = 0;
+			sim.setFault(8); // HH 13.11.14 Added
+		} 
+
+		// New Fault #9 (FAULT #18) - HH 28/7/14 - Force the angle loop to end half-way through
+		if (sim.getFault(9) == true) {
+			endAngle = 0;
+			sim.setFault(9); // HH 13.11.14 Added
+		} 
 		
+		// New Fault #10 (FAULT #19) - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
+		if (sim.getFault(10) == true) {
+			resolution = resolution*2;
+			sim.setFault(10); // HH 13.11.14 Added
+		}  
+				
 		// Check the viewable range at each angle		
 		for(double i = startAngle; i >= endAngle; i -= resolution)
 		{
@@ -1557,24 +1516,28 @@ public abstract class Car extends Entity implements Oriented2D
 			// of the vehicle (sensor)
 			testCoord.setTo(0,0);
 			testCoord.addIn(location);
-			newBearing = Utility.correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
+			//newBearing = Utility.correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
+			newBearing = Utility.correctAngle(Utility.getDirectionDeg(getDirection()) + i); // HH 8.12.14 - Replaced with the direction of desired movement, rather than pointing
 			
 			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 			
-//			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
-//			if (sim.getFault(21) == true) {
-//				startRange = UGVViewingRange/2;
-//			} 
-//
-//			// FAULT #22 - HH 28/7/14 - Force the angle loop to end half-way through
-//			if (sim.getFault(22) == true) {
-//				endRange = UGVViewingRange/2;
-//			} 
-//			
-//			// FAULT #23 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-//			if (sim.getFault(23) == true) {
-//				rangeSensitivity = sensitivityForRoadTracking*2;
-//			} 
+			// New Fault #11 (FAULT #21) - HH 28/7/14 - Force the angle loop to start half-way through
+			if (sim.getFault(11) == true) {
+				startRange = inRange/2;
+				sim.setFault(11); // HH 13.11.14 Added
+			} 
+
+			// New Fault #12 (FAULT #22) - HH 28/7/14 - Force the angle loop to end half-way through
+			if (sim.getFault(12) == true) {
+				endRange = inRange/2;
+				sim.setFault(12); // HH 13.11.14 Added
+			} 
+			
+			// New Fault #13 (FAULT #23) - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
+			if (sim.getFault(13) == true) {
+				rangeSensitivity = inSensitivity*2;
+				sim.setFault(13); // HH 13.11.14 Added
+			} 
 						
 			// HH 6.8.14 - we don't use j, this just ensures we run the loop the right num
 			for(double j = startRange; j <= endRange; j += rangeSensitivity)
@@ -1621,6 +1584,62 @@ public abstract class Car extends Entity implements Oriented2D
 		
 		return RM; 
 	}	
+	
+	/*
+	 *  HH 4.12.14 Method to determine (without cheating) whether the point supplied
+	 *  is in the same lane as the vehicle.  We use the lane marking sensors to find
+	 *  the lane boundaries and then compare these to the location at which the 
+	 *  vehicle has been detected.
+	 */
+	protected boolean checkSameLane(COModel sim, Double2D testLoc, double inRange, double inAngle, double inSensitivity, double inBearing) {
+		
+		// Need to restrict the obstacle checks to those which are in the same lane as
+		// the UGV, so need to know direction in order to restrict in method below
+		UGV_Direction direction = Utility.getDirection(inBearing);
+		
+		// Use the road marking detection algorithm to find the centre of the road so that we can make 
+		// sure that we only detect obstacles on the same side of the road as the UGV's direction of travel.		
+		Double2D furthestLaneMarking = locateRoadMarkings_AllRoads(sim.roads, false, sim, Constants.genLineType.NEARSIDE, inAngle , inRange, inSensitivity);
+
+		double centreOffset = Road.roadWidth/2 - Constants.ROADEDGINGWIDTH - Constants.ROADEDGEOFFSET; // Distance between edge line and centre
+		boolean inLane = true;
+		double centre;
+		
+		switch (direction) {
+
+			case NORTH : {
+				centre = furthestLaneMarking.x + centreOffset;
+				if (testLoc.x > centre || testLoc.x < (centre - Road.roadWidth/2)) {
+					inLane = false;
+				}	
+				break;
+			}
+			case SOUTH : {
+				centre = furthestLaneMarking.x - centreOffset;
+				if (testLoc.x < centre || testLoc.x > (centre + Road.roadWidth/2)) {
+					inLane = false;
+				}
+				break;
+			}
+			case EAST : {
+				centre = furthestLaneMarking.y + centreOffset;
+				if (testLoc.y > centre || testLoc.y < (centre - Road.roadWidth/2)) {
+					inLane = false;
+				}
+				break;
+			}
+			case WEST : {
+				centre = furthestLaneMarking.y - centreOffset;
+				if (testLoc.y < centre || testLoc.y > (centre + Road.roadWidth/2)) {
+					inLane = false;
+				}
+				break;
+			}
+		}
+			
+		return inLane;
+	}
+	
 	
 	/*
 	 * HH 24.9.14 - Return the distance between the location of this vehicle, and the supplied coordinates.  

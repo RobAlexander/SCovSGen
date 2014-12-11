@@ -1,4 +1,6 @@
 package modeling;
+import java.awt.Shape;
+import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
@@ -360,8 +362,8 @@ public class COModel extends SimState
 		
 		// HH 22/7/14 Update for faults (do this before adding the header to aDetector so the faultArray can
 		// be logged to file.
-		faultArray = new boolean[Constants.MAX_FAULTS]; // Clear out the array
-		faultCalled = new long[Constants.MAX_FAULTS]; // Clear out the array or results will accumulate!
+		faultArray = new boolean[Constants.MAX_FAULTS]; // Clear out the array // HH 3.12.14 Added -1
+		faultCalled = new long[Constants.MAX_FAULTS]; // Clear out the array or results will accumulate! // HH 3.12.14 Added -1
 		initFaultArray(percentageFaults);// Instantiate the faultArray with the required percentage of faults
 		// HH end		
 		
@@ -569,8 +571,12 @@ public class COModel extends SimState
 		
 		String retString = new String("Fault Array: "); // Start by describing what is being output
 		
-		for (int i = 0; i < faultArray.length; i++) {
-			retString += i + "=" + faultArray[i] + ", ";
+		// HH 4.12.14 Add the first entry separately then can comma-separate BEFORE each of the other
+		// entries, rather than having an extra comma at the end.
+		retString += 0 + "=" + faultArray[0];
+		
+		for (int i = 1; i < faultArray.length; i++) {
+			retString += ", " + i + "=" + faultArray[i];
 		}
 		
 		return retString;
@@ -583,8 +589,12 @@ public class COModel extends SimState
 		
 		String retString = new String("Faults Called: "); // Start by describing what is being output
 		
-		for (int i = 0; i < faultCalled.length; i++) {
-			retString += i + "=" + faultCalled[i] + ", ";
+		// HH 4.12.14 Add the first entry separately then can comma-separate BEFORE each of the other
+		// entries, rather than having an extra comma at the end.
+		retString += 0 + "=" + faultCalled[0];
+					
+		for (int i = 1; i < faultCalled.length; i++) {
+			retString += ", " + i + "=" + faultCalled[i];
 		}
 		
 		return retString;
@@ -619,30 +629,46 @@ public class COModel extends SimState
 		// Loop through the array and 'flip a biased coin' to determine whether to set the entry to true
 		int noFaultsRequired = 0;
 		int noFaultsSet = 0;
+		int tempIdx = 0; // HH 3.12.14 - New index added 
 		
 		noFaultsRequired = (int) Math.round(Constants.MAX_FAULTS * percentageFaults);
 		
 		while (noFaultsSet < noFaultsRequired) { 
 		
-			for (int i = 0; i < faultArray.length; i++) {
-				
-				// Only need to check on this iteration if this fault is not active
-				if (faultArray[i] == false) {
-
-					// Repeat the check for exceeding the number of faults in case we have exceeded the 
-					// required number on the previous iteration
-					if (noFaultsSet < noFaultsRequired) { 
-
-						if (random.nextDouble() < percentageFaults) {
-							faultArray[i] = true; // set the fault to 'active' in the array
-							noFaultsSet ++; // increase the total faults found
-						}
-					} else {
-						// Exit, we've set it up
-						return;
-					}
-				}
+			// HH 3.12.14 - Generate an index into the array at random
+			tempIdx = (int)Math.floor(random.nextDouble() * Constants.MAX_FAULTS);
+			
+			while (faultArray[tempIdx] == true) {
+				// Choose a new index
+				tempIdx = (int)Math.floor(random.nextDouble() * Constants.MAX_FAULTS);			
 			}
+			
+			// HH 3.12.14 - So we must have a false entry which we can set to true
+			faultArray[tempIdx] = true; // set the fault to 'active' in the array
+			noFaultsSet ++; // increase the total faults found
+			
+// HH 3.12.14 - This code appears to introduce a bias into the distribution of faults as it always
+// starts trying to allocate faults at the start of the array, so these seem to end up being more
+// likely to be populated.  Now replaced with different code above.
+//			for (int i = 0; i < faultArray.length; i++) {
+//				
+//				// Only need to check on this iteration if this fault is not active
+//				if (faultArray[i] == false) {
+//
+//					// Repeat the check for exceeding the number of faults in case we have exceeded the 
+//					// required number on the previous iteration
+//					if (noFaultsSet < noFaultsRequired) { 
+//
+//						if (random.nextDouble() < percentageFaults) {
+//							faultArray[i] = true; // set the fault to 'active' in the array
+//							noFaultsSet ++; // increase the total faults found
+//						}
+//					} else {
+//						// Exit, we've set it up
+//						return;
+//					}
+//				}
+//			}
 		}
 	}
 	
@@ -1399,6 +1425,35 @@ public class COModel extends SimState
 		
 		//at this point either return the default 0 (for no overlap), or the jctID that we have found
 		return jctID;
+	}
+	
+	/**
+	 * Method to check for junctions which overlap
+	 * HH 4.12.14 - 
+	 * - if no junction is found, returns false
+	 * - otherwise returns true
+	 * 
+	 * @author HH
+	 */
+	public boolean junctionAtArea(Area inJunct, Bag junctions)
+	{
+		Shape tempJctShape;
+		Double2D tempJctLoc;
+		boolean retVal = false; // Default no overlap
+		
+		for (int i = 0; i < junctions.size(); i++)
+		{
+			// Create a shape to represent this junction
+			tempJctLoc = ((Junction) (junctions.get(i))).location;
+			tempJctShape = new Rectangle2D.Double((tempJctLoc.x-(Road.roadWidth/2)), (tempJctLoc.y-(Road.roadWidth/2)), Road.roadWidth, Road.roadWidth);
+			Area jctArea = new Area (tempJctShape);
+			jctArea.intersect(inJunct);
+			if (!jctArea.isEmpty()) {
+				retVal = true;
+			}
+		}
+		
+		return retVal;
 	}
 	
 	/**

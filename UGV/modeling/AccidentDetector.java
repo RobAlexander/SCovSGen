@@ -110,6 +110,7 @@ public class AccidentDetector implements Constants,Steppable {
 		//Bag cars = COModel.cars;
 		Car car1;
 		Car car2;
+
 		for (int i=0; i<trackedCars.size(); i++)
 		{
 			car1= (Car)trackedCars.get(i);
@@ -386,7 +387,10 @@ public class AccidentDetector implements Constants,Steppable {
 	// HH 24.9.14 - Improved this method so that it uses the actual vehicle outlines
 	// rather than some approximation based on whether the centres of each object are 
 	// less than 2m apart
-	private boolean detectCollisionWithOtherCar(Car car1, Car car2)
+	// HH 3.12.14 - Force the first parameter to be a UGV so that we can ignore any
+	// collisions where the UGV is stationary (assume these to be the fault of one
+	// of the other DumbCars)
+	private boolean detectCollisionWithOtherCar(Car trackedCar, Car car2)
 	{
 //		Double2D location1=car1.getLocation();
 //		Double2D location2=car2.getLocation();
@@ -401,7 +405,14 @@ public class AccidentDetector implements Constants,Steppable {
 //			return false;
 //		}
 		
-		Area shape1 = new Area(car1.getShape());
+		// HH 3.12.14 Firstly let's see if the UGV is stationary, because if so, we are going to attribute
+		// any accident to one of the other cars (so we can ignore it)
+		if (trackedCar.getSpeed() == 0)
+		{
+			return false;
+		}
+				
+		Area shape1 = new Area(trackedCar.getShape());
 		Area shape2 = new Area(car2.getShape());
 		Area intersection = new Area(shape1);
 		intersection.intersect(shape2); // replace shape1 with the intersection of shape1 and shape2
@@ -410,10 +421,10 @@ public class AccidentDetector implements Constants,Steppable {
 		if (intersection.isEmpty() == true)
 		{
 			return false; // they didn't
-		} else if (car1.isActive && car2.isActive && (car1.ID != car2.ID)) {
+		} else if (trackedCar.isActive && car2.isActive && (trackedCar.ID != car2.ID)) {
 			
 			// HH 25.9.14 Let's output the info to make sure there was really a crash
-			addLog(AccidentType.CLASHWITHOTHERCAR, car1.getID(), sim.schedule.getSteps(), car1.getLocation(), 
+			addLog(AccidentType.CLASHWITHOTHERCAR, trackedCar.getID(), sim.schedule.getSteps(), trackedCar.getLocation(), 
 					" Shape1: " + areaToString(shape1) + ", Shape2: " + areaToString(shape2) + ", Intersection: " +
 					areaToString(intersection) + ".");
 			
@@ -450,6 +461,13 @@ public class AccidentDetector implements Constants,Steppable {
 	 **/
 	private boolean detectCollisionWithPavement(Car car, Bag roads)
 	{
+		// HH 3.12.14 TODO - This method only checks to see whether the centre point of the UGV (getLocation())
+		// has left the road, which means that almost half of the vehicle could be overlapping the pavement
+		// without this failure being detected.  As we are in an exercise to reduce the number of failures being
+		// logged, we will accept this weaker form of collision detection (which will detect serious pavement
+		// invasions), but perhaps in the future this should be updated so that any part of the UGV leaving the
+		// road would be sufficient to trigger a failure.
+		
 		boolean onRoad = false;
 		
 		for (int r=0; r < roads.size(); r++)

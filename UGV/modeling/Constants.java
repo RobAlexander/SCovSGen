@@ -44,7 +44,7 @@ public interface Constants
 	}
 	
 	// HH 22/7/14 - Faults
-	public static final int MAX_FAULTS = 32;
+	public static final int MAX_FAULTS = 19;
 	// HH end
 	
 	// HH 30/4/14 - Road

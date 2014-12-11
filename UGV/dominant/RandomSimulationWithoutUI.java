@@ -38,7 +38,9 @@ public class RandomSimulationWithoutUI {
     		// e.g. percentageFaults = 0.01, 0.02, 0.03 ... is okay, (NOT e.g. 0.001, 0.002)
     		// ALSO: Consider whether resolution is meaningful compared to number of faults e.g. if there are only 29 faults,
     		// there will be very little difference between 1%, 2%, 3% etc.
-    		for (int i=0; i < 13; i=i+3)
+    		// HH 4.12.14 Updated to a change of 5% on each loop due to #faults = 19 to ensure that we get different
+    		// numbers of faults at the different levels
+    		for (int i=0; i < 21; i=i+5)
     		{
     			percentageFaults = (double)i/100;
 

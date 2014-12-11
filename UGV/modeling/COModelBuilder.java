@@ -1,4 +1,5 @@
 package modeling;
+import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -251,7 +252,8 @@ public class COModelBuilder
 //		Road road = new Road(sim.getNewID(), Constants.SINGLETWOWAY, new Double2D(x1,y1), new Double2D(x2,y2));
 //		sim.roads.add(road);
 		
-		double cx,cy;
+		double cx = 0;
+		double cy = 0;
 		boolean jctFound = false;
 		int noSmallIterations = 0;
 		int noBigIterations = 0;
@@ -259,6 +261,9 @@ public class COModelBuilder
 		Junction nJct;
 		//int jctDir = -1;
 		int dirLen = 1;
+		
+		// HH 4.12.14 Added to support junction overlap check below.
+		Area jctArea;
 		
 		// Init cRoad/jct to prevent compilation errors below
 		cRoad = (Road) sim.roads.get(0); 
@@ -286,7 +291,7 @@ public class COModelBuilder
 				// Generate random from 0 to length (but not within roadWidth * 1.5 (changed from roadWidth/2 on 25.8.14) 
 				// of either end of the road and make sure it is within the model bounds)
 
-				// TO DO - HH 2.10.14 - this method will need to be updated when we revert to non-grid based roads
+				// TODO - HH 2.10.14 - this method will need to be updated when we revert to non-grid based roads
 				do {
 					jct = ((mapGenRandom.nextDouble(true, true) * (length - (3*Road.roadWidth))) + (Road.roadWidth*1.5));
 					// work out the 'start' coordinates for the road (so we add from the right end)
@@ -295,8 +300,22 @@ public class COModelBuilder
 					
 					noSmallIterations += 1; // increment counter so we don't get stuck in an infinite loop
 					
-				} while (((cRoad.getIsNS() && (((cy + jct >= (Constants.WorldYVal-Road.roadWidth))) || (cy + jct < 0) || sim.junctionAppAtPoint(new Double2D(cx, (cy+jct)), sim.junctions))) || 
-						 (!cRoad.getIsNS() && (((cx + jct >= (Constants.WorldXVal-Road.roadWidth))) || (cx + jct < 0) || sim.junctionAppAtPoint(new Double2D((cx+jct), cy), sim.junctions)))) &&
+					// HH 4.12.14 Better check for overlapping junctions:
+					Double2D jctLoc;
+					if (cRoad.getIsNS()) {
+						jctLoc = new Double2D(cx, (cy+jct));
+					} else {
+						jctLoc = new Double2D((cx+jct), cy);
+					}
+					Rectangle2D jctRect = new Rectangle2D.Double((jctLoc.x-(Road.roadWidth/2)), (jctLoc.y-(Road.roadWidth/2)), Road.roadWidth, Road.roadWidth);
+					jctArea = new Area(jctRect);
+					
+					
+//				} while (((cRoad.getIsNS() && (((cy + jct >= (Constants.WorldYVal-Road.roadWidth))) || (cy + jct < 0) || sim.junctionAppAtPoint(new Double2D(cx, (cy+jct)), sim.junctions))) || 
+//						 (!cRoad.getIsNS() && (((cx + jct >= (Constants.WorldXVal-Road.roadWidth))) || (cx + jct < 0) || sim.junctionAppAtPoint(new Double2D((cx+jct), cy), sim.junctions)))) &&
+//						 noSmallIterations < 10);
+				} while (((cRoad.getIsNS() && (((cy + jct >= (Constants.WorldYVal-Road.roadWidth))) || (cy + jct < 0) || sim.junctionAtArea(jctArea, sim.junctions))) || 
+						 (!cRoad.getIsNS() && (((cx + jct >= (Constants.WorldXVal-Road.roadWidth))) || (cx + jct < 0) || sim.junctionAtArea(jctArea, sim.junctions)))) &&
 						 noSmallIterations < 10);
 				
 				if (noSmallIterations < 10){
@@ -307,8 +326,21 @@ public class COModelBuilder
 				}
 			}
 			
+//			// TODO - Remove this, here for debugging purposes
+//			Double2D jctLoc;
+//			if (cRoad.getIsNS()) {
+//				jctLoc = new Double2D(cx, (cy+jct));
+//			} else {
+//				jctLoc = new Double2D((cx+jct), cy);
+//			}
+//			Rectangle2D jctRect = new Rectangle2D.Double((jctLoc.x-(Road.roadWidth/2)), (jctLoc.y-(Road.roadWidth/2)), Road.roadWidth, Road.roadWidth);
+//			Area jctArea = new Area(jctRect);
+//			if (sim.junctionAtArea(jctArea, sim.junctions)) {
+//				System.out.println("We've just been allowed to add a new junction overlapping an existing one!");
+//			}		
+
 			if (jctFound == true) {
-			
+
 				// We're going to reuse length to work out the length of our new road, and first we'll decide whether it should be applied in negative or positive 
 				// i.e. which way will the new road extend from the junction we have just selected (we will use these as multipliers for the results below)
 				if (mapGenRandom.nextBoolean()) {
@@ -398,7 +430,7 @@ public class COModelBuilder
 					} while ((Math.abs(length) < Junction.jctApproachLen || sim.roadAtPoint(new Rectangle2D.Double(x1-(Road.roadWidth/2), (length > 0 ? y1-(Road.roadWidth/2) : y1+length), Road.roadWidth, Math.abs(length)), sim.roads, r)) && noSmallIterations < 20);
 
 //					// Check to see if the enclosing rectangle (i.e. including road width) of this road that we want to create will
-//					// intersect with roads other than the one it is supposed to join TO DO - Could enforce that a perpendicular
+//					// intersect with roads other than the one it is supposed to join TODO - Could enforce that a perpendicular
 //					// crossroads intersection is okay (as long as we then implement another method for detecting new junctions)
 //					if (sim.roadAtPoint(new Rectangle2D.Double(x1-(Road.roadWidth/2), (length > 0 ? y1-(Road.roadWidth/2) : y1+length), Road.roadWidth, Math.abs(length)), sim.roads, r)) {
 //						// Intersection with existing road has been detected, so try flipping the direction of the road

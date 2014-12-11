@@ -64,12 +64,15 @@ public class UGV extends Car {
 				
 				jIdx = j.ordinal();
 				junctionHistory[i][jIdx] = 0; // HH 16.7.14 - a zero indicates that this approach has not been visited
+	
 				
-				// FAULT #0 - HH 22/7/14 - Initialise all values to 1
-				if (sim.getFault(0) == true) {
-					junctionHistory[i][jIdx] = 1;
-					sim.setFault(0);
-				}
+				// HH 3.12.14 This Fault was never begin called, so perhaps there is an issue with this code loop???
+				// TODO - CHECK!!!
+//				// FAULT #0 - HH 22/7/14 - Initialise all values to 1
+//				if (sim.getFault(0) == true) {
+//					junctionHistory[i][jIdx] = 1;
+//					sim.setFault(0);
+//				}
 			}
 		}
 		
@@ -99,22 +102,7 @@ public class UGV extends Car {
 			Continuous2D environment = sim.environment;
 			
 			Double2D me = environment.getObjectLocation(this);
-			
-			// FAULT #1,2,3,4 - HH 22/7/14 - Introduce a fault in the location of the UGV
-			if (sim.getFault(1) == true) {
-				me = new Double2D(me.x+1, me.y+1);
-				sim.setFault(1);
-			} else if (sim.getFault(2) == true) {
-				me = new Double2D(me.x+1, me.y-1);
-				sim.setFault(2);
-			} else if (sim.getFault(3) == true) {
-				me = new Double2D(me.x-1, me.y+1);
-				sim.setFault(3);
-			} else if (sim.getFault(4) == true) {
-				me = new Double2D(me.x-1, me.y-1);
-				sim.setFault(4);
-			}
-			
+						
 			MutableDouble2D sumForces = new MutableDouble2D(); //used to record the changes to be made to the location of the car
 
 			// HH 16/7/14 - Store the previous location now, before we do anything with it
@@ -196,12 +184,12 @@ public class UGV extends Car {
 			{
 				for(int i = 0; i < sim.junctions.size(); i++) 
 				{
-					// FAULT #12 - HH 28/7/14 - Exit the loop half-way through
-					if (sim.getFault(12) == true) {
+					// New Fault #7 (FAULT #12) - HH 28/7/14 - Exit the loop half-way through
+					if (sim.getFault(7) == true) {
 						if (i == (sim.junctions.size()/2)) {
 							break;
 						}
-						sim.setFault(12); // HH 13.11.14 Added
+						sim.setFault(7); // HH 13.11.14 Added
 					}
 										
 					// ARE WE INSIDE A JUNCTION
@@ -316,11 +304,12 @@ public class UGV extends Car {
 				Double2D minDistanceToObsCoord;
 				
 				// HH 21.11.14 Add a seedable fault to replicate a bug found in the code
-				if (sim.getFault(31) == true) {
+				// HH 3.12.14 New Fault #18 (Fault #31)
+				if (sim.getFault(18) == true) {
 					// Look for an obstacle in front and evaluate the distance
 					maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true);
 					minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false);
-					sim.setFault(31);
+					sim.setFault(18);
 				} else {
 					// HH 21.11.14 Try this with the bearing instead as we can't see obstacles properly once
 					// we have pulled out into the overtake as we are not looking in the direction of travel
@@ -352,9 +341,11 @@ public class UGV extends Car {
 							
 							// HH 19.8.14 Need to check whether we are seeing the back of this vehicle, or some point
 							// on a subsequent parked car.  For simplicity, just use some rough boundary conditions
-							if (me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH + 1) || 
+							// HH 8.12.14 Added check of the return value maxDistanceToObsCoord as can be (-1,-1) and
+							// is then meaningless when used in distance calcs.
+							if ((me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH + 1) || 
 								//((me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH * 3) && sim.getFault(29) == false))) {
-								((me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(29) == false))) {
+								((me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(16) == false))) && maxDistanceToObsCoord.x != -1) {
 								
 								// HH 21.8.14 - Changed so that use the location of the START waypoint to determine the location
 								// of the new waypoint
@@ -367,7 +358,8 @@ public class UGV extends Car {
 										this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 										". Entering overtake stage: PULLED OUT.");
 							//} else if (me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH * 3) && sim.getFault(29) == true) {
-							} else if (me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(29) == true) {
+							// HH 3.12.14 New Fault #16 (Fault #29)
+							} else if (me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(16) == true && maxDistanceToObsCoord.x != -1) {
 								// HH 21.8.14 - Changed so that use the location of the START waypoint to determine the location
 								// of the new waypoint
 								//pCarWP = getOvertakeWP(me, getDirection(), maxDistanceToObsCoord, OvertakeStage.OVERTAKE_START);
@@ -378,7 +370,7 @@ public class UGV extends Car {
 										this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 										". Extending overtake stage: START, another obstacle detected ahead.");
 								// NOTE - keep overtakeStage as OVERTAKE_START
-								sim.setFault(29); // HH 18.11.14 - Update fault called
+								sim.setFault(16); // HH 18.11.14 - Update fault called
 								
 							} else {
 								// We don't want to offset the next waypoint to be as far away as the max distance as the
@@ -436,8 +428,9 @@ public class UGV extends Car {
 							setTargetID(((Waypoint) eTarget).getNextPoint());
 							environment.remove(eTarget);
 						}
-						
-					} else if (sim.getFault(30) == false) {
+					
+					// HH 3.12.14 - New Fault #17 (Fault #30)
+					} else if (sim.getFault(17) == false) {
 						// HH 18.11.14 - we want to make sure that the UGV is continuing to turn towards its WP
 						setDirection(me, eTarget.getLocation());
 						
@@ -445,7 +438,7 @@ public class UGV extends Car {
 								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 								". Continuing in current overtaking stage.");
 					} else {
-						sim.setFault(30); // HH 18.11.14 Call above must not have happened, so log the fault
+						sim.setFault(17); // HH 18.11.14 Call above must not have happened, so log the fault
 					}
 					
 				} 
@@ -573,7 +566,9 @@ public class UGV extends Car {
 			// TO DO: Maybe make this so that we slow down if we are going faster than the car in front - so maybe keep track of the distance to the car in front
 			// but should be allowed to keep travelling at the speed of the car in front, with a separation of about 2m if we are e.g. in a junction approach, or 
 			// travelling at low speeds.
-			if (location.distance(checkAllMovingObstacles(sim, sim.cars, true, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking)) < 20) // HH 17.11.14 Changed to 20m so have time to slow down
+			// HH 8.12.14 Moved the calc outside of the if condition so that we can test for default return value
+			Double2D tempMovObsLoc = checkAllMovingObstacles(sim, sim.cars, true, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);
+			if (location.distance(tempMovObsLoc) < 20 && tempMovObsLoc.x != -1) // HH 17.11.14 Changed to 20m so have time to slow down
 			{
 				goSlowStop();
 			} else {
@@ -588,10 +583,10 @@ public class UGV extends Car {
 				// so if the fault is active, we don't slow down in waiting mode, but in most cases (when fault inactive)
 				// the UGV will slow to a stop in waiting mode.
 				
-				// FAULT #28 - HH 17/11/14 - Don't enforce the slow down to zero condition (can cause creep through jct)
-				if (sim.getFault(28) == true) {
+				// New Fault #15 (FAULT #28) - HH 17/11/14 - Don't enforce the slow down to zero condition (can cause creep through jct)
+				if (sim.getFault(15) == true) {
 					// We're in the fault condition, so don't slow the vehicle down.
-					sim.setFault(28);
+					sim.setFault(15);
 				} else {
 					goSlowStop(); // Make sure that we actually slow down to 0
 				}
@@ -613,17 +608,21 @@ public class UGV extends Car {
 				tempDist = me.distance(eTarget.getLocation()); // HH 2.10.14 Swapped with above (wrong way around)
 			}
 			
-			if (me.distance( (finalTarget).getLocation()) < 3 && eTarget.getID() != -1) // HH 1.10.14 Added check for eTarget
+//			if (me.distance( (finalTarget).getLocation()) < 3 && eTarget.getID() != -1) // HH 1.10.14 Added check for eTarget
+			if (me.distance( (finalTarget).getLocation()) < 3) // HH 8.12.14 Removed check for eTarget as it can sometimes get set to -1 and Target is never found
 			{
 				// HH - 4/9/14 We don't really want vehicles straying towards targets in the other lane as 
 				// can produce some weird behaviour.  However, we'll retain this as a seedable fault
 				
-				// FAULT #27 - HH 4/9/14 - Forget to check if the target is in the same lane as the UGV
-				// TO DO HH - 2.10.14 - This is cheating; the UGV can't ask the road which lane it's in!
-				if (sim.getFault(27) == true || 
-					(sim.getLaneDirAtPoint(me, sim.roads) == sim.getLaneDirAtPoint(eTarget.getLocation(), sim.roads)))
+				// New Fault #14 (FAULT #27) - HH 4/9/14 - Forget to check if the target is in the same lane as the UGV
+				// TODO HH - 2.10.14 - This is cheating; the UGV can't ask the road which lane it's in!
+				// HH 4.12.14 - For now, correct this so sim.getLaneDirAtPoint(eTarget.getLocation(), sim.roads) looks at the
+				// finalTarget location instead
+				if (sim.getFault(14) == true || 
+					(sim.getLaneDirAtPoint(me, sim.roads) == sim.getLaneDirAtPoint(finalTarget.getLocation(), sim.roads)))
 				{
 					eTarget = finalTarget;
+					setTargetID(finalTarget.getID()); // HH 8.12.14 - If we don't set the ID too then we end up setting tempDist to 4 on next iter
 					setDirection(me, eTarget.getLocation());
 					
 					// HH 14.7.14 - Added this test in case vehicle is added next to a waypoint
@@ -635,8 +634,8 @@ public class UGV extends Car {
 						//changeSpeed(ACCELERATE);
 					}	
 					
-					if (sim.getFault(27) == true) {
-						sim.setFault(27); // HH 13.11.14 Added
+					if (sim.getFault(14) == true) {
+						sim.setFault(14); // HH 13.11.14 Added
 					}
 				}
 			// HH 1.10.14 - Updated to try and fix null ptr bug	
@@ -695,11 +694,13 @@ public class UGV extends Car {
 				} else {
 					if (eTarget.getType() == TTARGET)
 					{
-						//System.out.println("Car"+this.getID()+"arrived at destination, the closest to danger the car got was " + Double.toString(distanceToDanger));
-						//System.out.println("Ending Sim at destination the closest to danger the car got was " + Double.toString(distanceToDanger));
-						//sim.schedule.clear();
-						this.isActive = false;
-						targetFound = true;
+						// HH 4.12.14 - Add a check to make sure the Target is in the same lane as the 
+						// vehicle before we 'eat' the target
+						// double inRange, double inAngle, double inSensitivity, double inBearing
+						if (checkSameLane(sim, eTarget.location, UGVViewingRange, UGVViewingAngle, sensitivityForRoadTracking, getDirection()) == true) {
+							this.isActive = false;
+							targetFound = true;
+						}
 						
 					// HH 14.7.14 - Added TUTURNWP to ensure keep turning towards waypoint on each step
 					} else if (eTarget.getType() == TWAYPOINT || eTarget.getType() == TUTURNWP) {
@@ -824,146 +825,146 @@ public class UGV extends Car {
 		return newLoc;
 	}	
 	
-	/**
-	 * HH 7.5.14 - Based on Car.checkCourse (Robert Lee)
-	 *  
-	 * @param roads
-	 * @param bearing
-	 * @param sim // HH 28.7.14 Added for fault insertion
-	 * @return true if going to remain on road, false if not
-	 */
-	private boolean checkRoads(Bag roads, double bearing, COModel sim)
-	{
-		for(int i = 0; i < roads.size(); i++)
-		{
-			// FAULT #13 - HH 28/7/14 - Exit the loop half-way through
-			if (sim.getFault(13) == true) {
-				if (i == (sim.roads.size()/2)) {
-					break;
-				}
-				sim.setFault(13); // HH 13.11.14 Added
-			}			
-			
-			if (onCourse((Road) roads.get(i), bearing, sim))
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	
-	// HH 2.10.14 - Stopped using this as it 'cheats' and narrows down the options by only considering the 
-	// lines on the road the vehicle is on ...but how does the UGV know which line is on which road, and 
-	// indeed which road it is actually on?
-	/**
-	 * HH 7.5.14 - Based on Car.checkCourse (Robert Lee)
-	 *  
-	 * @param roads
-	 * @param bearing
-	 * @param sim // HH 28.7.14 - added for fault insertion
-	 * @return coordinates of the furthermost road marking detected.
-	 */
-	private Double2D findAllRoadMarkings(Bag roads, double bearing, Double2D me, COModel sim)
-	{
-		Double2D currentXY = new Double2D(0,0);
-		Double2D furthestXY = new Double2D(0,0);
-
-		// HH 10.7.14 - Only look at the road that the UGV is on
-		for(int i = 0; i < roads.size(); i++)
-		{
-			// FAULT #14 - HH 28/7/14 - Exit the loop half-way through
-			if (sim.getFault(14) == true) {
-				if (i == (roads.size()/2)) {
-					break;
-				}
-				sim.setFault(14); // HH 13.11.14 Added
-			}
-			
-			if (((Road)roads.get(i)).inShape(me) == true ) 
-			{
-				currentXY = findRoadMarkings((Road) roads.get(i), bearing, me, sim);
-
-				if ( (onMap(currentXY) == true) && ((me.distance(currentXY) > me.distance(furthestXY)) || (furthestXY.x == 0 && furthestXY.y == 0)))
-				{
-					if (currentXY.x != 0 || currentXY.y != 0) {
-						furthestXY = currentXY;
-					}
-				}
-			}
-		}
-		
-		
-// HH 10.7.14 - updated so that only consider the road that the UGV is actually on at the time
+//	/**
+//	 * HH 7.5.14 - Based on Car.checkCourse (Robert Lee)
+//	 *  
+//	 * @param roads
+//	 * @param bearing
+//	 * @param sim // HH 28.7.14 Added for fault insertion
+//	 * @return true if going to remain on road, false if not
+//	 */
+//	private boolean checkRoads(Bag roads, double bearing, COModel sim)
+//	{
 //		for(int i = 0; i < roads.size(); i++)
 //		{
-//			currentXY = findRoadMarkings((Road) roads.get(i), bearing, me);
+//			// FAULT #13 - HH 28/7/14 - Exit the loop half-way through
+//			if (sim.getFault(13) == true) {
+//				if (i == (sim.roads.size()/2)) {
+//					break;
+//				}
+//				sim.setFault(13); // HH 13.11.14 Added
+//			}			
 //			
-//			if ((me.distance(currentXY) > me.distance(furthestXY)) || (furthestXY.x == 0 && furthestXY.y == 0))
+//			if (onCourse((Road) roads.get(i), bearing, sim))
 //			{
-//				if (currentXY.x != 0 || currentXY.y != 0) {
-//					furthestXY = currentXY;
+//				return true;
+//			}
+//		}
+//		
+//		return false;
+//	}
+	
+	
+//	// HH 2.10.14 - Stopped using this as it 'cheats' and narrows down the options by only considering the 
+//	// lines on the road the vehicle is on ...but how does the UGV know which line is on which road, and 
+//	// indeed which road it is actually on?
+//	/**
+//	 * HH 7.5.14 - Based on Car.checkCourse (Robert Lee)
+//	 *  
+//	 * @param roads
+//	 * @param bearing
+//	 * @param sim // HH 28.7.14 - added for fault insertion
+//	 * @return coordinates of the furthermost road marking detected.
+//	 */
+//	private Double2D findAllRoadMarkings(Bag roads, double bearing, Double2D me, COModel sim)
+//	{
+//		Double2D currentXY = new Double2D(0,0);
+//		Double2D furthestXY = new Double2D(0,0);
+//
+//		// HH 10.7.14 - Only look at the road that the UGV is on
+//		for(int i = 0; i < roads.size(); i++)
+//		{
+//			// FAULT #14 - HH 28/7/14 - Exit the loop half-way through
+//			if (sim.getFault(14) == true) {
+//				if (i == (roads.size()/2)) {
+//					break;
+//				}
+//				sim.setFault(14); // HH 13.11.14 Added
+//			}
+//			
+//			if (((Road)roads.get(i)).inShape(me) == true ) 
+//			{
+//				currentXY = findRoadMarkings((Road) roads.get(i), bearing, me, sim);
+//
+//				if ( (onMap(currentXY) == true) && ((me.distance(currentXY) > me.distance(furthestXY)) || (furthestXY.x == 0 && furthestXY.y == 0)))
+//				{
+//					if (currentXY.x != 0 || currentXY.y != 0) {
+//						furthestXY = currentXY;
+//					}
 //				}
 //			}
 //		}
-		
-		return furthestXY;
-	}
+//		
+//		
+//// HH 10.7.14 - updated so that only consider the road that the UGV is actually on at the time
+////		for(int i = 0; i < roads.size(); i++)
+////		{
+////			currentXY = findRoadMarkings((Road) roads.get(i), bearing, me);
+////			
+////			if ((me.distance(currentXY) > me.distance(furthestXY)) || (furthestXY.x == 0 && furthestXY.y == 0))
+////			{
+////				if (currentXY.x != 0 || currentXY.y != 0) {
+////					furthestXY = currentXY;
+////				}
+////			}
+////		}
+//		
+//		return furthestXY;
+//	}
 	
-	/** 
-	 * HH 7.5.14 - Based on Car.onCourse (Robert Lee)
-	 * 
-	 * @param road
-	 * @param bearing
-	 * @param sim // HH 28.7.14 - added for fault insertion
-	 * @return true if going to remain on road on provided course (as far as it can see) false if not
-	 */
-	private boolean onCourse(Road road, double bearing, COModel sim)
-	{
-		//simple and dirty method which checks the coordinates between 0 and 
-		//the viewing range away from the target in certain increments and see 
-		//if they're on the road
-		MutableDouble2D testCoord = new MutableDouble2D();
-		Double2D amountAdd = new Double2D(Utility.xMovement(bearing, sensitivityForRoadTracking), Utility.yMovement(bearing, sensitivityForRoadTracking));
-		testCoord.addIn(location);
-		double startAngle = 0; // HH 28.7.14 - added to replace fixed start for iteration of i=0 (supports fault insertion)
-		double sensorSensitivity = sensitivityForRoadTracking; // HH 28.7.14 - added to replace fixed sensitivity (supports fault insertion)
-		
-		// FAULT #16 - HH 28/7/14 - Force the loop to start half-way through
-		if (sim.getFault(16) == true) {
-			startAngle = UGVViewingRange/2;
-			sim.setFault(16); // HH 13.11.14 Added
-		} 
-
-		// FAULT #20 - HH 28/7/14 - Force the sensor to operate with degraded vision sensitivity
-		if (sim.getFault(20) == true) {
-			sensorSensitivity = sensitivityForRoadTracking*2;
-			sim.setFault(20); // HH 13.11.14 Added
-		} 
-		
-		for(double i = startAngle; i < UGVViewingRange; i += sensorSensitivity)
-		{
-			// FAULT #15 - HH 28/7/14 - Exit the loop half-way through
-			if (sim.getFault(15) == true) {
-				if (i == (UGVViewingRange/2)) {
-					break;
-				}
-				sim.setFault(15); // HH 13.11.14 Added
-			}
-			
-			//keep adding the amountAdd on and seeing if the coordinate is on the road
-			if (!road.inShape(new Double2D(testCoord)))
-			{
-				return false; //the testing doesn't need to continue if it would leave the road at any point
-			}
-			
-			testCoord.addIn(amountAdd);
-			
-		}
-		
-		return true; //the car does not leave the road at any point it can see on it's current course
-	}
+//	/** 
+//	 * HH 7.5.14 - Based on Car.onCourse (Robert Lee)
+//	 * 
+//	 * @param road
+//	 * @param bearing
+//	 * @param sim // HH 28.7.14 - added for fault insertion
+//	 * @return true if going to remain on road on provided course (as far as it can see) false if not
+//	 */
+//	private boolean onCourse(Road road, double bearing, COModel sim)
+//	{
+//		//simple and dirty method which checks the coordinates between 0 and 
+//		//the viewing range away from the target in certain increments and see 
+//		//if they're on the road
+//		MutableDouble2D testCoord = new MutableDouble2D();
+//		Double2D amountAdd = new Double2D(Utility.xMovement(bearing, sensitivityForRoadTracking), Utility.yMovement(bearing, sensitivityForRoadTracking));
+//		testCoord.addIn(location);
+//		double startAngle = 0; // HH 28.7.14 - added to replace fixed start for iteration of i=0 (supports fault insertion)
+//		double sensorSensitivity = sensitivityForRoadTracking; // HH 28.7.14 - added to replace fixed sensitivity (supports fault insertion)
+//		
+//		// FAULT #16 - HH 28/7/14 - Force the loop to start half-way through
+//		if (sim.getFault(16) == true) {
+//			startAngle = UGVViewingRange/2;
+//			sim.setFault(16); // HH 13.11.14 Added
+//		} 
+//
+//		// FAULT #20 - HH 28/7/14 - Force the sensor to operate with degraded vision sensitivity
+//		if (sim.getFault(20) == true) {
+//			sensorSensitivity = sensitivityForRoadTracking*2;
+//			sim.setFault(20); // HH 13.11.14 Added
+//		} 
+//		
+//		for(double i = startAngle; i < UGVViewingRange; i += sensorSensitivity)
+//		{
+//			// FAULT #15 - HH 28/7/14 - Exit the loop half-way through
+//			if (sim.getFault(15) == true) {
+//				if (i == (UGVViewingRange/2)) {
+//					break;
+//				}
+//				sim.setFault(15); // HH 13.11.14 Added
+//			}
+//			
+//			//keep adding the amountAdd on and seeing if the coordinate is on the road
+//			if (!road.inShape(new Double2D(testCoord)))
+//			{
+//				return false; //the testing doesn't need to continue if it would leave the road at any point
+//			}
+//			
+//			testCoord.addIn(amountAdd);
+//			
+//		}
+//		
+//		return true; //the car does not leave the road at any point it can see on it's current course
+//	}
 	
 	/** 
 	 * HH 10.7.14 - Based on Car.checkWall (Robert Lee)
@@ -1004,112 +1005,112 @@ public class UGV extends Car {
 		return false;
 	}
 	
-	/** 
-	 * HH 17.6.14 - Based on Car.onCourse (Robert Lee), and some code in Car.alterCourse (Robert Lee)
-	 * 
-	 * @param road
-	 * @param bearing
-	 * @param sim // HH 28.7.14 - added to support failure insertion
-	 * @return the road markings that are detected within the range of the vehicle sensor (the farthest ones detected)
-	 */
-	private Double2D findRoadMarkings(Road road, double bearing, Double2D me, COModel sim)
-	{
-		//simple and dirty method which checks the coordinates between 0 and 
-		//the viewing range away from the target in certain increments and see 
-		//if they intersect with road markings
-		MutableDouble2D testCoord = new MutableDouble2D();
-		Double2D amountAdd = new Double2D();
-		testCoord.addIn(location);
-		Double2D lastRM = new Double2D();
-		
-		// For each angle that the sensor is able to view, turning in realistic increments
-		double resolution = 0.5;
-		double newBearing = 0.0;
-		LineType myNearside = LineType.SESIDE;
-		
-		// HH 28.7.14 - Added variables for the loop to support fault insertion
-		double startAngle = -(UGVViewingAngle/2);
-		double endAngle = (UGVViewingAngle / 2);
-		double startRange = 0;
-		double endRange = UGVViewingRange;
-		double rangeSensitivity = sensitivityForRoadTracking;
-		
-		// FAULT #17 - HH 28/7/14 - Force the angle loop to start half-way through
-		if (sim.getFault(17) == true) {
-			startAngle = 0;
-			sim.setFault(17); // HH 13.11.14 Added
-		} 
-
-		// FAULT #18 - HH 28/7/14 - Force the angle loop to end half-way through
-		if (sim.getFault(18) == true) {
-			endAngle = 0;
-			sim.setFault(18); // HH 13.11.14 Added
-		} 
-		
-		// FAULT #19 - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
-		if (sim.getFault(19) == true) {
-			resolution = resolution*2;
-			sim.setFault(19); // HH 13.11.14 Added
-		} 
-		
-		for(double i = startAngle; i < endAngle; i += resolution)
-		{
-			// HH 6.8.14 - Each iteration we need to reset the testCoord so it is back at the current location
-			// of the vehicle (sensor)
-			testCoord.setTo(0,0);
-			testCoord.addIn(location);
-			newBearing = Utility.correctAngle(bearing + i); // HH 6.8.14 - Reset the bearing for this iteration
-			
-			// HH 6.8.14 - Looks like this was happening with the wrong resolution - should be the range we adjust
-			//amountAdd = new Double2D(xMovement(newBearing, resolution), yMovement(newBearing, resolution));
-			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
-			
-			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
-			if (sim.getFault(21) == true) {
-				startRange = UGVViewingRange/2;
-				sim.setFault(21); // HH 13.11.14 Added
-			} 
-
-			// FAULT #22 - HH 28/7/14 - Force the angle loop to end half-way through
-			if (sim.getFault(22) == true) {
-				endRange = UGVViewingRange/2;
-				sim.setFault(22); // HH 13.11.14 Added
-			} 
-			
-			// FAULT #23 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-			if (sim.getFault(23) == true) {
-				rangeSensitivity = sensitivityForRoadTracking*2;
-				sim.setFault(23); // HH 13.11.14 Added
-			} 
-						
-			// HH 6.8.14 - we don't use j, this just ensures we run the loop the right num
-			for(double j = startRange; j < endRange; j += rangeSensitivity)
-			{
-				// keep adding the amountAdd on and seeing if the coordinate is on the road marking
-				// depending on which direction we are facing, we will either need to look at the 
-				// neside road markings (which is actually equivalent to the NORTH/EAST side of the road), 
-				// or the offside road markings (SOUTH/WEST side of the road)
-				if (Utility.getDirection(bearing) == UGV_Direction.NORTH || Utility.getDirection(bearing) == UGV_Direction.EAST) {
-					myNearside = LineType.NWSIDE;
-				} else { // must be travelling SOUTH or WEST
-					myNearside = LineType.SESIDE;
-				}
-				
-				// HH 6.8.14 - Adding in the first increment prior to the test, rather than after as no point
-				// testing the location the vehicle is already in
-				testCoord.addIn(amountAdd);
-				
-				if ((((Road) road).getLine(myNearside)).contains(testCoord.x, testCoord.y))
-				{
-					if ((me.distance(testCoord.x, testCoord.y) > me.distance(lastRM)) || (lastRM.x == 0 && lastRM.y == 0)) {
-						lastRM = new Double2D(testCoord.x, testCoord.y);
-					}
-				}
-			}
-		}
-		
-		return lastRM; 
-	}
+//	/** 
+//	 * HH 17.6.14 - Based on Car.onCourse (Robert Lee), and some code in Car.alterCourse (Robert Lee)
+//	 * 
+//	 * @param road
+//	 * @param bearing
+//	 * @param sim // HH 28.7.14 - added to support failure insertion
+//	 * @return the road markings that are detected within the range of the vehicle sensor (the farthest ones detected)
+//	 */
+//	private Double2D findRoadMarkings(Road road, double bearing, Double2D me, COModel sim)
+//	{
+//		//simple and dirty method which checks the coordinates between 0 and 
+//		//the viewing range away from the target in certain increments and see 
+//		//if they intersect with road markings
+//		MutableDouble2D testCoord = new MutableDouble2D();
+//		Double2D amountAdd = new Double2D();
+//		testCoord.addIn(location);
+//		Double2D lastRM = new Double2D();
+//		
+//		// For each angle that the sensor is able to view, turning in realistic increments
+//		double resolution = 0.5;
+//		double newBearing = 0.0;
+//		LineType myNearside = LineType.SESIDE;
+//		
+//		// HH 28.7.14 - Added variables for the loop to support fault insertion
+//		double startAngle = -(UGVViewingAngle/2);
+//		double endAngle = (UGVViewingAngle / 2);
+//		double startRange = 0;
+//		double endRange = UGVViewingRange;
+//		double rangeSensitivity = sensitivityForRoadTracking;
+//		
+//		// New Fault #8 (FAULT #17) - HH 28/7/14 - Force the angle loop to start half-way through
+//		if (sim.getFault(8) == true) {
+//			startAngle = 0;
+//			sim.setFault(8); // HH 13.11.14 Added
+//		} 
+//
+//		// New Fault #9 (FAULT #18) - HH 28/7/14 - Force the angle loop to end half-way through
+//		if (sim.getFault(9) == true) {
+//			endAngle = 0;
+//			sim.setFault(9); // HH 13.11.14 Added
+//		} 
+//		
+//		// New Fault #10 (FAULT #19) - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
+//		if (sim.getFault(10) == true) {
+//			resolution = resolution*2;
+//			sim.setFault(10); // HH 13.11.14 Added
+//		} 
+//		
+//		for(double i = startAngle; i < endAngle; i += resolution)
+//		{
+//			// HH 6.8.14 - Each iteration we need to reset the testCoord so it is back at the current location
+//			// of the vehicle (sensor)
+//			testCoord.setTo(0,0);
+//			testCoord.addIn(location);
+//			newBearing = Utility.correctAngle(bearing + i); // HH 6.8.14 - Reset the bearing for this iteration
+//			
+//			// HH 6.8.14 - Looks like this was happening with the wrong resolution - should be the range we adjust
+//			//amountAdd = new Double2D(xMovement(newBearing, resolution), yMovement(newBearing, resolution));
+//			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
+//			
+//			// New Fault #11 (FAULT #21) - HH 28/7/14 - Force the angle loop to start half-way through
+//			if (sim.getFault(11) == true) {
+//				startRange = UGVViewingRange/2;
+//				sim.setFault(11); // HH 13.11.14 Added
+//			} 
+//
+//			// New Fault #12 (FAULT #22) - HH 28/7/14 - Force the angle loop to end half-way through
+//			if (sim.getFault(12) == true) {
+//				endRange = UGVViewingRange/2;
+//				sim.setFault(12); // HH 13.11.14 Added
+//			} 
+//			
+//			// New Fault #13 (FAULT #23) - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
+//			if (sim.getFault(13) == true) {
+//				rangeSensitivity = sensitivityForRoadTracking*2;
+//				sim.setFault(13); // HH 13.11.14 Added
+//			} 
+//						
+//			// HH 6.8.14 - we don't use j, this just ensures we run the loop the right num
+//			for(double j = startRange; j < endRange; j += rangeSensitivity)
+//			{
+//				// keep adding the amountAdd on and seeing if the coordinate is on the road marking
+//				// depending on which direction we are facing, we will either need to look at the 
+//				// neside road markings (which is actually equivalent to the NORTH/EAST side of the road), 
+//				// or the offside road markings (SOUTH/WEST side of the road)
+//				if (Utility.getDirection(bearing) == UGV_Direction.NORTH || Utility.getDirection(bearing) == UGV_Direction.EAST) {
+//					myNearside = LineType.NWSIDE;
+//				} else { // must be travelling SOUTH or WEST
+//					myNearside = LineType.SESIDE;
+//				}
+//				
+//				// HH 6.8.14 - Adding in the first increment prior to the test, rather than after as no point
+//				// testing the location the vehicle is already in
+//				testCoord.addIn(amountAdd);
+//				
+//				if ((((Road) road).getLine(myNearside)).contains(testCoord.x, testCoord.y))
+//				{
+//					if ((me.distance(testCoord.x, testCoord.y) > me.distance(lastRM)) || (lastRM.x == 0 && lastRM.y == 0)) {
+//						lastRM = new Double2D(testCoord.x, testCoord.y);
+//					}
+//				}
+//			}
+//		}
+//		
+//		return lastRM; 
+//	}
 	
 //	/** 
 //	 * HH 9.9.14 - Based on Car.onCourse (Robert Lee), and some code in Car.alterCourse (Robert Lee)
@@ -1155,20 +1156,23 @@ public class UGV extends Car {
 //			endAngle = 0;
 //		}
 //		
-////		// FAULT #17 - HH 28/7/14 - Force the angle loop to start half-way through
-////		if (sim.getFault(17) == true) {
-////			startAngle = 0;
-////		} 
-////
-////		// FAULT #18 - HH 28/7/14 - Force the angle loop to end half-way through
-////		if (sim.getFault(18) == true) {
-////			endAngle = 0;
-////		} 
-////		
-////		// FAULT #19 - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
-////		if (sim.getFault(19) == true) {
-////			resolution = resolution*2;
-////		} 
+//		// New Fault #8 (FAULT #17) - HH 28/7/14 - Force the angle loop to start half-way through
+//		if (sim.getFault(8) == true) {
+//			startAngle = 0;
+//			sim.setFault(8); // HH 13.11.14 Added
+//		} 
+//
+//		// New Fault #9 (FAULT #18) - HH 28/7/14 - Force the angle loop to end half-way through
+//		if (sim.getFault(9) == true) {
+//			endAngle = 0;
+//			sim.setFault(9); // HH 13.11.14 Added
+//		} 
+//		
+//		// New Fault #10 (FAULT #19) - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
+//		if (sim.getFault(10) == true) {
+//			resolution = resolution*2;
+//			sim.setFault(10); // HH 13.11.14 Added
+//		}  
 //		
 //		// Check the viewable range at each angle		
 //		for(double i = startAngle; i < endAngle; i += resolution)
@@ -1177,25 +1181,28 @@ public class UGV extends Car {
 //			// of the vehicle (sensor)
 //			testCoord.setTo(0,0);
 //			testCoord.addIn(location);
-//			newBearing = correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
+//			newBearing = Utility.correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
 //			
-//			amountAdd = new Double2D(xMovement(newBearing, rangeSensitivity), yMovement(newBearing, rangeSensitivity));
+//			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 //			
-////			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
-////			if (sim.getFault(21) == true) {
-////				startRange = UGVViewingRange/2;
-////			} 
-////
-////			// FAULT #22 - HH 28/7/14 - Force the angle loop to end half-way through
-////			if (sim.getFault(22) == true) {
-////				endRange = UGVViewingRange/2;
-////			} 
-////			
-////			// FAULT #23 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-////			if (sim.getFault(23) == true) {
-////				rangeSensitivity = sensitivityForRoadTracking*2;
-////			} 
-//						
+//			// New Fault #11 (FAULT #21) - HH 28/7/14 - Force the angle loop to start half-way through
+//			if (sim.getFault(11) == true) {
+//				startRange = UGVViewingRange/2;
+//				sim.setFault(11); // HH 13.11.14 Added
+//			} 
+//
+//			// New Fault #12 (FAULT #22) - HH 28/7/14 - Force the angle loop to end half-way through
+//			if (sim.getFault(12) == true) {
+//				endRange = UGVViewingRange/2;
+//				sim.setFault(12); // HH 13.11.14 Added
+//			} 
+//			
+//			// New Fault #13 (FAULT #23) - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
+//			if (sim.getFault(13) == true) {
+//				rangeSensitivity = sensitivityForRoadTracking*2;
+//				sim.setFault(13); // HH 13.11.14 Added
+//			} 
+//									
 //			// HH 6.8.14 - we don't use j, this just ensures we run the loop the right num
 //			for(double j = startRange; j < endRange; j += rangeSensitivity)
 //			{
@@ -1241,135 +1248,135 @@ public class UGV extends Car {
 //		
 //		return RM; 
 //	}	
-	
+//	
 	
 
 	
-	/**
-	 * HH 7.5.14 - Based on Car.alterCourse (Robert Lee)
-	 * 
-	 * Method which adds a Waypoint for the vehicle to travel via on it's path to
-	 * prevent it from leaving the road
-	 * 
-	 * @param roads All of the roads in the environment
-	 * @param location of the vehicle (me)
-	 * @param wpID id for the Waypoint
-	 * @param sim // HH 28.7.14 - added for fault insertion
-	 */
-	public void alterCourse(Bag roads, Double2D me, int wpID, Continuous2D environment, Double2D destination, COModel sim)
-	{
-		double resolution = 0.5;
-		MutableDouble2D coord = new MutableDouble2D(me);
-		Waypoint wp;
-		double xComponent;
-		double yComponent;
-	
-		// Work out which direction we would need to turn in to be closer to the actual destination ('real' target)
-		// code inspired by Car.setDirection (Robert Lee)
-		double idealDirection = Utility.calculateAngle(me, destination);
-		double reqDirection = Utility.correctAngle(idealDirection - getDirection());
-		int iMult = 0;
-		
-		if (reqDirection >= 0 && reqDirection < 180) {
-			iMult = 1;
-		} else if (reqDirection >= 0 && reqDirection < 180) {
-			iMult = -1;
-		} else {
-			// TO DO - Error condition here...
-		}
-		
-		// HH 28.7.14 - added new loop params to support fault insertion
-		double minTurn = 0;
-		double maxTurn = getStats().getCurrentMaxTurning() - 5;
-		double turnResolution = resolution;
-		
-		// FAULT #24 - HH 28/7/14 - Force the angle loop to start half-way through
-		if (sim.getFault(24) == true) {
-			minTurn = (getStats().getCurrentMaxTurning() - 5)/2;
-			sim.setFault(24); // HH 13.11.14 Added
-		} 
-
-		// FAULT #25 - HH 28/7/14 - Force the angle loop to end half-way through
-		if (sim.getFault(25) == true) {
-			maxTurn = (getStats().getCurrentMaxTurning() - 5)/2;
-			sim.setFault(25);
-		} 
-		
-		// FAULT #26 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-		if (sim.getFault(26) == true) {
-			turnResolution = resolution*2;
-			sim.setFault(26); // HH 13.11.14 Added
-		} 
-				
-		for(double i = minTurn; i < maxTurn; i += turnResolution) // HH - TO DO - Why do we -5 here?  To ensure we turn at least 5 degrees?
-		{		
-			
-			if (checkRoads(roads, Utility.correctAngle(getDirection() - (i*iMult)), sim) == true)
-			{
-				//then moving right gives a clear path
-				//set wp and return
-				
-				//first must find out where to put wp
-				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
-				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
-				coord.addIn(xComponent, yComponent);
-				wp = new Waypoint(wpID, getTargetID());
-				wp.setLocation(new Double2D(coord));
-				setTargetID(wpID);
-				environment.setObjectLocation(wp, new Double2D(coord));
-				return;
-				
-			} else if (checkRoads(roads, Utility.correctAngle(getDirection() + (i*iMult)), sim) == true) {
-				//then moving left gives a clear path
-				//set wp and return
-				
-				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
-				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
-				coord.addIn(xComponent, yComponent);
-				wp = new Waypoint(wpID, getTargetID());
-				wp.setLocation(new Double2D(coord));
-				setTargetID(wpID);
-				environment.setObjectLocation(wp, new Double2D(coord));
-				return;
-			}
-		}
-		
-		//no path that can be immediately turned onto is clear
-		//therefore see if it is possible for the car to see a clear path even
-		//if it can't be immediately turned onto
-		for(double i = (getStats().getCurrentMaxTurning()-5); i < (UGVViewingAngle / 2); i += resolution)
-		{
-			if (checkRoads(roads, Utility.correctAngle(getDirection() - i), sim) == true)
-			{
-				//then moving right gives a clear path
-				//set wp and return
-				
-				//first must find out where to put wp
-				
-				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
-				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
-				coord.addIn(xComponent, yComponent);
-				wp = new Waypoint(wpID, getTargetID());
-				wp.setLocation(new Double2D(coord));
-				setTargetID(wpID);
-				environment.setObjectLocation(wp, new Double2D(coord));
-				return;
-				
-			} else if (checkRoads(roads, Utility.correctAngle(getDirection() + i), sim) == true) {
-				//then moving left gives a clear path
-				//set wp and return
-				
-				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
-				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
-				coord.addIn(xComponent, yComponent);
-				wp = new Waypoint(wpID, getTargetID());
-				wp.setLocation(new Double2D(coord));
-				setTargetID(wpID);
-				environment.setObjectLocation(wp, new Double2D(coord));
-				return;
-			}
-		}
-	}
+//	/**
+//	 * HH 7.5.14 - Based on Car.alterCourse (Robert Lee)
+//	 * 
+//	 * Method which adds a Waypoint for the vehicle to travel via on it's path to
+//	 * prevent it from leaving the road
+//	 * 
+//	 * @param roads All of the roads in the environment
+//	 * @param location of the vehicle (me)
+//	 * @param wpID id for the Waypoint
+//	 * @param sim // HH 28.7.14 - added for fault insertion
+//	 */
+//	public void alterCourse(Bag roads, Double2D me, int wpID, Continuous2D environment, Double2D destination, COModel sim)
+//	{
+//		double resolution = 0.5;
+//		MutableDouble2D coord = new MutableDouble2D(me);
+//		Waypoint wp;
+//		double xComponent;
+//		double yComponent;
+//	
+//		// Work out which direction we would need to turn in to be closer to the actual destination ('real' target)
+//		// code inspired by Car.setDirection (Robert Lee)
+//		double idealDirection = Utility.calculateAngle(me, destination);
+//		double reqDirection = Utility.correctAngle(idealDirection - getDirection());
+//		int iMult = 0;
+//		
+//		if (reqDirection >= 0 && reqDirection < 180) {
+//			iMult = 1;
+//		} else if (reqDirection >= 0 && reqDirection < 180) {
+//			iMult = -1;
+//		} else {
+//			// TO DO - Error condition here...
+//		}
+//		
+//		// HH 28.7.14 - added new loop params to support fault insertion
+//		double minTurn = 0;
+//		double maxTurn = getStats().getCurrentMaxTurning() - 5;
+//		double turnResolution = resolution;
+//		
+//		// FAULT #24 - HH 28/7/14 - Force the angle loop to start half-way through
+//		if (sim.getFault(24) == true) {
+//			minTurn = (getStats().getCurrentMaxTurning() - 5)/2;
+//			sim.setFault(24); // HH 13.11.14 Added
+//		} 
+//
+//		// FAULT #25 - HH 28/7/14 - Force the angle loop to end half-way through
+//		if (sim.getFault(25) == true) {
+//			maxTurn = (getStats().getCurrentMaxTurning() - 5)/2;
+//			sim.setFault(25);
+//		} 
+//		
+//		// FAULT #26 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
+//		if (sim.getFault(26) == true) {
+//			turnResolution = resolution*2;
+//			sim.setFault(26); // HH 13.11.14 Added
+//		} 
+//				
+//		for(double i = minTurn; i < maxTurn; i += turnResolution) // HH - TO DO - Why do we -5 here?  To ensure we turn at least 5 degrees?
+//		{		
+//			
+//			if (checkRoads(roads, Utility.correctAngle(getDirection() - (i*iMult)), sim) == true)
+//			{
+//				//then moving right gives a clear path
+//				//set wp and return
+//				
+//				//first must find out where to put wp
+//				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
+//				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() - (iMult*(i+5))), (UGVViewingRange / 1));
+//				coord.addIn(xComponent, yComponent);
+//				wp = new Waypoint(wpID, getTargetID());
+//				wp.setLocation(new Double2D(coord));
+//				setTargetID(wpID);
+//				environment.setObjectLocation(wp, new Double2D(coord));
+//				return;
+//				
+//			} else if (checkRoads(roads, Utility.correctAngle(getDirection() + (i*iMult)), sim) == true) {
+//				//then moving left gives a clear path
+//				//set wp and return
+//				
+//				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
+//				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() + (iMult*(i+5))), (UGVViewingRange / 1));
+//				coord.addIn(xComponent, yComponent);
+//				wp = new Waypoint(wpID, getTargetID());
+//				wp.setLocation(new Double2D(coord));
+//				setTargetID(wpID);
+//				environment.setObjectLocation(wp, new Double2D(coord));
+//				return;
+//			}
+//		}
+//		
+//		//no path that can be immediately turned onto is clear
+//		//therefore see if it is possible for the car to see a clear path even
+//		//if it can't be immediately turned onto
+//		for(double i = (getStats().getCurrentMaxTurning()-5); i < (UGVViewingAngle / 2); i += resolution)
+//		{
+//			if (checkRoads(roads, Utility.correctAngle(getDirection() - i), sim) == true)
+//			{
+//				//then moving right gives a clear path
+//				//set wp and return
+//				
+//				//first must find out where to put wp
+//				
+//				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+//				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() - (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+//				coord.addIn(xComponent, yComponent);
+//				wp = new Waypoint(wpID, getTargetID());
+//				wp.setLocation(new Double2D(coord));
+//				setTargetID(wpID);
+//				environment.setObjectLocation(wp, new Double2D(coord));
+//				return;
+//				
+//			} else if (checkRoads(roads, Utility.correctAngle(getDirection() + i), sim) == true) {
+//				//then moving left gives a clear path
+//				//set wp and return
+//				
+//				xComponent = Utility.xMovement(Utility.correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+//				yComponent = Utility.yMovement(Utility.correctAngle(getDirection() + (getStats().getCurrentMaxTurning()+5)), (UGVViewingRange / 1));
+//				coord.addIn(xComponent, yComponent);
+//				wp = new Waypoint(wpID, getTargetID());
+//				wp.setLocation(new Double2D(coord));
+//				setTargetID(wpID);
+//				environment.setObjectLocation(wp, new Double2D(coord));
+//				return;
+//			}
+//		}
+//	}
 	
 	/**
 	 * HH 7.5.14 - Based on Car.alterCourse (Robert Lee)
@@ -1736,9 +1743,11 @@ public class UGV extends Car {
 	 *  HH 6.8.14 - return the distance to an obstacle which is found in the current lane.  Search conducted at a 
 	 *  range of up to 25m.  Search progresses in a similar way to the roadMarkings search, and looks for the closest
 	 *  hit on an obstacle within a narrow range: Constants.UGVObsViewingAngle
+	 *  HH 3.12.14 - removed input inRoad as the UGV cannot be allowed to 'query the road', it can only build up
+	 *  an image of its surroundings by using sensors.
 	 */
 	
-	private Double2D checkForObstacle(COModel sim, double bearing, Obstacle obstacle, boolean getMax, Road inRoad) {
+	private Double2D checkForObstacle(COModel sim, double bearing, Obstacle obstacle, boolean getMax) {
 		
 		//simple and dirty method which checks the coordinates between 0 and 
 		//the obstacle viewing range away from the target in certain increments and see 
@@ -1752,8 +1761,7 @@ public class UGV extends Car {
 		if (getMax == true) {
 			reqDistance = 0;
 		}
-		
-		
+				
 		// HH 13.8.14 Need to restrict the obstacle checks to those which are in the same lane as
 		// the UGV, so need to know direction in order to restrict in method below
 		UGV_Direction direction = Utility.getDirection(bearing);
@@ -1768,26 +1776,16 @@ public class UGV extends Car {
 		double startRange = 0;
 		double endRange = UGVObsViewingRange;
 		double rangeSensitivity = sensitivityForRoadTracking;
-				
-//		// FAULT #17 - HH 28/7/14 - Force the angle loop to start half-way through
-//		if (sim.getFault(17) == true) {
-//			startAngle = 0;
-//		} 
-//
-//		// FAULT #18 - HH 28/7/14 - Force the angle loop to end half-way through
-//		if (sim.getFault(18) == true) {
-//			endAngle = 0;
-//		} 
-//		
-//		// FAULT #19 - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
-//		if (sim.getFault(19) == true) {
-//			resolution = resolution*2;
-//		} 
-		
+						
 		// HH 20/8/14 - Use the road marking detection algorithm to find the centre of the road so that we
 		// can make sure that we only detect obstacles on the same side of the road as the UGV's direction of
 		// travel.
-		Double2D furthestLaneMarking = findRoadMarkings(inRoad, bearing, location, sim);
+		
+		// HH 3.12.14 Need to remove dependence on access to the Road object, should conduct a search instead
+		//Double2D furthestLaneMarking = findRoadMarkings(inRoad, bearing, location, sim);
+		// HH 4.12.14 Changed from Constants.genLineType.CENTRE to Constants.genLineType.NEARSIDE
+		Double2D furthestLaneMarking = locateRoadMarkings_AllRoads(sim.roads, false, sim, Constants.genLineType.NEARSIDE, UGVViewingAngle , UGVViewingRange, sensitivityForRoadTracking);
+		
 		double centreOffset = Road.roadWidth/2 - Constants.ROADEDGINGWIDTH - Constants.ROADEDGEOFFSET; // Distance between edge line and centre
 		
 		for(double i = startAngle; i < endAngle; i += resolution)
@@ -1801,25 +1799,18 @@ public class UGV extends Car {
 			// Construct the x an y increments for each iteration below
 			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 						
-//			// FAULT #21 - HH 28/7/14 - Force the angle loop to start half-way through
-//			if (sim.getFault(21) == true) {
-//				startRange = UGVViewingRange/2;
-//			} 
-//
-//			// FAULT #22 - HH 28/7/14 - Force the angle loop to end half-way through
-//			if (sim.getFault(22) == true) {
-//				endRange = UGVViewingRange/2;
-//			} 
-//			
-//			// FAULT #23 - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-//			if (sim.getFault(23) == true) {
-//				rangeSensitivity = sensitivityForRoadTracking*2;
-//			} 
-						
 		    // NOTE - j is not actually used, it just ensures the correct number of iterations
 			for(double j = startRange; j < endRange; j += rangeSensitivity){
 												
 				testCoord.addIn(amountAdd);  // move the test location outwards on the chosen bearing
+				
+				// HH 3.12.14 Ensure that the testCoord location is still on the road surface,
+				// if not, we would expect that any vision algorithm would have noticed this
+				// and stopped searching at this bearing (similar to stopping the search 
+				// when we have found an obstacle (as we can't see through it!)
+				if (sim.roadAtPoint(new Double2D(testCoord), sim.roads) == false) {
+					break; // Don't search any further on this bearing
+				}
 				
 				// HH 13.8.14 Ensure that the our test coordinate is in the same lane as the UGV
 				boolean inLane = true;
@@ -1905,35 +1896,36 @@ public class UGV extends Car {
 			currentDistance = 0;
 		}
 		
-		// HH 13.8.14 - Work out which road the UGV is on, so that we can compare the id to that of the 
-		// obstacle - we are only interested in obstacles that are on the same road as the UGV
-		int roadId = -1;
-		Road thisRoad = null;
+		// HH 3.12.14 - It's not really acceptable to 'query the road' to find out what its ID is,
+		// and then query the Obstacle to find out which road it is on.  Instead we just restrict our search for 
+		// obstacles within our line of sight so that the search terminates as soon as the search point
+		// leaves the road, or reaches an obstacle.  If the search terminates when it reaches the road then it 
+		// would be impossible to detect obstacles which are on a different road (unless the roads are closer 
+		// than the resolution of the search, which shouldn't be the case).
 		
-		for (int r = 0; r < sim.roads.size(); r++)
-		{
-			if (((Road)sim.roads.get(r)).inShape(location) == true) {
-				roadId = ((Road) sim.roads.get(r)).getID();
-				thisRoad = (Road) sim.roads.get(r);
-				break;
-			}
-		}
+//		// HH 13.8.14 - Work out which road the UGV is on, so that we can compare the id to that of the 
+//		// obstacle - we are only interested in obstacles that are on the same road as the UGV
+//		int roadId = -1;
+//		Road thisRoad = null;
+//		
+//		for (int r = 0; r < sim.roads.size(); r++)
+//		{
+//			if (((Road)sim.roads.get(r)).inShape(location) == true) {
+//				roadId = ((Road) sim.roads.get(r)).getID();
+//				thisRoad = (Road) sim.roads.get(r);
+//				break;
+//			}
+//		}
 		
 		// Look through all the obstacles and look for intersection
 		for(int i = 0; i < sim.obstacles.size(); i++)
 		{
-//			// FAULT #14 - HH 28/7/14 - Exit the loop half-way through
-//			if (sim.getFault(14) == true) {
-//				if (i == (roads.size()/2)) {
-//					break;
-//				}
-//			}
 			
-			if (((ParkedCar) sim.obstacles.get(i)).getRoadId() == roadId)
-			{
+//			if (((ParkedCar) sim.obstacles.get(i)).getRoadId() == roadId)
+//			{
 			//if (((Obstacle)sim.obstacles.get(i)).inShape(location) == true ) 
 			//{
-				currentDistanceCoord = checkForObstacle(sim, bearing, (Obstacle) sim.obstacles.get(i), getMax, thisRoad);
+				currentDistanceCoord = checkForObstacle(sim, bearing, (Obstacle) sim.obstacles.get(i), getMax); // HH 3.12.14 Removed thisRoad param
 				if (currentDistanceCoord.x > -1) {
 					currentDistance = location.distance(currentDistanceCoord.x, currentDistanceCoord.y);
 
@@ -1952,10 +1944,10 @@ public class UGV extends Car {
 					}
 				}
 			//}
-			}
+			//}
 		}
 		
-		return reqCoord; // Need to do a check on return value as if this returns a value greater
+		return reqCoord; // TODO Need to do a check on return value as if this returns a value greater
 							// than the maximum sensor range (for getMin) or 0 for (getMax) then it denotes 
 							// *no obstacle*
 	}

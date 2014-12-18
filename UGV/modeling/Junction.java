@@ -2,6 +2,7 @@ package modeling;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 
+import modeling.COModel.jctExitInfo;
 import sim.util.*;
 
 /**
@@ -245,7 +246,8 @@ public class Junction extends Entity
 				occupied = false;
 				occupiedTime = 0;
 			} else {
-				return new Double2D(-1, this.ID); // Error Code to indicate junction occupied, returns jctID
+				return new Double2D(-1, -1); // HH 18.12.14 Doesn't appear that anyone uses the ID returned!
+				//return new Double2D(-1, this.ID); // Error Code to indicate junction occupied, returns jctID
 			}			
 		}
 		
@@ -328,7 +330,7 @@ public class Junction extends Entity
 	 *  Loop continues until a valid exit is chosen.  Where the junction is actually a dead end, the
 	 *  vehicle is permitted to continue straight ahead and leave the road network.
 	 */	
-	public Double2D getRandomExit(DumbCar theCar, int idx, COModel sim)
+	public jctExitInfo getRandomExit(DumbCar theCar, int idx, COModel sim)
 	{
 		// HH 3.9.14 - Implementing 4-way stops
 		// Firstly need to check to see if the junction is already in use (or there is no point
@@ -342,7 +344,7 @@ public class Junction extends Entity
 				occupied = false;
 				occupiedTime = 0;
 			} else {
-				return new Double2D(-1, this.ID); // Error Code to indicate junction occupied, returns jctID
+				return new jctExitInfo(new Double2D(-1, -1), this.ID); // Error Code to indicate junction occupied, returns jctID HH 18.12.14 Updated to separate parts of return value
 			}
 		}
 		
@@ -426,7 +428,7 @@ public class Junction extends Entity
 			loopCount ++;
 		}
 				
-		return exitCoords;
+		return new jctExitInfo(exitCoords, this.ID);
 	}
 	
 	public void unOccupy()

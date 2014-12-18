@@ -444,7 +444,7 @@ public class AccidentDetector implements Constants,Steppable {
 			} else {
 				UGVLaneDirSimple = 2;
 			}
-			UGV_Direction DCLaneDir = Utility.getDirection(trackedCar.getDirection());
+			UGV_Direction DCLaneDir = Utility.getDirection(car2.getDirection());
 			int DCLaneDirSimple;
 			if (DCLaneDir == UGV_Direction.NORTH || DCLaneDir == UGV_Direction.EAST) {
 				DCLaneDirSimple = 1;

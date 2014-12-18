@@ -139,6 +139,25 @@ public class COModel extends SimState
 	
 	// HH end
 	
+	// HH 18.12.14 A class for storing the return type from the getJunctionExit method so that we
+	// can have the junctionId returned separately from the location of the exit WP
+	public static class jctExitInfo {
+		public Double2D exitWP;
+		public int jctId;
+				
+		public jctExitInfo ()
+		{
+			exitWP = new Double2D(-1,-1);
+			jctId = 0;
+		}
+		
+		public jctExitInfo (Double2D inExitWP, int inJctId) {
+			exitWP = inExitWP;
+			jctId = inJctId;
+		}
+	}
+	
+	
 	// HH - Original value, replaced below
 	//private double carMaxSpeed=1.0; 
 	//private double carMaxAcceleration = 0.05;

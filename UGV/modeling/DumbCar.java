@@ -5,6 +5,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 
+import modeling.COModel.jctExitInfo;
 import sim.engine.SimState;
 import sim.field.continuous.Continuous2D;
 import sim.util.Bag;
@@ -133,7 +134,8 @@ public class DumbCar extends Car {
 						
 						// Vehicle currently within the junction, ensure that we are checking whether we need a new waypoint to redirect
 						// towards the destination
-						Double2D junctionWP = ((Junction) sim.junctions.get(i)).getRandomExit(this, i, sim);
+						jctExitInfo junctionInfo = ((Junction) sim.junctions.get(i)).getRandomExit(this, i, sim);
+						Double2D junctionWP = junctionInfo.exitWP;
 
 						// HH 3.9.14 Implementing 4-way Stop						
 						// TO DO : Add a check on the return value, if we don't get a valid WP back, we haven't
@@ -144,7 +146,8 @@ public class DumbCar extends Car {
 						// HH 16.10.14 - getRandomExit returns (-1, ID) as an error code sometimes, not always (-1,-1)
 						// so adjusted the code below so that we stop the vehicle
 						// if (junctionWP.x == -1 && junctionWP.y == -1)
-						if (junctionWP.x == -1) 
+						// HH 18.12.14 - getRandomExit not returns ((-1,-1), ID) in the instance above.
+						if (junctionWP.x == -1 && junctionWP.y == -1) 
 						{
 							// Something has gone wrong, an exit has not been chosen - maybe the junction is
 							// already occupied

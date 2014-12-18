@@ -250,7 +250,7 @@ public class UGV extends Car {
 						// stop if that exceeds the maximum deceleration of the vehicle), and we shouldn't set 
 						// the inJunctionFlag.  ALSO, make sure that we can't execute any movements by following the 
 						// methods which follow - may need to set a new mode for TWAIT.
-						if (junctionWP.x == -1) 
+						if (junctionWP.x == -1 && junctionWP.y == -1) // HH 18.12.14 Added y as very unlikely that both would be -1 through being close to the edge
 						{
 							// Something has gone wrong, an exit has not been chosen - maybe the junction is
 							// already occupied
@@ -264,6 +264,9 @@ public class UGV extends Car {
 							}
 							
 							startWaiting(); // Go into waiting mode
+							
+							// HH 18.12.14 - To try and see why vehicles are entering occupied junctions
+							sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV is waiting at junction with the following...");
 							
 						} else {
 							// HH 14.7.14 - Make sure the WP is on the road surface
@@ -649,7 +652,14 @@ public class UGV extends Car {
 			// but should be allowed to keep travelling at the speed of the car in front, with a separation of about 2m if we are e.g. in a junction approach, or 
 			// travelling at low speeds.
 			// HH 8.12.14 Moved the calc outside of the if condition so that we can test for default return value
-			Double2D tempMovObsLoc = checkAllMovingObstacles(sim, sim.cars, true, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);
+			
+			// HH 18.12.14 Change the viewing angle used if we are in a junction
+			double tempViewAngle = UGVMovObsViewingAngle;
+			if (eTarget.getType() == TUTURNWP) {
+				tempViewAngle = 90; 
+			}
+			
+			Double2D tempMovObsLoc = checkAllMovingObstacles(sim, sim.cars, true, tempViewAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);
 			// HH 12.12.14 - Changed 20 -> stoppingDistance to try and make vehicles slightly more aggressive
 			if (location.distance(tempMovObsLoc) < stoppingDistance && tempMovObsLoc.x != -1) // HH 17.11.14 Changed to 20m so have time to slow down
 			{

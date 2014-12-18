@@ -423,12 +423,61 @@ public class AccidentDetector implements Constants,Steppable {
 			return false; // they didn't
 		} else if (trackedCar.isActive && car2.isActive && (trackedCar.ID != car2.ID)) {
 			
-			// HH 25.9.14 Let's output the info to make sure there was really a crash
-			addLog(AccidentType.CLASHWITHOTHERCAR, trackedCar.getID(), sim.schedule.getSteps(), trackedCar.getLocation(), 
+			// HH 17.12.14 - We want to make sure this is a crash we should be reporting as it is not 
+			// fair to blame the UGV when the Dumb Car is entirely at fault i.e. back end swings out and 
+			// wipes out UGV during a turn.  
+			//
+			// It can be quite difficult to find general rules for determining fault, so we will just use
+			// simple one(s) and hope that this will eliminate a few unnecessary failures, whilst retaining those
+			// in which the UGV is at fault.
+			
+			Boolean retVal = true;
+			
+			// If the UGV is not in a junction, and the DumbCar is mostly located in the other lane (we'll just
+			// check which side of the road the centre of the DumbCar is on) then we can assume that the collision is
+			// the fault of the DumbCar.  Alternatively, as long as the UGV is on the side of the road corresponding to
+			// its direction of travel, if it is hit by a vehcile travelling in the other direction, assume the DC is at fault
+			UGV_Direction UGVLaneDir = Utility.getDirection(trackedCar.getDirection());
+			int UGVLaneDirSimple;
+			if (UGVLaneDir == UGV_Direction.NORTH || UGVLaneDir == UGV_Direction.EAST) {
+				UGVLaneDirSimple = 1;
+			} else {
+				UGVLaneDirSimple = 2;
+			}
+			UGV_Direction DCLaneDir = Utility.getDirection(trackedCar.getDirection());
+			int DCLaneDirSimple;
+			if (DCLaneDir == UGV_Direction.NORTH || DCLaneDir == UGV_Direction.EAST) {
+				DCLaneDirSimple = 1;
+			} else {
+				DCLaneDirSimple = 2;
+			}
+			
+			if ((sim.junctionAtArea(new Area(trackedCar.getShape()), sim.junctions) == 0) && // HH 17.12.14 Changed retVal Check from false to 0
+				((sim.getLaneDirAtPoint(trackedCar.getLocation(), sim.roads) != sim.getLaneDirAtPoint(car2.getLocation(), sim.roads)) ||
+				 ((UGVLaneDirSimple != DCLaneDirSimple) && UGVLaneDirSimple == sim.getLaneDirAtPoint(trackedCar.getLocation(), sim.roads))))
+			{
+				retVal = false;			
+			}
+			
+			// If the DumbCar is travelling faster than the UGV, on approximately the same bearing (+/- 15 deg) then
+			// we can assume that the collision is the fault of the DumbCar - hopefully this will eliminate the failure
+			// of a DumbCar driving over the top of a UGV that is slowing down to a stop, but has not quite stopped yet.
+			double angleDiff = Math.abs(trackedCar.getDirection() - car2.getDirection());
+			if ((trackedCar.getSpeed() < car2.getSpeed()) && ((angleDiff < 45) ||(angleDiff > 315))) // HH 17.12.14 Changed from 15 to 45
+			{
+				retVal = false;			
+			}
+			
+			if (retVal == true) {
+				// HH 25.9.14 Let's output the info to make sure there was really a crash
+				addLog(AccidentType.CLASHWITHOTHERCAR, trackedCar.getID(), sim.schedule.getSteps(), trackedCar.getLocation(), 
 					" Shape1: " + areaToString(shape1) + ", Shape2: " + areaToString(shape2) + ", Intersection: " +
 					areaToString(intersection) + ".");
 			
-			return true; // they did			
+				return true; // they did
+			} else {
+				return false; // HH 17.12.14 - tests above suggest collision was the fault of the DumbCar not the UGV
+			}
 		} else {
 			return false; // they did, but one of the cars is already dead
 		}
@@ -502,6 +551,11 @@ public class AccidentDetector implements Constants,Steppable {
 		// the centre line in this case
 		if (car.getType() == TUGV) {
 			if (((UGV) car).isOvertaking() == true) {
+				return retVal; // return value of x=-1 indicates failure
+			}
+			
+			// HH 16.12.14 - if the car is a UGV it is also okay to cross the centre line when performing a UTurn manouevre
+			if (((UGV) car).isUTurning() == true) {
 				return retVal; // return value of x=-1 indicates failure
 			}
 		}

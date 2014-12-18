@@ -314,8 +314,8 @@ public class COModelBuilder
 //				} while (((cRoad.getIsNS() && (((cy + jct >= (Constants.WorldYVal-Road.roadWidth))) || (cy + jct < 0) || sim.junctionAppAtPoint(new Double2D(cx, (cy+jct)), sim.junctions))) || 
 //						 (!cRoad.getIsNS() && (((cx + jct >= (Constants.WorldXVal-Road.roadWidth))) || (cx + jct < 0) || sim.junctionAppAtPoint(new Double2D((cx+jct), cy), sim.junctions)))) &&
 //						 noSmallIterations < 10);
-				} while (((cRoad.getIsNS() && (((cy + jct >= (Constants.WorldYVal-Road.roadWidth))) || (cy + jct < 0) || sim.junctionAtArea(jctArea, sim.junctions))) || 
-						 (!cRoad.getIsNS() && (((cx + jct >= (Constants.WorldXVal-Road.roadWidth))) || (cx + jct < 0) || sim.junctionAtArea(jctArea, sim.junctions)))) &&
+				} while (((cRoad.getIsNS() && (((cy + jct >= (Constants.WorldYVal-Road.roadWidth))) || (cy + jct < 0) || (sim.junctionAtArea(jctArea, sim.junctions) != 0))) || 
+						 (!cRoad.getIsNS() && (((cx + jct >= (Constants.WorldXVal-Road.roadWidth))) || (cx + jct < 0) || (sim.junctionAtArea(jctArea, sim.junctions) != 0)))) &&
 						 noSmallIterations < 10);
 				
 				if (noSmallIterations < 10){

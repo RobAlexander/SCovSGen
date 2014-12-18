@@ -2,6 +2,7 @@ package modeling;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 
 import sim.engine.SimState;
@@ -63,7 +64,7 @@ public class DumbCar extends Car {
 				sim.addNewDumbCar();
 				
 				return;
-			}
+			}	
 			
 			MutableDouble2D sumForces = new MutableDouble2D(); //used to record the changes to be made to the location of the car
 
@@ -96,6 +97,24 @@ public class DumbCar extends Car {
 			
 			dealWithTerrain();
 			
+			// HH 15.12.14 Check to see if we have recently started to leave a junction, and are just
+			// waiting for the 'back-end' to vacate the junction so we can mark it as cleared.
+			
+			if (getJctID() > 0)
+			{
+				// Check that we have started to leave the junction
+				if (sim.junctionAtPoint(me, sim.junctions) == 0 || sim.junctionAtPoint(me, sim.junctions) != this.getJctID())
+				{
+					// See if we have entirely left the junction
+					if (sim.junctionAtArea(new Area(this.getShape()), sim.junctions) <= 0) // HH 17.14.12 Include when in othee junction
+					{
+						// We've left the junction, so reset the junction occupancy so someone else can enter
+						sim.unOccupyJunction(getJctID(), sim.junctions);
+						setJctID(0);
+					}
+				}
+			}
+						
 			// check whether we are approaching a junction (slow down)
 			// Check to see whether we are already executing a turning manoeuvre, if so, 
 			// don't need to check the junctions as it's immaterial until we have finished the turn.
@@ -183,15 +202,18 @@ public class DumbCar extends Car {
 					this.setTargetID(-1); // back to default as have 'reached' target
 					environment.remove(eTarget);
 					
+					// HH 15.12.14 - We don't actually want to clear the junction until the whole DumbCar
+					// has left the junction, not just the centre location.  This method has been moved to 
+					// the top of the Step() routine
 					// HH 4.9.14 - Junction Priority 
-					if (getJctID() > 0)
-					{
-						// We've left the junction, so reset the junction occupancy so someone else can enter
-						// HH 16.10.14 Updated to use method which doesn't confuse ID and idx
-						sim.unOccupyJunction(getJctID(), sim.junctions);
-						//((Junction) sim.junctions.get(getJctID())).unOccupy();
-						setJctID(0);
-					}
+//					if (getJctID() > 0)
+//					{
+//						// We've left the junction, so reset the junction occupancy so someone else can enter
+//						// HH 16.10.14 Updated to use method which doesn't confuse ID and idx
+//						sim.unOccupyJunction(getJctID(), sim.junctions);
+//						//((Junction) sim.junctions.get(getJctID())).unOccupy();
+//						setJctID(0);
+//					}
 					
 //					// HH 30.9.14 - Make sure that we are pointing in the right direction (actually gets run twice!)
 //					// Work out which way we should be pointing?
@@ -238,6 +260,14 @@ public class DumbCar extends Car {
 			} else {
 				goFaster(false); // HH 23.9.14 - This is just a vote to speed up, in case the vehicle has got stuck
 			}			
+			
+			// HH 16.12.14 We need to ensure that when a vehicle is supposed to be waiting at a junction, it must
+			// not be allowed to *creep* forward 
+			if (isWaiting() == true)
+			{
+				goSlowStop(); // Make sure that we actually slow down to 0
+			}
+			
 			
 //			// HH 23.9.14 Regardless of what is going on - if there is another moving vehicle on the road ahead, and within 10m of us, then we need to slow down.
 //			// TO DO: 10m is sort of arbitrary at the moment (COModel sim, boolean sameLane, double inAngle, double inRange, double inSensitivity)

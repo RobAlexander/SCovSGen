@@ -974,7 +974,7 @@ public class COModel extends SimState
 			if (testLoc.x == inCoord.x || testLoc.y == inCoord.y) {
 				testDistance = Constants.OBSTACLE_LENGTH;
 			} else {
-				testDistance = Constants.OBSTACLE_LENGTH * 1.5;
+				testDistance = (Constants.OBSTACLE_LENGTH + Constants.OBSTACLE_BUFFER) * 1.5;
 			}
 			
 			// HH 24.11.14 Updated so that compare the 'snapped to kerb' value and use a different test distance if we are comparing
@@ -1432,14 +1432,18 @@ public class COModel extends SimState
 	 * HH 4.12.14 - 
 	 * - if no junction is found, returns false
 	 * - otherwise returns true
+	 *  
+	 * HH 17.12.14 - change return type to int and 
+	 * return 0 in place of false, jctId of the junction where the overlap is found, or -1 if the Area overlaps with 
+	 * multiple junctions. 
 	 * 
 	 * @author HH
 	 */
-	public boolean junctionAtArea(Area inJunct, Bag junctions)
+	public int junctionAtArea(Area inJunct, Bag junctions)
 	{
 		Shape tempJctShape;
 		Double2D tempJctLoc;
-		boolean retVal = false; // Default no overlap
+		int retVal = 0; // Default no overlap
 		
 		for (int i = 0; i < junctions.size(); i++)
 		{
@@ -1449,7 +1453,11 @@ public class COModel extends SimState
 			Area jctArea = new Area (tempJctShape);
 			jctArea.intersect(inJunct);
 			if (!jctArea.isEmpty()) {
-				retVal = true;
+				if (retVal == 0) {				
+					retVal = ((Junction) (junctions.get(i))).getID();
+				} else {
+					retVal = -1; // We've already found another junction that overlaps with this Area, so return -1
+				}
 			}
 		}
 		
@@ -1467,9 +1475,9 @@ public class COModel extends SimState
 		
 		for (int i = 0; i < junctions.size(); i++)
 		{
-			//for all of the obstacles check if the provided point is in it
+			// Search for the supplied junction in the bag, and un-occupy it
 			tempJunction = (Junction) (junctions.get(i));
-			if (tempJunction.getID() == jctID) //[TODO] this might not work it depends on if whatever the object is will override inShape
+			if (tempJunction.getID() == jctID)
 			{
 				tempJunction.unOccupy();
 			}

@@ -1391,6 +1391,8 @@ public abstract class Car extends Entity implements Oriented2D
 		return reqCoord; // Need to do a check on return value as if this returns a value greater
 							// than the maximum sensor range then it denotes *no obstacle*
 	}
+
+
 	
 	/**
 	 * HH 9.9.14 - Based on Car.checkCourse (Robert Lee)

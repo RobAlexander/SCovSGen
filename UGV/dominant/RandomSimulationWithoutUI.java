@@ -40,8 +40,11 @@ public class RandomSimulationWithoutUI {
     		// there will be very little difference between 1%, 2%, 3% etc.
     		// HH 4.12.14 Updated to a change of 5% on each loop due to #faults = 19 to ensure that we get different
     		// numbers of faults at the different levels
-    		for (int i=0; i < 21; i=i+5)
-    		{
+    		//for (int i=0; i < 21; i=i+5)
+    		//{
+    			//TODO reinstate batch run
+    			int i = 0;
+    		
     			percentageFaults = (double)i/100;
 
     			COModelWithoutUI mod = new COModelWithoutUI(percentageFaults, j);
@@ -53,7 +56,7 @@ public class RandomSimulationWithoutUI {
     				ExternalSeed = Math.round(new SecureRandom().nextInt()); // Get a new Map/Initial Configuration
     				mod.runBatch(3, ExternalSeed, j); // Run a batch of 3 for each initial configuration
     			}
-    		}
+    		//}
     	}
     }
    

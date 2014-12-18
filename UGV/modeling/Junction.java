@@ -240,7 +240,7 @@ public class Junction extends Entity
 		{	
 			// Check the time that the occupied flag was set and if it has exceeded a maximum time, then clear 
 			// the occupied flag and allow the method to continue below.  
-			if (sim.schedule.getSteps() > (occupiedTime + 50))
+			if (sim.schedule.getSteps() > (occupiedTime + 80)) // HH 16.12.14 increased from 50 steps to 120 17.12.14 Down to 80 steps
 			{
 				occupied = false;
 				occupiedTime = 0;
@@ -337,7 +337,7 @@ public class Junction extends Entity
 			
 			// Check the time that the occupied flag was set and if it has exceeded a maximum time, then clear 
 			// the occupied flag and allow the method to continue below.  
-			if (sim.schedule.getSteps() > (occupiedTime + 20))
+			if (sim.schedule.getSteps() > (occupiedTime + 30)) // HH 16.12.14 Changed from 20 steps to 120, 17.12.14 Down to 30 steps
 			{
 				occupied = false;
 				occupiedTime = 0;

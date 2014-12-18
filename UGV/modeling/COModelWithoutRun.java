@@ -32,7 +32,7 @@ public class COModelWithoutRun
 		
 		// TODO - Some extra calculations on the map that has been created, and an output to the output file
 		String outString = sBuilder.sim.getJunctionSep();
-		outString = outString + ", " + sBuilder.sim.getMinTargetCentreSeparation(); // Error checking 1
+		outString = outString + ", " + sBuilder.sim.HgetMinTargetCentreSeparation(); // Error checking 1
 		outString = outString + ", " + sBuilder.sim.getNoObstacles(); // Error checking 2
 		
 		System.out.println("COModelWithoutUI finished.");

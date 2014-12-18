@@ -105,10 +105,14 @@ public interface Constants
 	
 	// HH 6.8.14 Obstacles/Moving Obstacles Params
 	public static final double CAR_SPEED = 2.5; // this is m/step and is equivalent to a speed of 45km/hr under the assumption of 5 steps/s
-	public static final double OBSTACLE_HEADWAY = 5; // an overtaking vehicle should stop 5m ahead of the obstacle to allow for manoeuvre
+	public static final double OBSTACLE_HEADWAY = 7; // an overtaking vehicle should stop 7m ahead of the obstacle to allow for manoeuvre (HH 16.12.14 changed from 5m)
 	public static final double OBSTACLE_LENGTH = 5; // assume that obstacles will be 5m long (but don't pull back in front until passed object)
 	public static final double OBSTACLE_WIDTH = 2; // assume that obstacles will be 5m long (but don't pull back in front until passed object)
 	public static final double UGV_WIDTH = 2; // HH 8.9.14
+	public static final double OBSTACLE_BUFFER = 2; // HH 17.12.13 Also used when generating network to prevent Obs being added too close
+	
+	// HH 12.12.14 Minimum stopping distance to try and encourage UGV to be slightly less cautious
+	public static final double MIN_STOPPINGDISTANCE = OBSTACLE_LENGTH; // Stay 1 car length behind
 	
 	public static final int MIN_OBSTACLES = 5;
 	public static final int MAX_OBSTACLES = 10;

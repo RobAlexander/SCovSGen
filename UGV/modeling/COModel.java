@@ -157,6 +157,23 @@ public class COModel extends SimState
 		}
 	}
 	
+	// HH 22.12.14 A class for storing the return type from the getJunctionExit method so that we
+	// can have the target direction returned separately from the location of the exit WP
+	public static class jctExitDirInfo {
+		public Double2D exitWP;
+		public int direction;  // Direction in degrees
+				
+		public jctExitDirInfo ()
+		{
+			exitWP = new Double2D(-1,-1);
+			direction = 0;
+		}
+		
+		public jctExitDirInfo (Double2D inExitWP, int inDir) {
+			exitWP = inExitWP;
+			direction = inDir;
+		}
+	}
 	
 	// HH - Original value, replaced below
 	//private double carMaxSpeed=1.0; 
@@ -1160,6 +1177,28 @@ public class COModel extends SimState
 	}
 	
 	/**
+	 * Method to check for Cars intersecting with roadMarkings.  
+	 * 
+	 * @author HH 22.12.14
+	 */
+	public boolean roadMarkingAtShape(Shape inShape, Bag roads, LineType inLineType)
+	{
+		// This method is called for each point on the map, and so each point is compared with all
+		// roads and all possible line locations (nearside, centre, offside) to see if it falls on 
+		// any of them.  This method will return as soon as it finds one instance of 'white paint'
+		// it will not continue the search.
+		for (int i = 0; i < roads.size(); i++)
+		{
+			if (inShape.intersects(((Road) (roads.get(i))).getLine(inLineType)))
+			{
+				return true; // Intersection detected
+			}		
+		}
+		
+		return false; // No intersection detected
+	}
+	
+	/**
 	 * Method to work out the closest 'in lane' position for this vehicle to be initialised.  
 	 * 
 	 * @author HH 18.6.14
@@ -1488,7 +1527,7 @@ public class COModel extends SimState
 	 * 
 	 * @author HH
 	 */
-	public void unOccupyJunction(int jctID, Bag junctions)
+	public void unOccupyJunction(int jctID, Bag junctions, long vehID)
 	{
 		Junction tempJunction;
 		
@@ -1498,7 +1537,7 @@ public class COModel extends SimState
 			tempJunction = (Junction) (junctions.get(i));
 			if (tempJunction.getID() == jctID)
 			{
-				tempJunction.unOccupy();
+				tempJunction.unOccupy(vehID);
 			}
 		}
 	}	

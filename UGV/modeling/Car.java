@@ -342,7 +342,64 @@ public abstract class Car extends Entity implements Oriented2D
 		}		
 	}
 
+	/**
+	 * HH 22.12.14 - Updated method to prevent the UGV from turning further than the target direction of
+	 * travel. Method changes the direction of the Car so that moving on that bearing will bring it closer
+	 * to the supplied target.
+	 * 
+	 * @param loc the location of the car
+	 * @param targ the target location for the car
+	 * @param targetDir target direction for the car
+	 */
+	protected void setDirection(Double2D loc, Double2D targ, double targetDir)
+	{
+		double idealDirection = Utility.calculateAngle(loc, targ);
+		
+		// HH 22.12.14 Need to make sure that this 'idealDirection' isn't actually an overshoot
+		double currentToIdeal = Utility.correctAngle(idealDirection - direction);
+		double currentToTarget = Utility.correctAngle(targetDir - direction);
+		
+		// HH 22.12.14 If the angular distance is further to the idealDirection then we should stop at the targetDirection
+		if (currentToIdeal > currentToTarget && currentToTarget <= this.performance.getCurrentMaxTurning() && 
+			sim.roadAtPoint(this.location, sim.roads) && targetDir != -1) {
+			idealDirection = targetDir;
+		}
+		
+		//now based on the ideal bearing for the car to get to it's position it
+		//must be determined if the car needs to be changed from the bearing it's
+		//on at all
+		if (idealDirection != direction)
+		{
+			//then the course that the car is on needs correcting
+			//check if it would be quicker to turn left or right
+			double delta = idealDirection - direction;
+			if(delta>0)
+			{
+				if(delta <= 180)
+				{
+					turnLeft(delta);
+				}
 
+				else if (delta >180 )
+				{
+					turnRight(360 - delta);
+				}
+				
+			}
+			else
+			{
+				if (delta >= -180)
+				{
+					turnRight(-delta);
+				}
+				else
+				{
+					turnLeft(360+delta);
+				}
+			}
+			
+		}		
+	}
 	
 	
 	/**

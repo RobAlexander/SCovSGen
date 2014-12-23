@@ -269,11 +269,11 @@ public class COModelWithUI extends GUIState
 		// HH 7.5.14 - Added portrayal for Failures
 		// tell the portrayals what to portray and how to portray them
 		environmentPortrayal.setField( simulation.environment );	
-		environmentPortrayal.setPortrayalForClass(Failure.class, new RectanglePortrayal2D(0.5)
+		environmentPortrayal.setPortrayalForClass(Failure.class, new RectanglePortrayal2D(0.75) // HH 22.12.14 Increased size from 0.5
 		{
 			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
 			{
-				paint = new Color(255, 0, 0, 255);							
+				paint = new Color(0, 0, 0, 255); // HH 22.12.14 Changed from red to black							
 			    super.draw(object, graphics, info);
 			}
 		});

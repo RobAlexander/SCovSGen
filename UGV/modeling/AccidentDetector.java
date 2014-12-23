@@ -468,6 +468,12 @@ public class AccidentDetector implements Constants,Steppable {
 				retVal = false;			
 			}
 			
+			// HH 22.12.14 If the DumbCar is spanning two lanes i.e. intersecting with the centreline, then
+			// we can assume it is at fault in the crash
+			if (sim.roadMarkingAtShape(car2.getShape(), sim.roads, LineType.CENTRE)){
+				retVal = false;
+			}
+						
 			if (retVal == true) {
 				// HH 25.9.14 Let's output the info to make sure there was really a crash
 				addLog(AccidentType.CLASHWITHOTHERCAR, trackedCar.getID(), sim.schedule.getSteps(), trackedCar.getLocation(), 
@@ -579,8 +585,11 @@ public class AccidentDetector implements Constants,Steppable {
 					double adjacent = trajectory.x2 - ((Road) roads.get(r)).getLine(inLineType).getCenterX();
 					double opposite = adjacent * Math.tan(angle);
 					
-					retVal = new Double2D(((Road) roads.get(r)).getLine(inLineType).getCenterX(), trajectory.y2 - opposite);
-					
+					// HH 22.12.14 Need to make sure that all calculated values are valid numbers
+					if (!Double.isNaN(angle) && !Double.isNaN(adjacent) && !Double.isNaN(opposite)) {
+						retVal = new Double2D(((Road) roads.get(r)).getLine(inLineType).getCenterX(), trajectory.y2 - opposite);
+					}
+										
 				} else {
 					// The road must run E/W
 					
@@ -591,9 +600,11 @@ public class AccidentDetector implements Constants,Steppable {
 					double angle = Math.atan((trajectory.x1 - trajectory.x2)/(trajectory.y1 - trajectory.y2));
 					double adjacent = trajectory.y2 - ((Road) roads.get(r)).getLine(inLineType).getCenterY();
 					double opposite = adjacent * Math.tan(angle);
-					
-					retVal = new Double2D(trajectory.x2 - opposite, ((Road) roads.get(r)).getLine(inLineType).getCenterY());
-					
+
+					// HH 22.12.14 Need to make sure that all calculated values are valid numbers
+					if (!Double.isNaN(angle) && !Double.isNaN(adjacent) && !Double.isNaN(opposite)) {
+						retVal = new Double2D(trajectory.x2 - opposite, ((Road) roads.get(r)).getLine(inLineType).getCenterY());
+					}
 				}
 			}
 		}

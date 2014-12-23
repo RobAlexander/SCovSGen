@@ -5,6 +5,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 
+import modeling.COModel.jctExitDirInfo;
 import modeling.COModel.jctPairInfo;
 import modeling.Constants.UGV_Direction;
 import modeling.Constants.genLineType;
@@ -46,6 +47,8 @@ public class UGV extends Car {
 	
 	private int prevJct = -1;
 	private Double2D prevJctLoc;
+	
+	private int UTurnTargetDir = -1; // HH 22.12.14 - store the target direction in degrees when we are in a UTurn so that we don't overshoot chosen direction
 	
 	// HH 18.6.14 - New constructor to allow initialisation of direction/bearing
 	// HH 22.7.14 - Added COModel as argument to allow faults
@@ -160,14 +163,17 @@ public class UGV extends Car {
 					if (sim.junctionAtArea(new Area(this.getShape()), sim.junctions) <= 0) // HH 17.12.14 Include if now in a different jct
 					{
 						// We've left the junction, so reset the junction occupancy so someone else can enter
-						sim.unOccupyJunction(getJctID(), sim.junctions);
+						sim.unOccupyJunction(getJctID(), sim.junctions, this.getID());
 						setJctID(0);
+						
+						// HH 22.12.14 Clear the targetDirection flag too
+						UTurnTargetDir = -1;
 					}
 				}
 			}			
 			
 			// HH 12.12.14 Work out the stopping distance for the vehicle based on speed and maxDeceleratione
-			double stoppingDistance = 0;
+			double stoppingDistance = getSpeed(); // HH 23.12.14 - Add an extra buffer (0 -> getSpeed) as a number of failures see UGV hitting rear of vehicle in front
 			double tempSpeed = getSpeed();
 			
 			while (tempSpeed > 0) {
@@ -212,6 +218,7 @@ public class UGV extends Car {
 				// UGV to a range of 3m
 				if (checkAllMovingObsCircle(sim, sim.cars, sensitivityForRoadTracking) == true)
 				{
+					emergencyStop(); // HH 22.12.14 - Actually need to set speed to zero to avoid crashes registering even tho we're stopped
 					return; // No need to continue with Step, we're just going to stay still!
 				}
 			}
@@ -242,7 +249,10 @@ public class UGV extends Car {
 								
 						// Vehicle currently within the junction, ensure that we are checking whether we need a new waypoint to redirect
 						// towards the destination
-						Double2D junctionWP = ((Junction) sim.junctions.get(i)).getJunctionExit(finalTarget.getLocation(), this, i, sim);
+						//Double2D junctionWP = ((Junction) sim.junctions.get(i)).getJunctionExit(finalTarget.getLocation(), this, i, sim);
+						jctExitDirInfo junctionDirInfo = ((Junction) sim.junctions.get(i)).getJunctionExit(finalTarget.getLocation(), this, i, sim); // HH 22.12.14 Replaced the above
+						Double2D junctionWP = junctionDirInfo.exitWP;
+						UTurnTargetDir = junctionDirInfo.direction; // Store the direction
 						
 						// HH 3.9.14 Implementing 4-way Stop						
 						// Check on the return value, if we don't get a valid WP back, we haven't
@@ -297,8 +307,10 @@ public class UGV extends Car {
 
 						// HH 24.7.14 - To try and work out why vehicles are leaving the road during turns, create
 						// a log of the speed, location, and bearing of the UGV when it enters a junction
-						sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
-								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + ".");
+						sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV (" + this.getID() + ") = (" + me.x + "," + me.y + "), bearing = " +
+								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
+								". Attempting to enter Junction #" + ((Junction)sim.junctions.get(i)).getID() + 
+								", currently occupied by ID #" + ((Junction)sim.junctions.get(i)).getOccupierID() + ".");
 						
 						// ARE WE INSIDE A JUNCTION APPROACH
 					} else if (((Junction) sim.junctions.get(i)).inApproach(me)) {
@@ -542,7 +554,9 @@ public class UGV extends Car {
 							distMovObsToEndOvertake = minDistanceToMovObs - me.distance(minDistanceToObsCoord) - Constants.OBSTACLE_LENGTH - Constants.OBSTACLE_HEADWAY;
 						}
 						
-						if ((distMovObsToEndOvertake / Car.CAR_SPEED) > (getAvgManoeuvreTime(me.distance(minDistanceToObsCoord)))) 
+						// HH 23.12.14 Made this a little more conservative using maxDistToObs
+						//if ((distMovObsToEndOvertake / Car.CAR_SPEED) > (getAvgManoeuvreTime(me.distance(minDistanceToObsCoord)))) 
+						if ((distMovObsToEndOvertake / Car.CAR_SPEED) > (getAvgManoeuvreTime(me.distance(maxDistanceToObsCoord))))
 						{ 
 							if (me.distance(minDistanceToObsCoord) <= (Constants.OBSTACLE_HEADWAY + getSpeed())) 
 							{
@@ -572,6 +586,9 @@ public class UGV extends Car {
 											overshoot + 
 								           ", at speed: " + this.getSpeed() + ", bearing: " + this.getDirection() + ".");
 								}
+								
+								// HH 22.12.14 Make sure that we ignore any votes to speed up
+								goSlowStop();
 								
 							} else {
 								
@@ -656,7 +673,9 @@ public class UGV extends Car {
 			// HH 18.12.14 Change the viewing angle used if we are in a junction
 			double tempViewAngle = UGVMovObsViewingAngle;
 			if (eTarget.getType() == TUTURNWP) {
-				tempViewAngle = 90; 
+				tempViewAngle = 180; // HH 23.12.14 Changed from 90 to 180
+			} else {
+				tempViewAngle = 45; // HH 23.12.14 Added this as 10 is too narrow for moving obstacles at close range
 			}
 			
 			Double2D tempMovObsLoc = checkAllMovingObstacles(sim, sim.cars, true, tempViewAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);
@@ -706,8 +725,9 @@ public class UGV extends Car {
 				tempDist = me.distance(eTarget.getLocation()); // HH 2.10.14 Swapped with above (wrong way around)
 			}
 			
+			// HH 23.12.14 Changed threshold from 3m, to 10m
 //			if (me.distance( (finalTarget).getLocation()) < 3 && eTarget.getID() != -1) // HH 1.10.14 Added check for eTarget
-			if (me.distance( (finalTarget).getLocation()) < 3) // HH 8.12.14 Removed check for eTarget as it can sometimes get set to -1 and Target is never found
+			if (me.distance( (finalTarget).getLocation()) < 10) // HH 8.12.14 Removed check for eTarget as it can sometimes get set to -1 and Target is never found
 			{
 				// HH - 4/9/14 We don't really want vehicles straying towards targets in the other lane as 
 				// can produce some weird behaviour.  However, we'll retain this as a seedable fault
@@ -768,9 +788,10 @@ public class UGV extends Car {
 					// HH 14.7.14 - Added this cos turn not tight enough
 					if (eTarget.getType() == TUTURNWP) {
 						goSlow();
+						setDirection(me, eTarget.getLocation(), this.UTurnTargetDir);
+					} else {
+						setDirection(me, eTarget.getLocation());
 					}
-					
-					setDirection(me, eTarget.getLocation());
 				}
 			} 
 			

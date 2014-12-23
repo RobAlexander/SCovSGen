@@ -239,6 +239,25 @@ public class Utility {
 			return 270;
 		}
 	}
+
+	/** 
+	 * HH 22.12.14 - Return the degrees-equivalent for this compass direction
+	 * 
+	 * @param bearing either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
+	 * @return angular equivalent of bearing
+	 */
+	public static int getDirectionDeg(UGV_Direction bearing)
+	{
+		if (bearing == UGV_Direction.SOUTH)	{
+			return 0;
+		} else if (bearing == UGV_Direction.EAST) {
+			return 90;
+		} else if (bearing == UGV_Direction.NORTH) {
+			return 180;
+		} else { // must be between 225 and 315 
+			return 270;
+		}
+	}
 	
 	/** 
 	 * A method which changes a bearing to be in the range of 0 (inclusive) to 360 (exclusive)

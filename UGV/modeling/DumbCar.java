@@ -50,9 +50,14 @@ public class DumbCar extends Car {
 				// HH 29.9.14 - Need to make sure we aren't blocking junctions unnecessarily 
 				if (getJctID() > 0)
 				{
+					// HH - 23.12.14 Log car actually leaving junction
+					sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", All of Car: " + this.getID() + " has left junction" + 
+							", at speed: " + this.getSpeed() + ", bearing: " + this.getDirection() + "; unOccupy called on " +
+							"Junction #" + getJctID() + ".");
+					
 					// We've left the junction, so reset the junction occupancy so someone else can enter
 					// HH 16.10.14 Update to new method which doesn't confuse ID and Idx
-					sim.unOccupyJunction(getJctID(), sim.junctions);
+					sim.unOccupyJunction(getJctID(), sim.junctions, this.getID());
 					//((Junction) sim.junctions.get(getJctID())).unOccupy();
 					setJctID(0);
 				}
@@ -106,12 +111,37 @@ public class DumbCar extends Car {
 				// Check that we have started to leave the junction
 				if (sim.junctionAtPoint(me, sim.junctions) == 0 || sim.junctionAtPoint(me, sim.junctions) != this.getJctID())
 				{
+					// HH 23.12.14 Rearranged this a bit so that we actually check to make sure that the original
+					// junction has been completely vacated (there are accidents caused by the DC entering a second junction
+					// whilst remaining in the first junction too - and then the first junction is marked as empty; this shouldn't
+					// happen anymore.
+					int jctRetVal = sim.junctionAtArea(new Area(this.getShape()), sim.junctions);
+					
 					// See if we have entirely left the junction
-					if (sim.junctionAtArea(new Area(this.getShape()), sim.junctions) <= 0) // HH 17.14.12 Include when in othee junction
+					if (jctRetVal == 0) 
 					{
 						// We've left the junction, so reset the junction occupancy so someone else can enter
-						sim.unOccupyJunction(getJctID(), sim.junctions);
+						sim.unOccupyJunction(getJctID(), sim.junctions, this.getID());
 						setJctID(0);
+					} else if (jctRetVal < 0) { // HH 17.14.12 Include when in other junction HH 23.12.14 Moved this to its own clause
+						// HH 23.12.14 Need to double-check that the vehicle has actually left the first junction
+						for (int i=0; i < sim.junctions.size(); i++)
+						{
+							Junction tempJct = (Junction) sim.junctions.get(i);
+							
+							if (((Junction)sim.junctions.get(i)).ID == getJctID())
+							{
+								// Create a shape to represent this junction
+								Rectangle2D tempJctShape = new Rectangle2D.Double((tempJct.location.x-(Road.roadWidth/2)), (tempJct.location.y-(Road.roadWidth/2)), Road.roadWidth, Road.roadWidth);
+								Area jctArea = new Area (tempJctShape);
+								jctArea.intersect(new Area(this.getShape())); // Intersect with the DumbCar
+								if (jctArea.isEmpty()) {
+									// We've left the junction, so reset the junction occupancy so someone else can enter
+									sim.unOccupyJunction(getJctID(), sim.junctions, this.getID());
+									setJctID(0);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -199,7 +229,7 @@ public class DumbCar extends Car {
 				if (sim.junctionAtPoint(me, sim.junctions) == 0 || sim.junctionAtPoint(me, sim.junctions) != this.getJctID())
 				{
 					// HH - 27.8.14 Log speed of car leaving junction
-					sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", Car: " + this.getID() + " leaving junction" + 
+					sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", Front of Car: " + this.getID() + " leaving junction" + 
 							           ", at speed: " + this.getSpeed() + ", bearing: " + this.getDirection() + ".");
 										
 					this.setTargetID(-1); // back to default as have 'reached' target

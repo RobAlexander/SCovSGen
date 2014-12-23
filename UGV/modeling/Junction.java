@@ -2,6 +2,7 @@ package modeling;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 
+import modeling.COModel.jctExitDirInfo;
 import modeling.COModel.jctExitInfo;
 import sim.util.*;
 
@@ -29,6 +30,9 @@ public class Junction extends Entity
 	// HH 3.9.14 Implementing 4 Way Stop
 	private boolean occupied = false;
 	private long occupiedTime = 0; // store the timestep at which the junction became occupied
+	
+	// HH 23.12.14 - Store the ID of the vehicle who has occupied the junction (used to validate unOccupy requests)
+	private long occupierID = 0;
 	
 //	public Junction(int idNo, double x, double y, int inDirection)
 //	{
@@ -227,8 +231,12 @@ public class Junction extends Entity
 	 *  16/7/14 - Updated so that junction history now stores a count of the number of times an exit
 	 *  has been chosen so that the probability used on future iterations (as ii) will reduce the
 	 *  more times it has been chosen
+	 *  
+	 *  22/12/13 - Updated so return type now includes the target direction so that we can prevent the
+	 *  UGV from overshooting the target direction of travel.
 	 */	
-	public Double2D getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
+	//public Double2D getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
+	public jctExitDirInfo getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
 	{
 		// HH 3.9.14 - Implementing 4-way stops (not necessarily fair when more than one car is waiting
 		// as this method does not take into account the length of time that a car has been waiting, it is 
@@ -243,17 +251,28 @@ public class Junction extends Entity
 			// the occupied flag and allow the method to continue below.  
 			if (sim.schedule.getSteps() > (occupiedTime + 80)) // HH 16.12.14 increased from 50 steps to 120 17.12.14 Down to 80 steps
 			{
+				occupierID = 0; // 23.12.14 New var
 				occupied = false;
 				occupiedTime = 0;
 			} else {
-				return new Double2D(-1, -1); // HH 18.12.14 Doesn't appear that anyone uses the ID returned!
+				return new jctExitDirInfo(new Double2D(-1, -1), 999); // HH 18.12.14 Doesn't appear that anyone uses the ID returned!
 				//return new Double2D(-1, this.ID); // Error Code to indicate junction occupied, returns jctID
 			}			
+		}
+		
+		// HH 23.12.14 Make sure that we aren't still occupying a different junction
+		if (theUGV.getJctID() != this.ID)
+		{
+			sim.unOccupyJunction(theUGV.getJctID(), sim.junctions, theUGV.ID);
 		}
 		
 		// HH 3.9.14 Implementing 4-way stops, we've got here, so the junction is now occupied!
 		occupied = true;
 		occupiedTime = sim.schedule.getSteps(); // Timestamp of some kind here to facilitate timeout clearing of flag
+		
+		// HH 23.12.14 New var
+		occupierID = theUGV.getID();
+		
 		// HH 16.10.14 - Updated so doesn't confuse idx and ID
 		theUGV.setJctID(this.ID);
 		//theUGV.setJctID(idx);
@@ -318,7 +337,7 @@ public class Junction extends Entity
 			theUGV.updateJunctionHistory(idx, selected);
 		}
 		
-		return exitCoords;
+		return new jctExitDirInfo(exitCoords, Utility.getDirectionDeg(selected));
 	}
 	
 	/**
@@ -341,6 +360,7 @@ public class Junction extends Entity
 			// the occupied flag and allow the method to continue below.  
 			if (sim.schedule.getSteps() > (occupiedTime + 30)) // HH 16.12.14 Changed from 20 steps to 120, 17.12.14 Down to 30 steps
 			{
+				occupierID = 0; // 23.12.14 New var
 				occupied = false;
 				occupiedTime = 0;
 			} else {
@@ -348,9 +368,19 @@ public class Junction extends Entity
 			}
 		}
 		
+		// HH 23.12.14 Make sure that we aren't still occupying a different junction
+		if (theCar.getJctID() != this.ID)
+		{
+			sim.unOccupyJunction(theCar.getJctID(), sim.junctions, theCar.ID);
+		}
+				
 		// HH 3.9.14 Implementing 4-way stops, we've got here, so the junction is now occupied!
 		occupied = true;
 		occupiedTime = sim.schedule.getSteps(); // Timestamp of some kind here to facilitate timeout clearing of flag
+		
+		// HH 23.12.14 New var
+		occupierID = theCar.getID();
+		
 		// HH 16.10.14 Updated so doesn't confuse ID and idx
 		theCar.setJctID(this.ID);
 		//theCar.setJctID(idx);
@@ -431,10 +461,19 @@ public class Junction extends Entity
 		return new jctExitInfo(exitCoords, this.ID);
 	}
 	
-	public void unOccupy()
+	// HH 23.12.14 Update to include a check on the id of the vehicle that is trying to clear the lock on the junction
+	public void unOccupy(long inID)
 	{
-		occupied = false;
-		occupiedTime = 0;
+		if (occupierID == inID) {
+			occupied = false;
+			occupiedTime = 0;
+			occupierID = 0;
+		}
+	}
+	
+	// HH 23.12.14 For logging
+	public long getOccupierID() {
+		return occupierID;
 	}
 	
 	public boolean isDeadEnd()

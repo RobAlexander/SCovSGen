@@ -240,6 +240,25 @@ public class Utility {
 		}
 	}
 
+	/*
+	 * HH 30.12.14 getDirectionInt(coord) - return 1 for N or E; 2 for S or W
+	 * Designed to compliment Road.getLane which returns similar coded directions.
+	 * Used to check that the target is on the side of the road which aligns with the
+	 * direction of travel of the UGV (for clarity when the UGV is performing an O/T).
+	 */
+	public static int getDirectionInt(double bearing)
+	{
+		if (correctAngle(bearing) >= 315 || correctAngle(bearing) < 45)	{
+			return 2; // South
+		} else if (correctAngle(bearing) < 135) {
+			return 1; // East
+		} else if (correctAngle(bearing) < 225) {
+			return 1; // North
+		} else { // must be between 225 and 315 
+			return 2; // West
+		}
+	}
+	
 	/** 
 	 * HH 22.12.14 - Return the degrees-equivalent for this compass direction
 	 * 

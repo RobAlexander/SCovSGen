@@ -36,8 +36,9 @@ public class UGV extends Car {
 	
 	// HH 8.9.14 - Moving Obstacle Detection Params
 	private double UGVMovObsViewingRange = 100;
-	private double UGVMovObsViewingAngle = 10; // We will assume that the sensor is placed on the offside front corner of the vehicle
+	private double UGVMovObsViewingAngle = 30; // We will assume that the sensor is placed on the offside front corner of the vehicle
 											   // so this should provide sufficient search breadth to cover most of the road (>7m away)
+	// HH 30.12.14 Changed the above angle from 10 to 30 as nearby obstacles are being missed
 	
 	private int[][] junctionHistory; // HH 15.7.14 Store true/false for each junction index and direction to show where we have already been, 16.7.14 updated to int
 	private Entity finalTarget;
@@ -367,17 +368,28 @@ public class UGV extends Car {
 				// HH 3.12.14 New Fault #18 (Fault #31)
 				if (sim.getFault(18) == true) {
 					// Look for an obstacle in front and evaluate the distance
-					maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true);
-					minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false);
+					maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true, 0); // HH 30.12.14 Added new param
+					minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false, 0); // HH 30.12.14 Added new param
 					sim.setFault(18);
 				} else {
 					// HH 21.11.14 Try this with the bearing instead as we can't see obstacles properly once
 					// we have pulled out into the overtake as we are not looking in the direction of travel
 					// anymore - (but our sensor could be)
-					maxDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), true);
-					minDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), false);
+					maxDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), true, 0); // HH 30.12.14 Added new param
+					minDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), false, 0); // HH 30.12.14 Added new param
 				}
 
+				// HH 30.12.14 If the maxDistanceToObs is going to suggest a large separation (and to pull back in between
+				// obstacles) we should do a quick check to make sure we don't have three in a row.  Limit search to ObsLen*2.5
+				// and see if anything is detected at close to this limit
+				boolean threeInARow = false;
+				if (maxDistanceToObsCoord.x != -1 && me.distance(maxDistanceToObsCoord) > UGVObsViewingRange) {
+					Double2D distToMiddleObs = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), true, (Constants.OBSTACLE_HEADWAY + getSpeed() + Constants.OBSTACLE_LENGTH*2.5));
+					if (me.distance(distToMiddleObs) > (Constants.OBSTACLE_LENGTH + Constants.OBSTACLE_HEADWAY + getSpeed())) {
+						threeInARow = true;
+					}
+				}
+				
 				// HH 9.9.14 Look for a moving obstacle in the next lane
 				Double2D minDistanceToMovObsCoord = this.checkAllMovingObstacles(sim, sim.cars, false, UGVMovObsViewingAngle, UGVMovObsViewingRange, sensitivityForRoadTracking);			
 								
@@ -389,7 +401,8 @@ public class UGV extends Car {
 						overshotWaypoint(eTarget.getLocation(), getDirection()) == true) {
 					
 						// Work out whether this is the first waypoint or the second one?
-						if (overtakeStage == OvertakeStage.OVERTAKE_START) {
+						// HH 30.12.14 - Added a check for where we have extended the START stage but may have passed the end of the Obs
+						if (overtakeStage == OvertakeStage.OVERTAKE_START && maxDistanceToObsCoord.x != -1) {
 
 							// This must be the first waypoint as we can still see the back of the 
 							// parked vehicle with the sensor, so add the second waypoint and remove this one
@@ -403,7 +416,7 @@ public class UGV extends Car {
 							// on a subsequent parked car.  For simplicity, just use some rough boundary conditions
 							// HH 8.12.14 Added check of the return value maxDistanceToObsCoord as can be (-1,-1) and
 							// is then meaningless when used in distance calcs.
-							if ((me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH + 1) || 
+							if ((me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH + 1) || threeInARow == true ||
 								//((me.distance(maxDistanceToObsCoord) <= (Constants.OBSTACLE_LENGTH * 3) && sim.getFault(29) == false))) {
 								((me.distance(maxDistanceToObsCoord) <= UGVObsViewingRange && sim.getFault(16) == false))) && maxDistanceToObsCoord.x != -1) {
 								
@@ -475,7 +488,8 @@ public class UGV extends Car {
 														
 							eTarget = createWaypoint(pCarWP, sim, me, TPARKEDCAR, true, eTarget); //set eTarget to be new WP - HH 21.11.14 - added new params				
 							
-						} else if (overtakeStage == OvertakeStage.OVERTAKE_PULLEDOUT) {
+						// HH 30.12.14 - Added a check for if we've managed to pass the end of the Obs without entering OVERTAKE_PULLEDOUT
+						} else if (overtakeStage == OvertakeStage.OVERTAKE_PULLEDOUT || (overtakeStage == OvertakeStage.OVERTAKE_START && maxDistanceToObsCoord.x == -1)) {
 							
 							// We may have finished the overtaking manoeuvre, but need to make sure we are
 							// tracking back to the appropriate offset from the kerb.  
@@ -513,7 +527,7 @@ public class UGV extends Car {
 						
 						sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV = (" + me.x + "," + me.y + "), bearing = " +
 								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
-								". Continuing in current overtaking stage.");
+								". Continuing in current overtaking stage: " + overtakeStage + "."); // HH 30.12.14 Added stage no to log
 						
 						// HH 17.12.14 Get the UGV to slow down as it pulls back in, as it needs to re-evaluate surroundings
 						if (overtakeStage == OvertakeStage.OVERTAKE_FINISH)
@@ -725,9 +739,9 @@ public class UGV extends Car {
 				tempDist = me.distance(eTarget.getLocation()); // HH 2.10.14 Swapped with above (wrong way around)
 			}
 			
-			// HH 23.12.14 Changed threshold from 3m, to 10m
+			// HH 23.12.14 Changed threshold from 3m, to 10m // HH 30.12.14 Changed to 4.5m instead
 //			if (me.distance( (finalTarget).getLocation()) < 3 && eTarget.getID() != -1) // HH 1.10.14 Added check for eTarget
-			if (me.distance( (finalTarget).getLocation()) < 10) // HH 8.12.14 Removed check for eTarget as it can sometimes get set to -1 and Target is never found
+			if (me.distance( (finalTarget).getLocation()) < 4.5) // HH 8.12.14 Removed check for eTarget as it can sometimes get set to -1 and Target is never found
 			{
 				// HH - 4/9/14 We don't really want vehicles straying towards targets in the other lane as 
 				// can produce some weird behaviour.  However, we'll retain this as a seedable fault
@@ -736,8 +750,13 @@ public class UGV extends Car {
 				// TODO HH - 2.10.14 - This is cheating; the UGV can't ask the road which lane it's in!
 				// HH 4.12.14 - For now, correct this so sim.getLaneDirAtPoint(eTarget.getLocation(), sim.roads) looks at the
 				// finalTarget location instead
+				// HH 30.12.14 - Use the non-cheat method to see if the target is on the same side of the road as the one which
+				// corresponds with the direction of travel of the UGV, in case we are in an
+				// overtaking manoeuvre and the UGV is on the other side of the road.
+				//if (sim.getFault(14) == true || 
+				//		(sim.getLaneDirAtPoint(me, sim.roads) == sim.getLaneDirAtPoint(finalTarget.getLocation(), sim.roads)))
 				if (sim.getFault(14) == true || 
-					(sim.getLaneDirAtPoint(me, sim.roads) == sim.getLaneDirAtPoint(finalTarget.getLocation(), sim.roads)))
+					(checkSameLane(sim, finalTarget.getLocation(), UGVViewingRange, UGVViewingAngle, sensitivityForRoadTracking, getDirection())))
 				{
 					eTarget = finalTarget;
 					setTargetID(finalTarget.getID()); // HH 8.12.14 - If we don't set the ID too then we end up setting tempDist to 4 on next iter
@@ -798,7 +817,7 @@ public class UGV extends Car {
 			// If we are really close to our target, whether it is a waypoint or a real target, we may want to
 			// finish the run, or 'eat' the target and get the next one.
 //			if (me.distance(eTarget.getLocation()) < 1) {
-			if (tempDist < 1) // HH 1.10.14 - Updated to prevent null ptr error
+			if (tempDist < 1.5) // HH 1.10.14 - Updated to prevent null ptr error HH 30.12.14 Updated from 1 to 1.5 so don't miss target
 			{
 				
 				if (eTarget.getID() == -1)
@@ -1904,16 +1923,23 @@ public class UGV extends Car {
 	 *  hit on an obstacle within a narrow range: Constants.UGVObsViewingAngle
 	 *  HH 3.12.14 - removed input inRoad as the UGV cannot be allowed to 'query the road', it can only build up
 	 *  an image of its surroundings by using sensors.
+	 *  HH 30.12.14 - allow the caller to restrict the search range to a supplied limit, or if 0 is supplied then use the default range
 	 */
 	
-	private Double2D checkForObstacle(COModel sim, double bearing, Obstacle obstacle, boolean getMax) {
+	private Double2D checkForObstacle(COModel sim, double bearing, Obstacle obstacle, boolean getMax, double inRangeLimit) {
 		
 		//simple and dirty method which checks the coordinates between 0 and 
 		//the obstacle viewing range away from the target in certain increments and see 
 		//if they intersect with road markings
 		MutableDouble2D testCoord = new MutableDouble2D();
 		Double2D amountAdd = new Double2D();
+		
+		// HH 30.12.14 - if a range limit is supplied, update the internal variables
 		double reqDistance = UGVObsViewingRange;
+		if (inRangeLimit != 0) {
+			reqDistance = inRangeLimit;
+		}
+		
 		Double2D reqCoord = new Double2D(-1,-1);
 		double distance;
 		
@@ -2038,11 +2064,15 @@ public class UGV extends Car {
 	/**
 	 * HH 7.8.14 - Based on Car.checkCourse (Robert Lee)
 	 *  
+	 *  HH 30.12.14 Added new param inLimitRange - this should be set to 0 to use the defaults, but otherwise can
+	 *  be used to limit the search range so that it can be used to find an intermediate obstacle where there might
+	 *  be three obstacles in a row.
+	 *  
 	 * @param sim
 	 * @param bearing
 	 * @return distance to the obstacle
 	 */
-	private Double2D checkAllObstacles(COModel sim, double bearing, boolean getMax)
+	private Double2D checkAllObstacles(COModel sim, double bearing, boolean getMax, double inLimitRange)
 	{
 		// Init to the values we would want for finding the min
 		double reqDistance = UGVObsViewingRange + 1;
@@ -2084,7 +2114,9 @@ public class UGV extends Car {
 //			{
 			//if (((Obstacle)sim.obstacles.get(i)).inShape(location) == true ) 
 			//{
-				currentDistanceCoord = checkForObstacle(sim, bearing, (Obstacle) sim.obstacles.get(i), getMax); // HH 3.12.14 Removed thisRoad param
+				// HH 30.12.14 - Passed inLimitRange parameter to the interior method so that we can check for obstacles
+				// which appear at a closer range
+				currentDistanceCoord = checkForObstacle(sim, bearing, (Obstacle) sim.obstacles.get(i), getMax, inLimitRange); // HH 3.12.14 Removed thisRoad param
 				if (currentDistanceCoord.x > -1) {
 					currentDistance = location.distance(currentDistanceCoord.x, currentDistanceCoord.y);
 

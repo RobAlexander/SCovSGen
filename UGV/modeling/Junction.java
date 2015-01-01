@@ -281,7 +281,7 @@ public class Junction extends Entity
 		double x = location.x;
 		double y = location.y;
 		double laneWidth = Road.roadWidth/2;
-		final double offset = 1; // HH 15.7.14 offset to move location outside of junction
+		final double offset = 1.5; // HH 15.7.14 offset to move location outside of junction HH 31.12.14 Increased due to change to WP 'eating'
 		
 		int [][] junctionHistory = theUGV.getJunctionHistory();
 		

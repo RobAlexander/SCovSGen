@@ -17,7 +17,7 @@ import sim.engine.SimState;
  */
 public class InfoLogFile {
 
-	private File infoLog = new File("InfoLog.txt");
+	private File infoLog = new File(Constants.outFilePath + "InfoLog.txt");
 	private COModel sim;
 	private PrintStream ps;
 	

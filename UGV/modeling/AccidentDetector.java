@@ -67,7 +67,7 @@ public class AccidentDetector implements Constants,Steppable {
 	public AccidentDetector(double percentageFaults, int mapNo){ 
 		
 		// HH 28.8.14 : NOTE - differences in percentages of faults must be > 1% or files will be overwritten
-		accidentLog = new File("AccidentLog" + Math.round(percentageFaults * 100) + "_" + mapNo + ".txt");
+		accidentLog = new File(Constants.outFilePath + "AccidentLog" + Math.round(percentageFaults * 100) + "_" + mapNo + ".txt");
 		
 		try{
 			ps= new PrintStream(new FileOutputStream(accidentLog));
@@ -79,7 +79,7 @@ public class AccidentDetector implements Constants,Steppable {
 		}
 		
 		// HH 28.8.14 - Create new summary log file for logging pertinent data about the run as a whole for easy analysis
-		accidentSummary = new File("AccidentSummary" + Math.round(percentageFaults * 100) + "_" + mapNo + ".txt");
+		accidentSummary = new File(Constants.outFilePath + "AccidentSummary" + Math.round(percentageFaults * 100) + "_" + mapNo + ".txt");
 		
 		try{
 			psSummary= new PrintStream(new FileOutputStream(accidentSummary));

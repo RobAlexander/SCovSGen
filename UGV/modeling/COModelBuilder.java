@@ -525,8 +525,9 @@ public class COModelBuilder
 			x = mapGenRandom.nextDouble() * Constants.WorldXVal;
 			y = mapGenRandom.nextDouble() * Constants.WorldYVal;
 		} while (!sim.roadAtPoint(new Double2D(x,y), sim.roads) || sim.junctionAtPoint(new Double2D(x,y), sim.junctions) != 0 || 
-				sim.obstacleAtPoint(new Double2D(x,y), obstacles)); // HH 23.7.14 - edited to prevent adding Target in Junction + 7.8.14 or in Obstacles
-		t.setLocation(new Double2D(x,y));
+		//		sim.obstacleAtPoint(new Double2D(x,y), obstacles)); // HH 23.7.14 - edited to prevent adding Target in Junction + 7.8.14 or in Obstacles
+				sim.obstacleNearPoint(new Double2D(x,y), obstacles, sim.roads)); // HH 1.7.14 Quick fix to keep target further away from obstacles
+				t.setLocation(new Double2D(x,y));
 		t.isSchedulable = false;
 		sim.allEntities.add(t);
 		
@@ -535,8 +536,8 @@ public class COModelBuilder
 			x = mapGenRandom.nextDouble() * Constants.WorldXVal;
 			y = mapGenRandom.nextDouble() * Constants.WorldYVal;
 		} while (!sim.roadAtPoint(new Double2D(x,y), sim.roads) || sim.junctionAtPoint(new Double2D(x,y),  sim.junctions) != 0 || 
-				sim.obstacleAtPoint(new Double2D(x,y), obstacles)); // HH 18.6.14 - edited to prevent adding UGV in Junction + 7.8.14 or in Obstacles
-		
+		//		sim.obstacleAtPoint(new Double2D(x,y), obstacles)); // HH 18.6.14 - edited to prevent adding UGV in Junction + 7.8.14 or in Obstacles
+				sim.obstacleNearPoint(new Double2D(x,y), obstacles, sim.roads));// HH 1.7.14 Quick fix to start UGV further away from obstacles
 		// HH 18.6.14 - new code to snap the UGV to the nearest side of the road, and orient it 
 		// so that it is facing in the right direction to start driving.
 		initialInfo startInfo = sim.snapToLane(x,y);

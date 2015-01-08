@@ -155,6 +155,10 @@ public class DumbCar extends Car {
 			{
 				for(int i = 0; i < sim.junctions.size(); i++) 
 				{				
+					// HH 6.1.15 Are we NEARLY inside a junction?  We need to start stopping the DumbCars slightly
+					// back from the kerb as the 
+					
+					
 					// ARE WE INSIDE A JUNCTION
 					if (((Junction) sim.junctions.get(i)).inShape(me)) {
 								

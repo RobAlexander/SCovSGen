@@ -1,4 +1,5 @@
 package modeling;
+import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 
@@ -243,9 +244,36 @@ public class Junction extends Entity
 		// just the car/UGV which calls this method first following the junction becoming unoccupied that 
 		// will be given the chance to move.)
 		
+		// HH 7.1.15 As this method is used by the UGV, we need to make sure that the UGV does not enter the 
+		// junction if there is any part of a DC remaining in the junction.  Existing methods are not strict enough
+		// to prevent this (possible due to short time-outs for DCs?).  We will assume that the 'intelligent' junction 
+		// is equipped with sensors to detect the presence of vehicles within its perimeter.  This information can be 
+		// used by the junction to prevent the UGV from entering.  NOTE: Similar safety behaviour will not be rolled out
+		// to the DC method as it would be likely to result in the network gridlocking.  Assumption is that the manned
+		// vehicles would be able to find safe routes through the junction to avoid the vehicles which are blocking it.
+		
+		// Loop through all the cars and see if any of them overlap with the area of this junction
+		boolean carInJunction = false;
+		DumbCar inCar;
+		Area junctionArea = new Area(getJunctionArea());
+		Area intersection;
+		for (int i=0;i<sim.cars.size(); i++)
+		{
+			inCar = (DumbCar) sim.cars.get(i);
+			intersection = new Area(junctionArea);
+			intersection.intersect(new Area(inCar.getShape()));
+			
+			if (intersection.isEmpty() == true)
+			{
+				carInJunction = true;
+				break;
+			}
+		}
+		// HH 7.1.15 - END
+		
 		// Firstly need to check to see if the junction is already in use (or there is no point
 		// going any further)
-		if (occupied) 
+		if (occupied || carInJunction == true) // HH 7.1.15 Added carInJunction part (see above) 
 		{	
 			// Check the time that the occupied flag was set and if it has exceeded a maximum time, then clear 
 			// the occupied flag and allow the method to continue below.  
@@ -282,6 +310,7 @@ public class Junction extends Entity
 		double y = location.y;
 		double laneWidth = Road.roadWidth/2;
 		final double offset = 1.5; // HH 15.7.14 offset to move location outside of junction HH 31.12.14 Increased due to change to WP 'eating'
+		//final double offset = 1; // HH 6.1.15 Changed back to prevent corner clipping
 		
 		int [][] junctionHistory = theUGV.getJunctionHistory();
 		
@@ -289,6 +318,11 @@ public class Junction extends Entity
 		Double2D tempCoords = new Double2D(0,0);
 		int loopCount = 0;
 		UGV_Direction selected = UGV_Direction.NORTH;
+		
+		// HH 7.1.15 Further attempt to stop the corner-cutting, will add an intermediate WP and return that
+		// instead of the final one.  The final one will be created by this method first, but the intermediate one
+		// will be returned for creation by the UGV step method
+		Double2D interExitCoords = new Double2D(-1,-1); // Coordinates for intermediate WP
 		
 		while (exitCoords.x == -1 && exitCoords.y == -1 && loopCount < 1000) {
 		
@@ -298,6 +332,8 @@ public class Junction extends Entity
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x + offset, tempCoords.y);
 					selected = UGV_Direction.EAST;
+					
+					interExitCoords = new Double2D(tempCoords.x, tempCoords.y); // HH 7.1.15 
 				}
 			}
 
@@ -307,6 +343,8 @@ public class Junction extends Entity
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y + offset);
 					selected = UGV_Direction.SOUTH;
+					
+					interExitCoords = new Double2D(tempCoords.x, tempCoords.y); // HH 7.1.15 
 				}
 			}
 
@@ -316,6 +354,8 @@ public class Junction extends Entity
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x - offset, tempCoords.y);
 					selected = UGV_Direction.WEST;
+					
+					interExitCoords = new Double2D(tempCoords.x, tempCoords.y); // HH 7.1.15 
 				}
 			}
 
@@ -325,6 +365,8 @@ public class Junction extends Entity
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y - offset);
 					selected = UGV_Direction.NORTH;
+					
+					interExitCoords = new Double2D(tempCoords.x, tempCoords.y); // HH 7.1.15 
 				}
 			}
 			
@@ -337,7 +379,15 @@ public class Junction extends Entity
 			theUGV.updateJunctionHistory(idx, selected);
 		}
 		
-		return new jctExitDirInfo(exitCoords, Utility.getDirectionDeg(selected));
+		// HH 7.1.15 - Changes below to try and prevent UGV from cutting the corner and clipping waiting cars
+		
+		// Create the new intermediate WP so that the new one will be set up between the UGV and this one
+		theUGV.createWaypoint(exitCoords, sim, theUGV.location, TUTURNWP, false, null);
+		
+		//return new jctExitDirInfo(exitCoords, Utility.getDirectionDeg(selected));
+		return new jctExitDirInfo(interExitCoords, Utility.getDirectionDeg(selected));
+		
+		// HH 7.1.15 END
 	}
 	
 	/**

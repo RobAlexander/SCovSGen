@@ -564,6 +564,20 @@ public class AccidentDetector implements Constants,Steppable {
 			if (((UGV) car).isUTurning() == true) {
 				return retVal; // return value of x=-1 indicates failure
 			}
+			
+			// HH 7.1.15 - if the UGV is very close to the target <2m, then it may cross one of the kerb
+			// lines without reporting an accident as it is possible for the target to be located so close to 
+			// the kerb that the UGV cannot avoid an overlap and still reach the target.
+			if (inLineType != Constants.LineType.CENTRE)
+			{
+				Double2D finalTargetLoc = ((UGV) car).getFinalTargetLoc();
+				
+				if (finalTargetLoc.x != -1 && ((Double2D) car.location).distance(finalTargetLoc) < 2)
+				{
+					return retVal;
+				}
+			}
+			
 		}
 		
 		

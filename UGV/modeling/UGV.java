@@ -845,9 +845,19 @@ public class UGV extends Car {
 					//} else if (eTarget.getType() == TWAYPOINT ) {
 						//get rid of wp and get new target ID
 						//System.out.println("Car"+this.getID()+"gets a new target and removing waypoint");
-						setTargetID(((Waypoint) eTarget).getNextPoint());
-						environment.remove(eTarget);
 						
+						// HH 6.1.15 Add a check to make sure that the UGV is not in a junction so that we can
+						// change the offset for the junction WP back to 1 to avoid clipping of corners.
+						// HH 7/1/15 Change so we only check that the centre of the UGV has left the junction 
+						// (slightly weaker, but above solution was causing UGV to miss WP and circle around off-road
+						// in order to find it again)
+						//if (getJctID() == 0)
+						//if (getJctID() == 0 || sim.junctionExitAtPoint(this.location, sim.junctions) == true)
+						//{
+							setTargetID(((Waypoint) eTarget).getNextPoint());
+							environment.remove(eTarget);
+						//}
+							
 						// HH 15.12.14 - We don't actually want to clear the junction until the whole DumbCar
 						// has left the junction, not just the centre location.  This method has been moved to 
 						// the top of the Step() routine
@@ -2590,10 +2600,20 @@ public class UGV extends Car {
 	}
 	
 	/*
-	 * 12.12.14 HH CalcStoppingDistance method to determine the distance to the nearest vehicle in front
+	 * 7.1.15 HH getFinalTargetLoc
 	 * 
-	 * @return double distance to nearest vehicle in front
+	 * @return Double2D location of finalTarget
 	 */
+	
+	public Double2D getFinalTargetLoc()
+	{
+		if (finalTarget != null)
+		{
+			return finalTarget.getLocation();
+		} else {
+			return new Double2D(-1, -1);
+		}
+	}
 
 }
 

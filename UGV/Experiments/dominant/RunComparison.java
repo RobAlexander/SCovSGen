@@ -42,11 +42,11 @@ public class RunComparison {
     	// HH Outer loop enables us to run a number of different levels of search effort (which
     	// should also provide different levels of situation coverage and will therefore help
     	// us to explore the relationship between situation coverage and #accidents/faults found).
-    	int iterationLimit = 100; 
+    	int iterationLimit = 20000; // Use this as a start value if we are looping, or the #iterations if we are doing a single run 
     	double tempPercentCov;
     	
-    	for (int i=0; i<5; i++)
-    	{  		
+    	//for (int i=0; i<5; i++)
+    	//{  		
     		// *****  SEARCH-BASED MAP GENERATION *****
     		
     		// Log the start time
@@ -73,7 +73,7 @@ public class RunComparison {
     		// *****  RANDOM MAP GENERATION *****
 
     		long ExternalSeed;
-    		double percentageFaults = 0;
+    		double percentageFaults = (double)5/100; // HH 20.1.15 We need to insert some faults
 
     		// HH 15.1.15 : Existing copies of this file will be overwritten if the output folder is not empty
     		File newOutputs = new File(Constants.outFilePath + "RandomExternalSeeds_" + iterationLimit + ".txt");
@@ -85,6 +85,7 @@ public class RunComparison {
     		catch(FileNotFoundException e)
     		{
     			System.out.print("RandomExternalSeeds_" + iterationLimit + ".txt file not found!");
+    			ps.close();
     			return;
     		}
 
@@ -96,8 +97,9 @@ public class RunComparison {
     		while (java.lang.System.currentTimeMillis() < (endTime + timeElapsed)) // Assume that endTime of SB search is startTime for Random search
     		{
     			ExternalSeed = Math.round(new SecureRandom().nextInt()); // Get a new Map/Initial Configuration
-    			mod.runBatch(3, ExternalSeed); // Run a batch of 3 for each initial configuration
-
+    			//mod.runBatch(3, ExternalSeed); // Run a batch of 3 for each initial configuration
+    			mod.runBatch(1, ExternalSeed); // Run a batch of 1 for each initial configuration to speed up
+    			
     			// Add external seed to an output file
     			ps2.println(ExternalSeed);
     		}	
@@ -113,7 +115,7 @@ public class RunComparison {
     		
     		// Update iterationLimit
     		iterationLimit = iterationLimit * 4; // We don't have enough run time to just double it, we need to do 4x.
-    	} 
+    	//} 
     	
     	ps.close();
     }

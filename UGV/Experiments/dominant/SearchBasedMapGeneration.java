@@ -85,9 +85,9 @@ public class SearchBasedMapGeneration {
 			Res = mod.getCoverageCriteria(ExternalSeed, noIterations);
 			
 			// Categorise the criteria results returned from the simulation
-			c1 = categorize(Res.distTargetToObs, 1);
-			c2 = categorize(Res.distUGVToTarget, 2);
-			c3 = categorize(Res.distPrevJctToTarget, 3);
+			c1 = Math.max(0, categorize(Res.distTargetToObs, 1)); // HH 21.1.15 - Little cheat to prevent -1 being returned and causing exception
+			c2 = Math.max(0, categorize(Res.distUGVToTarget, 2)); // HH 21.1.15 - Little cheat to prevent -1 being returned and causing exception
+			c3 = Math.max(0, categorize(Res.distPrevJctToTarget, 3)); // HH 21.1.15 - Little cheat to prevent -1 being returned and causing exception
 						
 			// Test whether the coverage count in the box has already reached the required number of  
 			// candidate seeds.  

@@ -28,7 +28,7 @@ public class ActuallyRunSpecificBatchFromFile {
     public static void runBatch(int iterationLimit)
     {
     	// HH Parameters that we need to read from file
-    	double percentageFaults = 0;
+    	double percentageFaults = (double)5/100; // HH 20.1.15 We need to insert some faults
     	Long tempLong;
     	long ExternalSeed; 
     	COModelWithoutUI mod;
@@ -64,7 +64,8 @@ public class ActuallyRunSpecificBatchFromFile {
     		// Run map generation and analysis to calculate the values for our coverage criteria -
     		// they will be categorised by a static method defined within this class so the category 
     		// boundaries can easily be found and updated if necessary
-    		mod.runBatch(3, ExternalSeed); // Run a batch of 3 for each initial configuration
+    		//mod.runBatch(3, ExternalSeed); // Run a batch of 3 for each initial configuration
+    		mod.runBatch(1, ExternalSeed); // Run a batch of 1 for each initial configuration (to speed things up)
     		
     		// Get the next line
     		try {

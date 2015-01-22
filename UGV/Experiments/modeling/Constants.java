@@ -140,7 +140,7 @@ public interface Constants
 	public static final int NO_RANDOM_RUNS = 20;
 	
 	// HH 5.1.15 Supply a different file path for the output files
-	public static final String outFilePath = "D:\\hh940\\UGVResultsBackup\\Jan15th_SB\\";
+	public static final String outFilePath = "D:\\hh940\\UGVResultsBackup\\Jan21st_SBSF\\";
 	
 	// HH 14.1.14 Used as a return value from the method which tests candidate external random seeds by 
 	// generating the map and calculating specified (coverage) criteria

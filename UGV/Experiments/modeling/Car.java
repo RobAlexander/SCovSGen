@@ -1093,7 +1093,7 @@ public abstract class Car extends Entity implements Oriented2D
 				changeSpeed(ACCELERATE);
 				
 				// New Fault #5 (Fault #10) - 22/7/14 - Repeat the command to increase speed again
-				if (sim.getFault(5) == true) {
+				if (sim.getFault(5) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for UGV
 					changeSpeed(ACCELERATE);
 					sim.setFault(5);
 				}
@@ -1101,7 +1101,7 @@ public abstract class Car extends Entity implements Oriented2D
 				changeSpeed(DECELERATE);
 				
 				// New Fault #6 (Fault #11) - 22/7/14 - Repeat the command to reduce speed again
-				if (sim.getFault(6) == true) {
+				if (sim.getFault(6) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for UGV
 					changeSpeed(DECELERATE);
 					sim.setFault(6);
 				}
@@ -1552,19 +1552,19 @@ public abstract class Car extends Entity implements Oriented2D
 		}
 		
 		// New Fault #8 (FAULT #17) - HH 28/7/14 - Force the angle loop to start half-way through
-		if (sim.getFault(8) == true) {
+		if (sim.getFault(8) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
 			startAngle = 0;
 			sim.setFault(8); // HH 13.11.14 Added
 		} 
 
 		// New Fault #9 (FAULT #18) - HH 28/7/14 - Force the angle loop to end half-way through
-		if (sim.getFault(9) == true) {
+		if (sim.getFault(9) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
 			endAngle = 0;
 			sim.setFault(9); // HH 13.11.14 Added
 		} 
 		
 		// New Fault #10 (FAULT #19) - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
-		if (sim.getFault(10) == true) {
+		if (sim.getFault(10) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
 			resolution = resolution*2;
 			sim.setFault(10); // HH 13.11.14 Added
 		}  
@@ -1582,19 +1582,19 @@ public abstract class Car extends Entity implements Oriented2D
 			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 			
 			// New Fault #11 (FAULT #21) - HH 28/7/14 - Force the angle loop to start half-way through
-			if (sim.getFault(11) == true) {
+			if (sim.getFault(11) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
 				startRange = inRange/2;
 				sim.setFault(11); // HH 13.11.14 Added
 			} 
 
 			// New Fault #12 (FAULT #22) - HH 28/7/14 - Force the angle loop to end half-way through
-			if (sim.getFault(12) == true) {
+			if (sim.getFault(12) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
 				endRange = inRange/2;
 				sim.setFault(12); // HH 13.11.14 Added
 			} 
 			
 			// New Fault #13 (FAULT #23) - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-			if (sim.getFault(13) == true) {
+			if (sim.getFault(13) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
 				rangeSensitivity = inSensitivity*2;
 				sim.setFault(13); // HH 13.11.14 Added
 			} 

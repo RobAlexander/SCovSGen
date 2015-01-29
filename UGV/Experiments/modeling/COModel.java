@@ -58,6 +58,8 @@ public class COModel extends SimState
 	private double percentageFaults = 0;
 	// HH end
 	
+	private boolean wantRandomFaults = false;
+	
 	private boolean runningWithUI = false; 
 	
     private int newID = 0;	
@@ -223,7 +225,7 @@ public class COModel extends SimState
 	 * // HH 22/7/14 - Added extra input parameter 
 	 * @param inPercentageFaults - value of 0..1 (inclusive) to set the percentage of faults to be injected into the model
 	 */
-    public COModel(long seed, double x, double y, boolean UI, double inPercentageFaults, long mapNo)//,int noCars, int noObstacles)
+    public COModel(long seed, double x, double y, boolean UI, double inPercentageFaults, long mapNo, boolean inWantRandomFaults)//,int noCars, int noObstacles)
     {
     	super(seed);
     	//System.out.println("At the start of COModel Constructor: Free =" + Runtime.getRuntime().freeMemory());
@@ -268,13 +270,14 @@ public class COModel extends SimState
 //		System.out.println("Simulation2 is being called!!!!!!!!!!! the model is: "+ this.toString());
 
 		// HH 22/7/14 initialise the percentageFaults field
-		setPercentageFaults(inPercentageFaults);
+		setPercentageFaults(inPercentageFaults); // This is also used to store the active fault number if we do not want random faults
+		wantRandomFaults = inWantRandomFaults; // HH 22.1.15 Store whether we want to generate faults at random, or whether we are specifying one
 	}
     
     // HH 22/7/14 - Update the percentageFaults parameter to the one required by this simulation
     public void setPercentageFaults(double inPerFaults) {
-    	// Check that it is within the required range:
-    	if (inPerFaults >= 0 && inPerFaults <= 1.0) {
+    	// Check that it is within the required range: // HH 22.1.15 Changed to allow specific fault to be stored in percentageFaults
+    	if ((inPerFaults >= 0 && inPerFaults <= 1.0 && wantRandomFaults == true)||(inPerFaults < Constants.MAX_FAULTS && wantRandomFaults == false)) {
     		percentageFaults = inPerFaults;
     	} else {
     		this.schedule.clear();
@@ -397,7 +400,14 @@ public class COModel extends SimState
 		// be logged to file.
 		faultArray = new boolean[Constants.MAX_FAULTS]; // Clear out the array // HH 3.12.14 Added -1
 		faultCalled = new long[Constants.MAX_FAULTS]; // Clear out the array or results will accumulate! // HH 3.12.14 Added -1
-		initFaultArray(percentageFaults);// Instantiate the faultArray with the required percentage of faults
+		
+		// HH 22.1.15 Changed to allow one fault to be activated at request
+		if (wantRandomFaults == false)
+		{
+			initFaultArrayWithFault(); // Instantiate the faultArray to set the supplied fault to true (uses private field percentageFaults)
+		} else {
+			initFaultArray(); // Instantiate the faultArray with the required percentage of faults (private field)
+		}
 		// HH end		
 		
 		aDetector.addHeader(this); // HH 30/4/14 - Add header to accident log file
@@ -648,9 +658,22 @@ public class COModel extends SimState
 	}	
 
     /*
+     * HH 22.1.15 - Construct the fault array by activating only the specified fault
+     */
+	private void initFaultArrayWithFault() {
+			
+		int faultIdx = (int) percentageFaults;
+		
+		if (faultIdx < Constants.MAX_FAULTS)
+		{
+			faultArray[faultIdx] = true; // set the fault to 'active' in the array			
+		}
+	}
+	
+    /*
      * HH 22/7/14 - Return a string which represents the fault array, and can be output to e.g. the Accident Log
      */
-	private void initFaultArray(double percentageFaults) {
+	private void initFaultArray() {
 
 		// Either, loop for the appropriate number of faults (%Faults * TotalFaults) and ensure that choose 
 		// a new empty slot each time (at random) - need an internal while loop so we get a repeat if we choose

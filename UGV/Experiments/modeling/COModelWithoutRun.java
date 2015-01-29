@@ -16,7 +16,7 @@ public class COModelWithoutRun
 	// 
     public COModelWithoutRun(double percentageFaults, int mapNo, long newInternalSeed) 
     { 
-    	sBuilder = new COModelBuilder(new COModel( newInternalSeed, Constants.WorldXVal, Constants.WorldYVal, false, percentageFaults, mapNo));
+    	sBuilder = new COModelBuilder(new COModel( newInternalSeed, Constants.WorldXVal, Constants.WorldYVal, false, percentageFaults, mapNo, true));
     	System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
     }
          

@@ -52,7 +52,7 @@ public class RandomSimulationWithoutUI {
     				percentageFaults = (double)i/100;
 
     				//COModelWithoutUI mod = new COModelWithoutUI(percentageFaults, (m*100 + j));
-    				COModelWithoutUI mod = new COModelWithoutUI(percentageFaults, j);
+    				COModelWithoutUI mod = new COModelWithoutUI(percentageFaults, j, true);
 
     				// HH 21.10.14 - Run 5 different initial configurations at each fault level; run each of these
     				// with 3 different sets of run-time behaviour

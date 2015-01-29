@@ -45,6 +45,11 @@ public class RunComparison {
     	int iterationLimit = 20000; // Use this as a start value if we are looping, or the #iterations if we are doing a single run 
     	double tempPercentCov;
     	
+    	// HH 22.1.15 Define the array of random seeds that we want to loop through
+    	int[] setFaultArray = {1, 3, 7, 9, 11, 16, 17}; // Make this an empty array if you want to run random faults
+    	//int[] setFaultArray = {6, 7, 11, 14, 15, 16, 19}; // Make this an empty array if you want to run random faults
+    	//int[] setFaultArray = {6}; 
+    	
     	//for (int i=0; i<5; i++)
     	//{  		
     		// *****  SEARCH-BASED MAP GENERATION *****
@@ -61,7 +66,7 @@ public class RunComparison {
     		ps.println("Search Based Map Generation with iteration limit: " + iterationLimit + " achieves situation coverage of: " + tempPercentCov + ".");
     		
     		// Run the model with the Search-Based seed set
-    		ActuallyRunSpecificBatchFromFile.runBatch(iterationLimit); // pass in empty arguments
+    		ActuallyRunSpecificBatchFromFile.runBatch(iterationLimit, false, setFaultArray); // FALSE = We're going to supply the Fault # in runBatch
 
     		// Log the finish time
     		long endTime = java.lang.System.currentTimeMillis();
@@ -89,21 +94,46 @@ public class RunComparison {
     			return;
     		}
 
-    		// Create the simulation model so that all the results will end up in the same output file
-    		COModelWithoutUI mod = new COModelWithoutUI(percentageFaults, (100000 + iterationLimit)); // Make sure that the output filenames will be different from SB
-
+    		COModelWithoutUI mod = new COModelWithoutUI();
+    		int loopLength = 1;
+    		if (setFaultArray.length > 0)
+    		{
+    			loopLength = setFaultArray.length;
+    		}
+    		
+    		int iteration = 0;
+    		
     		// Loop for same length of time as taken above, generating individual External seeds
     		// and running a batch of 3 simulations with each
     		while (java.lang.System.currentTimeMillis() < (endTime + timeElapsed)) // Assume that endTime of SB search is startTime for Random search
     		{
     			ExternalSeed = Math.round(new SecureRandom().nextInt()); // Get a new Map/Initial Configuration
-    			//mod.runBatch(3, ExternalSeed); // Run a batch of 3 for each initial configuration
-    			mod.runBatch(1, ExternalSeed); // Run a batch of 1 for each initial configuration to speed up
+    			
+    			// HH 22.1.15 Loop through the set of individual faults that we want to activate in a loop
+    			for (int i=0; i<loopLength; i++)
+    			{   			
+        			if (setFaultArray.length > 0)
+        			{	
+        				// Create the simulation model so that all the results will end up in the same output file
+        				mod = new COModelWithoutUI(setFaultArray[i], (100000 + iterationLimit + iteration), false); // Make sure that the output filenames will be different from SB
+        			} else {
+        				mod = new COModelWithoutUI(percentageFaults, (100000 + iterationLimit), true); // Make sure that the output filenames will be different from SB
+        			}
+        			
+        			//mod.runBatch(3, ExternalSeed); // Run a batch of 3 for each initial configuration
+        			mod.runBatch(1, ExternalSeed); // Run a batch of 1 for each initial configuration to speed up
+        		}
     			
     			// Add external seed to an output file
     			ps2.println(ExternalSeed);
-    		}	
-
+    			
+    			// Increment loop count so that we have separate files
+    			if (setFaultArray.length > 0)
+    			{
+    				iteration = iteration + 1;
+    			}
+    		}
+    		    		
     		ps2.close();
 
     		ps.println("Random Map Generation ending with iteration limit: " + iterationLimit + " at time: " + java.lang.System.currentTimeMillis() + ".");

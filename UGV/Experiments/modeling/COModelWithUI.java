@@ -5,13 +5,16 @@ import sim.portrayal.DrawInfo2D;
 import sim.portrayal.Inspector;
 import sim.portrayal.continuous.*;
 import sim.portrayal.simple.*;
+
 import javax.swing.*;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.security.SecureRandom;
+
 import sim.portrayal.grid.FastValueGridPortrayal2D;
 
 
@@ -44,16 +47,17 @@ public class COModelWithUI extends GUIState
 	//FastValueGridPortrayal2D dumbCarsPortrayal = new FastValueGridPortrayal2D("Moving Obstacles", true);  // immutable
 	// HH end
    
-    public COModelWithUI() 
+	// HH 29.1.15 - Set arguments to 0, True if want a 'normal' standard run
+    public COModelWithUI(double percentageFaults, boolean inWantRandomFaults) 
     { 
     	//super(new COModel( System.nanoTime(), Constants.WorldXVal, Constants.WorldYVal, true, 0, 0)); // HH 22/7/14 Added percentage faults parameter to end
     	// HH 3.9.14 Changed seed method as concerned that integer casting of long value that occurs later could 
     	//result in lots of seeds having MAX_VALUE
-    	super(new COModel( new SecureRandom().nextInt(), Constants.WorldXVal, Constants.WorldYVal, true, 0, 0));     	
+    	super(new COModel( new SecureRandom().nextInt(), Constants.WorldXVal, Constants.WorldYVal, true, percentageFaults, 0, inWantRandomFaults));     	
     	System.out.println("COModelWithUI is being called!"+ "it's state(model)is: "+ state.toString());
     	sBuilder = new COModelBuilder((COModel) state);
     }
-    
+        
     public COModelWithUI(SimState state) {super(state); }    
     
     public static String getName() { return "Robot-Testing-Sim"; } //[TODO] rename this

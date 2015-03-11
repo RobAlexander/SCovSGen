@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>UGV</name>
+	<comment></comment>
+	<projects>
+		<project>ecj</project>
+		<project>mason</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>ecj</name>
+			<type>2</type>
+			<location>C:/Users/Heather/workspace/ecj</location>
+		</link>
+		<link>
+			<name>mason</name>
+			<type>2</type>
+			<location>C:/Users/Heather/workspace/mason</location>
+		</link>
+	</linkedResources>
+</projectDescription>

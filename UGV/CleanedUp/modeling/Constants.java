@@ -39,8 +39,8 @@ public interface Constants
 		CLASHWITHOTHERCAR,
 		LEAVEROAD,
 		CROSSCENTRELINE,
-		CROSS_NW_LINE,
-		CROSS_SE_LINE,
+		CROSS_NE_LINE,
+		CROSS_SW_LINE,
 		TIMEOUT;
 	}
 	
@@ -64,20 +64,19 @@ public interface Constants
 	public static final int T_SOUTH = 2;
 	public static final int T_WEST= 3;
 	
-	// HH 16/6/14
 	public static enum LineType
 	{
-		SESIDE,
+		NESIDE, // represents a decrease in either x or y compared to the centre of the road
 		CENTRE,
-		NWSIDE
+		SWSIDE // represents an increase in either x or y compared to the centre of the road
 	}
 	
-	// HH 9.9.14 - For when we want to be explicit relative to current location/heading
+	// For when we want to be explicit relative to current location/heading
 	public static enum genLineType
 	{
-		NEARSIDE,
+		NEARSIDE, // The same side of the road as the vehicle, or nearer to the kerb than the vehicle
 		CENTRE,
-		OFFSIDE
+		OFFSIDE // The opposite side of the road, or further from the kerb than the vehicle
 	}
 	
 	public static final double ROADEDGINGWIDTH = 0.1; // 10cm in metres - width of road edging

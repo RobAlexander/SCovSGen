@@ -30,9 +30,10 @@ import modeling.Utility;
 public class SearchBasedMapGeneration {
 
 	/**
-	 * @param args
+	 * This method...
+	 * @param int iterationLimit ()
+	 * @return double ()
 	 */
-	
 	public static double generateExternalSeeds(int iterationLimit) {
 		
 		// First task is to set up an array to represent the 'boxes' so that we can store whether or not
@@ -127,8 +128,12 @@ public class SearchBasedMapGeneration {
 		return tempPercentCov;
 	}
 
-	// HH 14.1.15 - Convert the supplied coverage criterion to the category range 0-5 as
-	// required for determining situation coverage
+	/**
+	 * Convert the supplied coverage criterion to the category range 0-5 as required for determining situation coverage
+	 * @param double inCovCriterion ()
+	 * @param int critIdx ()
+	 * @return int ()
+	 */
 	public static int categorize(double inCovCriterion, int critIdx) {
 		
 		int retVal = 0;
@@ -160,7 +165,15 @@ public class SearchBasedMapGeneration {
 		return retVal;
 	}
 	
-	// HH 14.1.15 - Dump the supplied coverageMatrix to file
+	/**
+	 * Dump the supplied coverageMatrix to file
+	 * @param int[][][] inMatrix ()
+	 * @param String inText ()
+	 * @param double tempPercentCov ()
+	 * @param int boxesCovered ()
+	 * @param long duration ()
+	 * @param int iterationLimit ()
+	 */
 	public static void matrixToFile(int[][][] inMatrix, String inText, double tempPercentCov, int boxesCovered, long duration, int iterationLimit) {
 		
 		// Open a file for output
@@ -210,8 +223,6 @@ public class SearchBasedMapGeneration {
 		ps.println("Duration of Search = " + duration + ".");
 		
 		// Close the file
-		ps.close(); // Close the output file
-		
+		ps.close(); // Close the output file	
 	}
-	
 }

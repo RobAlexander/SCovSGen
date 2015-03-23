@@ -10,14 +10,17 @@ import sim.util.Double2D;
 
 public class ParkedCar extends Obstacle implements Oriented2D {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private int roadId;
 	
-	// HH 2.10.14 - Updated to pass in the direction
+	/**
+	 * Updated to pass in the direction
+	 * @param int idNo ()
+	 * @param int typeNo ()
+	 * @param double inDirection ()
+	 * @param int inRoadId ()
+	 */
 	public ParkedCar(int idNo, int typeNo, double inDirection, int inRoadId) {
 		super(idNo, typeNo, inDirection);
 		roadId = inRoadId; // HH 13.8.14 - Added to allow check for whether UGV and Parked Car are on same road
@@ -26,6 +29,8 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	/**
 	 * method which returns true or false if a provided coordinate is in the shape
 	 * would have to be overwritten when implemented
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
 	{
@@ -36,6 +41,8 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	/**
 	 * HH 2.10.14 method which returns true or false if a provided area intersects with the
 	 * shape
+	 * @param Shape inShape ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Shape inShape)
 	{
@@ -47,6 +54,7 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	
 	/**
 	 * method which returns the id of the road on which the Obstacle is located
+	 * @return int ()
 	 */
 	public int getRoadId()
 	{
@@ -54,7 +62,9 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	}
 	
 	/**
-	 * HH 2.10.14 - Updated to use same method as DumbCar to return a Shape object representing the parked car obstacle and centred at location
+	 * Updated to use same method as DumbCar to return a Shape object representing the parked car 
+	 * obstacle and centred at location
+	 * @return Shape ()
 	 */
 	public Shape getShape()
 	{
@@ -73,5 +83,4 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 		
 		return carShape;
 	}
-	
 }

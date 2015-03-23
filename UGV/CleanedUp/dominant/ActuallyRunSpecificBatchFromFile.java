@@ -10,21 +10,21 @@ import java.io.IOException;
 import modeling.COModelWithoutUI;
 import modeling.Constants;
 
-
-
 /**
  * @author HH 15.1.15
  * 
- * This method has been created to allow us to supply a set of existing experiment runs as a text file, and
+ * This class has been created to allow us to supply a set of existing experiment runs as a text file, and
  * use the external random seed that defines each run to re-generate the network map and run the model.  This 
  * is a variation of the RunSpecificBatchFromFile, which (despite its name) does not actually run the model. 
  */
 public class ActuallyRunSpecificBatchFromFile {
 
 	/**
-	 * @param args
+	 * This method...
+	 * @param int iterationLimit ()
+	 * @param boolean wantRandomFaults ()
+	 * @param int[] inSetFaultArray ()
 	 */
-	
     public static void runBatch(int iterationLimit, boolean wantRandomFaults, int[] inSetFaultArray)
     {
     	// HH Parameters that we need to read from file

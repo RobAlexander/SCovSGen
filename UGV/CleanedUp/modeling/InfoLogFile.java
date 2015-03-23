@@ -18,6 +18,9 @@ public class InfoLogFile {
 	private COModel sim;
 	private PrintStream ps;
 	
+	/**
+	 * Constructor
+	 */
 	public InfoLogFile(){ 
 				
 		try{
@@ -30,16 +33,19 @@ public class InfoLogFile {
 		}
 	}
 
-	/*
+	/**
 	 * Simple log function to allow messages about each run to be printed to the info log file
+	 * @param String str ()
 	 */
 	public void addLog(String str)
 	{
 		ps.println(str); 
 	}
 	
-	/** HH 6/5/14 - Adds header information to file to enable run
-	 *  to be reproduced.  An entry in the log will be made for all runs.
+	/** 
+	 * HH 6/5/14 - Adds header information to file to enable run
+	 * to be reproduced.  An entry in the log will be made for all runs.
+	 * @param COModel state () 
 	 **/
 	public void addHeader(COModel state)
 	{
@@ -52,5 +58,4 @@ public class InfoLogFile {
 			+ "; CarMaxTurning = " + sim.getCarMaxTurning() + "; NoObstacles = "
 			+ sim.getNoObstacles() + ".");
 	}
-	
 }

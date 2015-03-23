@@ -8,17 +8,13 @@ package modeling;
  */
 public class Waypoint extends Entity
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private int nextPoint; //the id of the point to go to after this waypoint
 	
 	/** Constructor for Waypoint
-	 * 
-	 * @param ID the id of the waypoint
-	 * @param next the id of the point that should be travelled to after this waypoint is reached
+	 * @param int ID (the id of the waypoint)
+	 * @param int next (the id of the point that should be travelled to after this waypoint is reached)
 	 */
 	public Waypoint(int ID, int next)
 	{
@@ -26,11 +22,11 @@ public class Waypoint extends Entity
 		nextPoint = next;
 	}
 	
-	/** HH Additional Constructor for Waypoint used to enforce a U-turn
-	 * 
-	 * @param ID the id of the waypoint
-	 * @param next the id of the point that should be travelled to after this waypoint is reached
-	 * @param type - the integer type 
+	/**
+	 * Additional Constructor for Waypoint used to enforce a U-turn
+	 * @param int ID (the id of the waypoint)
+	 * @param int next (the id of the point that should be travelled to after this waypoint is reached)
+	 * @param int type (the integer type)
 	 */
 	public Waypoint(int ID, int next, int type)
 	{
@@ -41,8 +37,7 @@ public class Waypoint extends Entity
 	/**
 	 * A method which returns the id of the point to go to after this waypoint has
 	 * been reached
-	 * 
-	 * @return the id of the next point for the car to travel to
+	 * @return int (the id of the next point for the car to travel to)
 	 */
 	public int getNextPoint() {return nextPoint;}
 }

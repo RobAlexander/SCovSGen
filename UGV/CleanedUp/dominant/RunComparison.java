@@ -21,9 +21,9 @@ import modeling.Constants;
 public class RunComparison {
 
 	/**
-	 * @param args
+	 * This method...
+	 * @param String[] args ()
 	 */
-	
     public static void main(String[] args)
     {
     	// Open an overall log file so that we can capture the start and end times of the various loops
@@ -149,5 +149,4 @@ public class RunComparison {
     	
     	ps.close();
     }
-
 }

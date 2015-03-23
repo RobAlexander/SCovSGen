@@ -19,19 +19,27 @@ public class COModelBuilder
 	
 	public  COModel sim;
 	
+	/**
+	 * Copy Constructor
+	 * @param COModel s ()
+	 */
 	public COModelBuilder(COModel s)
 	{
 		sim = s;
 	}
 		
-	// HH 31/7/14 - Method to update the seed used by the underlying COModel so that can 
-	// do a batch run using different seeds if required
+	/** HH 31/7/14 - Method to update the seed used by the underlying COModel so that can 
+	 * do a batch run using different seeds if required
+	 * @param long newSeed ()
+	 */
 	public void updateSeed(long newSeed)
 	{
 		sim.setSeed(newSeed);
 	}
 	
-	// HH 30.7.14 Removed noJcts input parameter (determined at random below)
+	/**
+	 * HH 30.7.14 Removed noJcts input parameter (determined at random below)
+	 */
 	public void generateSimulation()//int noObstacles, int noCars) // HH 30/4/14 - added new road related parameters
 	{		
 		// HH 1.9.14 - This method cannot use sim.random if we want to provide the ability to run multiple
@@ -300,6 +308,7 @@ public class COModelBuilder
 		double x;
 		double y;	
 		Double2D testPt;
+		Double2D tempLoc;
 		
 		int noObstacles = (int) (mapGenRandom.nextDouble() * (Constants.MAX_OBSTACLES - Constants.MIN_OBSTACLES)) + Constants.MIN_OBSTACLES;
 		
@@ -314,19 +323,24 @@ public class COModelBuilder
 				noIterations++; // HH 27.8.14 - Limit loop
 			} while ((!sim.roadAtPoint(testPt, sim.roads) || sim.junctionAtPoint(testPt, sim.junctions) != 0 
 					|| sim.junctionAppAtPoint(testPt, sim.junctions) || sim.junctionExitAtPoint(testPt, sim.junctions)
-					|| sim.obstacleNearPoint(testPt, obstacles, sim.roads)) && noIterations < Constants.MAX_ITERATIONS); // HH 23.7.14 - edited to prevent adding Obstacles in Junction
+					|| sim.obstacleNearPoint(testPt, obstacles, sim.roads, sim)) && noIterations < Constants.MAX_ITERATIONS); // HH 23.7.14 - edited to prevent adding Obstacles in Junction
 					// HH 20.8.14 - edited to prevent adding Obstacles near junctions or other obstacles
 			
 			if (noIterations < Constants.MAX_ITERATIONS) // HH 27.8.14 - Make sure we didn't timeout on the loop
 			{
-				double inDirection = sim.getRoadDirectionAtPoint(testPt, sim.roads); // Check on the orientation of the road
+				double inDirection = sim.getRoadDirectionAtPoint(testPt); // Check on the orientation of the road
 				int roadId = sim.getRoadIdAtPoint(testPt, sim.roads); // HH 13.8.14 Get the ID of the road we are adding this car on
 
-				ParkedCar ob = new ParkedCar(sim.getNewID(), Constants.TPARKEDCAR, inDirection, roadId);
-				ob.setLocation(sim.snapToKerb(x,y));
-				ob.isSchedulable = false;
-				sim.allEntities.add(ob);
-				obstacles.add(ob);
+				tempLoc = sim.snapToKerb(x,y);
+				if (tempLoc.x != -1) {
+					ParkedCar ob = new ParkedCar(sim.getNewID(), Constants.TPARKEDCAR, inDirection, roadId);
+					ob.setLocation(tempLoc);
+					ob.isSchedulable = false;
+					sim.allEntities.add(ob);
+					obstacles.add(ob);
+				} else {
+					sim.infoLog.addLog("Problem adding car at: (" + x + "," + y + ").");
+				}
 			}
 		}		
 		
@@ -400,9 +414,9 @@ public class COModelBuilder
 	}
 		
 	/**
-	 * 
-	 * @param args
-	 * @return 
+	 * This method...
+	 * @param String[] args ()
+	 * @return String[] () 
 	 */
 	public static String[] addEndTime(String[] args)
 	{
@@ -419,6 +433,10 @@ public class COModelBuilder
 		return x;
 	}
 	
+	/**
+	 * This method...
+	 * @return COModel ()
+	 */
 	public COModel getSim() {return sim;}
 	
 	/**
@@ -471,5 +489,4 @@ public class COModelBuilder
 			}
 		}
 	}
-	
 }

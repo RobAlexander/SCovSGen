@@ -15,10 +15,10 @@ public class CarPerformance
 	
 	/*
 	 * Constructor to set up all the class members.
-	 * @param double maxCarSpeed (maximum speed achievable by vehicle)
-	 * @param double maxCarAcceleration (maximum increase in speed in one simulation step)
-	 * @param double maxCarDeceleration (maximum decrease in speed  in one simulation step)
-	 * @param double maxCarTurning (maximum rate of turning in one simulation step)
+	 * @param maxCarSpeed (double - maximum speed achievable by vehicle)
+	 * @param maxCarAcceleration (double - maximum increase in speed in one simulation step)
+	 * @param maxCarDeceleration (double - maximum decrease in speed  in one simulation step)
+	 * @param maxCarTurning (double - maximum rate of turning in one simulation step)
 	 */
 	public CarPerformance(double maxCarSpeed, double maxCarAcceleration, double maxCarDeceleration, double maxCarTurning)
 	{

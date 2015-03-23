@@ -12,12 +12,24 @@ public class COModelWithoutRun
 {	
 	protected COModelBuilder sBuilder;
 
+	/**
+	 * This method...
+	 * @param double percentageFaults ()
+	 * @param int mapNo ()
+	 * @param long newInternalSeed ()
+	 */
     public COModelWithoutRun(double percentageFaults, int mapNo, long newInternalSeed) 
     { 
     	sBuilder = new COModelBuilder(new COModel( newInternalSeed, Constants.WorldXVal, Constants.WorldYVal, false, percentageFaults, mapNo, true));
     	System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
     }
-         
+    
+    /**
+     * This method...
+     * @param long newExternalSeed ()
+     * @param int mapNo ()
+     * @return String ()
+     */
 	public String start(long newExternalSeed, int mapNo)
 	{
 		System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
@@ -36,9 +48,13 @@ public class COModelWithoutRun
 		return outString;
 	}
 	
-	// HH 14.1.15 New Start method to be used with the search-based situation set generation; for testing
-	// situation coverage (see dominant.SearchBasedMapGeneration class).  Method returns coverageCriteriaInfo
-	// which can be used to guide the search
+	/** HH 14.1.15 New Start method to be used with the search-based situation set generation; for testing
+	 * situation coverage (see dominant.SearchBasedMapGeneration class).  Method returns coverageCriteriaInfo
+	 * which can be used to guide the search
+	 * @param long newExternalSeed ()
+	 * @param long mapNo ()
+	 * @return coverageCriteriaInfo ()
+	 */
 	public coverageCriteriaInfo getCoverageCriteria(long newExternalSeed, long mapNo)
 	{
 		System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
@@ -58,7 +74,5 @@ public class COModelWithoutRun
 		System.out.println("COModelWithoutUI finished mapNo = " + mapNo + ".");
 		sBuilder.sim.finish();
 		return retVal;
-	}
-	
-	
+	}	
 }

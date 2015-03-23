@@ -4,19 +4,18 @@
 package modeling;
 
 /**
- * @author hh940 HH 26.8.14
- *
+ * This class...
+ * 
+ * @author hh940 
  */
 public class Crash extends Entity {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * @param idNo
-	 * @param typeNo
+	 * Constructor
+	 * @param int idNo ()
+	 * @param int typeNo ()
 	 */
 	public Crash(int idNo, int typeNo) {
 		super(idNo, typeNo);

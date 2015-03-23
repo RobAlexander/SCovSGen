@@ -9,14 +9,12 @@ package modeling;
  */
 public class Failure extends Entity {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * @param idNo
-	 * @param typeNo
+	 * Constructor.
+	 * @param int idNo ()
+	 * @param int typeNo ()
 	 */
 	public Failure(int idNo, int typeNo) {
 		super(idNo, typeNo);

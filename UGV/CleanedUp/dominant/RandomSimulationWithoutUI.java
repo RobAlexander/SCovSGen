@@ -15,9 +15,9 @@ import modeling.Constants;
 public class RandomSimulationWithoutUI {
 
 	/**
-	 * @param args
+	 * This method...
+	 * @param String[] args ()
 	 */
-	
     public static void main(String[] args)
     {
     	// HH 27.8.14 - Run with different % faults
@@ -64,7 +64,5 @@ public class RandomSimulationWithoutUI {
     			}
     		}
     	//}
-    }
-   
-    
+    }    
 }

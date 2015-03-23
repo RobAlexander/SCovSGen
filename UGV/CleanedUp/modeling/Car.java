@@ -52,9 +52,9 @@ public abstract class Car extends Entity implements Oriented2D
 	
 	/**
 	 * Constructor for Car class
-	 * @param int idNo (unique identifier)
-	 * @param int idTarget (unique identifier for Target)
-	 * @param CarPerformance (performance characteristics for car e.g. max speed)
+	 * @param idNo (int - unique identifier)
+	 * @param idTarget (int - unique identifier for Target)
+	 * @param performance (Car Performance - characteristics for car e.g. max speed)
 	 */
 	public Car(int idNo, int idTarget, CarPerformance performance)
 	{
@@ -66,11 +66,11 @@ public abstract class Car extends Entity implements Oriented2D
 	/**
 	 * Additional constructor for Car class, allows provision of an initial direction/bearing
 	 * and (sub)Type in case we want to call this from a child object.
-	 * @param int idNo (unique identifier)
-	 * @param int idTarget (unique identifier for Target)
-	 * @param CarPerformance (performance characteristics for car e.g. max speed)
-	 * @param double initialBearing (initial direction for vehicle)
-	 * @param int inType (allows provision of a subtype in place of TCAR e.g. TUGV)
+	 * @param idNo (int - unique identifier)
+	 * @param idTarget (int - unique identifier for Target)
+	 * @param performance (CarPerformance - characteristics for car e.g. max speed)
+	 * @param initialBearing (double - initial direction for vehicle)
+	 * @param inType (int - allows provision of a subtype in place of TCAR e.g. TUGV)
 	 */
 	public Car(int idNo, int idTarget, CarPerformance performance, double initialBearing, int inType)
 	{
@@ -83,7 +83,7 @@ public abstract class Car extends Entity implements Oriented2D
 	/**
 	 * Abstract placeholder method for step() to force subclasses to provide their own implementation;
 	 * unlikely that child classes would share the detailed movement control that is defined in step().
-	 * @param SimState state (access to the environment and other objects in the simulation)
+	 * @param state (SimState - access to the environment and other objects in the simulation)
 	 */
 	public abstract void step(SimState state);
 	
@@ -102,7 +102,7 @@ public abstract class Car extends Entity implements Oriented2D
 
 	/**
 	 * Set the junction id; required for junction priority.
-	 * @param int inJctID (unique identifier for junction currently occupied)
+	 * @param inJctID (int - unique identifier for junction currently occupied)
 	 */
 	public void setJctID(int inJctID)
 	{
@@ -149,7 +149,7 @@ public abstract class Car extends Entity implements Oriented2D
 	 * Record the current stopping distance as the supplied separation (as calculated 
 	 * by findImminentCrash); previous distance is compared to current distance on next step
 	 * in step() method.
-	 * @param double inCurrentSep (distance to closest DumbCar/UGV)
+	 * @param inCurrentSep (double - distance to closest DumbCar/UGV)
 	 */
 	public void setStoppingDistance(double inCurrentSep)
 	{
@@ -168,8 +168,8 @@ public abstract class Car extends Entity implements Oriented2D
 
 	/**
 	 * A method which turns the car towards the direction of the target point.
-	 * @param loc the location of the car
-	 * @param targ the target location for the car
+	 * @param loc (Double2D - the location of the car)
+	 * @param targ (Double2D - the target location for the car)
 	 */
 	protected void setDirection(Double2D loc, Double2D targ) 
 	{
@@ -207,9 +207,9 @@ public abstract class Car extends Entity implements Oriented2D
 	 * Method changes the direction of the Car so that moving on that bearing will bring it closer
 	 * to the supplied target location/waypoint.  Additional parameter targetDir is used to prevent 
 	 * the UGV from turning further than the direction of travel of the lane it is turning into.
-	 * @param Double2D loc (the location of the car)
-	 * @param Double2D targ (the target location/waypoint the car is travelling towards)
-	 * @param double targetDir (direction of the lane the car is turning into)
+	 * @param loc (Double2D - the location of the car)
+	 * @param targ (Double2D - the target location/waypoint the car is travelling towards)
+	 * @param targetDir (double - direction of the lane the car is turning into)
 	 */
 	protected void setDirection(Double2D loc, Double2D targ, double targetDir)
 	{
@@ -255,7 +255,7 @@ public abstract class Car extends Entity implements Oriented2D
 	/**
 	 * A method which turns the car to the left by the amount specified in theta,
 	 * up to a maximum of getCurrentMaxTurning() degrees.
-	 * @param double theta (angle the car would like to turn through)
+	 * @param theta (double - angle the car would like to turn through)
 	 */
 	private void turnLeft(double theta)
 	{
@@ -272,7 +272,7 @@ public abstract class Car extends Entity implements Oriented2D
 	/**
 	 * A method which turns the car to the right by the amount specified in theta,
 	 * up to a maximum of getCurrentMaxTurning() degrees.
-	 * @param double theta (angle the car would like to turn through)
+	 * @param theta (double - angle the car would like to turn through)
 	 */
 	private void turnRight(double theta)
 	{
@@ -290,7 +290,7 @@ public abstract class Car extends Entity implements Oriented2D
 	 * A method which increases/decreases the speed of the vehicle as much as possible 
 	 * (limited by getCurrentMaxAccel()/getCurrentMaxDecel() on each step until it reaches 
 	 * a defined maximum/minimum speed (zero).
-	 * @param boolean accelerate (true to accelerate, false to decelerate)
+	 * @param accelerate (boolean - true to accelerate, false to decelerate)
 	 */
 	protected void changeSpeed(boolean accelerate)
 	{
@@ -347,10 +347,10 @@ public abstract class Car extends Entity implements Oriented2D
 
 	/**
 	 * Sets the performance statistics currently attributed to the vehicle.
-	 * @param double maxCarSpeed (maximum speed achievable by vehicle)
-	 * @param double maxCarAcceleration (maximum increase in speed in one simulation step)
-	 * @param double maxCarDeceleration (maximum decrease in speed in one simulation step)
-	 * @param double maxCarTurning (maximum turn achievable; in one simulation step)
+	 * @param maxCarSpeed (double - maximum speed achievable by vehicle)
+	 * @param maxCarAcceleration (double - maximum increase in speed in one simulation step)
+	 * @param maxCarDeceleration (double - maximum decrease in speed in one simulation step)
+	 * @param maxCarTurning (double - maximum turn achievable; in one simulation step)
 	 */	
 	public void setStats(double maxCarSpeed, double maxCarAcceleration, double maxCarDeceleration, double maxCarTurning) {
 		this.performance.setCurrentMaxSpeed(maxCarSpeed);
@@ -370,7 +370,7 @@ public abstract class Car extends Entity implements Oriented2D
 		
 	/*
 	 * Store location of vehicle at previous time step.
-	 * @param Double2D inPrevLoc (previous location of vehicle)
+	 * @param inPrevLoc (Double2D - previous location of vehicle)
 	 */
 	protected void storePrevLoc(Double2D inPrevLoc) {
 		prevLoc = inPrevLoc;
@@ -381,7 +381,7 @@ public abstract class Car extends Entity implements Oriented2D
 	/** 
 	 * Work out whether the supplied location is on the Map i.e. within the boundaries
 	 * of the simulation environment.
-	 * @param Double2D location (location to be checked)
+	 * @param location (Double2D - location to be checked)
 	 * @return boolean (true if supplied location is on the map)
 	 */
 	protected boolean onMap(Double2D location)
@@ -397,7 +397,7 @@ public abstract class Car extends Entity implements Oriented2D
 	/** 
 	 * Work out whether the supplied Shape is on the Map i.e. within the boundaries
 	 * of the simulation environment.
-	 * @param Shape inShape (Shape to be checked (all must be off map for false return value))
+	 * @param inShape (Shape - Shape to be checked (all must be off map for false return value))
 	 * @return boolean (true if at least some of inShape is on the map)
 	 */
 	protected boolean onMap(Shape inShape)
@@ -414,7 +414,7 @@ public abstract class Car extends Entity implements Oriented2D
 	/** 
 	 * Work out whether the supplied Shape is on the Map and return the Area of shape
 	 * overlapping the map.
-	 * @param Shape in Shape (Shape to be overlapped with map)
+	 * @param in Shape (Shape - Shape to be overlapped with map)
 	 * @return Area (returns an Area object which is the overlap between inShape and the map)
 	 */
 	protected Area getAreaOnMap(Shape inShape)
@@ -431,8 +431,8 @@ public abstract class Car extends Entity implements Oriented2D
 	/** 
 	 * Work out whether the supplied Shape is on the Road and return the Area of shape 
 	 * overlapping the road
-	 * @param Bag roads (all roads in the simulation environment)
-	 * @param Shape inShape (shape to be checked for intersection with the road surface)
+	 * @param roads (Bag - all roads in the simulation environment)
+	 * @param inShape (Shape - shape to be checked for intersection with the road surface)
 	 * @return Area (Area of inShape intersecting with Road surface (may be Empty))
 	 */
 	protected Area getAreaOnRoad(Bag roads, Shape inShape)
@@ -464,8 +464,8 @@ public abstract class Car extends Entity implements Oriented2D
 	
 	/** 
 	 * Return the Area of a supplied Shape which does not intersect with a Road
-	 * @param Bag roads (roads collection)
-	 * @param Shape inShape (shape to be checked for intersection with the non-road surfaces)
+	 * @param roads (Bag - roads collection)
+	 * @param inShape (Shape - shape to be checked for intersection with the non-road surfaces)
 	 * @return Area (Area of inShape intersecting with non-road surface (may be Empty))
 	 */
 	protected Area getAreaNotOnRoad(Bag roads, Shape inShape)
@@ -500,8 +500,8 @@ public abstract class Car extends Entity implements Oriented2D
 	/** 
 	 * Test supplied Shape object for intersection with the road network on the simulation map,
 	 * return true if any part of the shape overlaps with the road. 
-	 * @param Bag roads (all roads in the simulation)
-	 * @param Shape inShape (shape to be checked for intersection with the road surface)
+	 * @param roads (Bag - all roads in the simulation)
+	 * @param inShape (Shape - shape to be checked for intersection with the road surface)
 	 * @return boolean (true if supplied inShape overlaps any road surface)
 	 */
 	protected boolean onRoad(Bag roads, Shape inShape)
@@ -537,8 +537,8 @@ public abstract class Car extends Entity implements Oriented2D
 	/** 
 	 * Test a Double2D for intersection with the road surface, return true if the point
 	 * is on the road.
-	 * @param Bag roads (all roads on the simulation map)
-	 * @param Double2D inLocation (coordinates of location to be checked)
+	 * @param roads (Bag - all roads on the simulation map)
+	 * @param inLocation (Double2D - coordinates of location to be checked)
 	 * @return boolean (true if location intersects with any road surface)
 	 */
 	protected boolean ptOnRoad(Bag roads, Double2D inLocation)
@@ -634,7 +634,7 @@ public abstract class Car extends Entity implements Oriented2D
 	 * Vote for vehicle to speed up during speed change.  This request can be made stronger by supplying 
 	 * the parameter 'true', which will cause the doSpeedCalcs method to ignore any simple voteSlow 
 	 * requests (voteSlowStop/voteReallySlow still take priority though).
-	 * @param boolean force (if true, indicate that speed up should be prioritised if possible, perhaps to avoid collision)
+	 * @param force (boolean - if true, indicate that speed up should be prioritised if possible, perhaps to avoid collision)
 	 */
 	protected void goFaster(boolean force) // HH 24.9 14 - If force is set to true then vehicle is required to prioritise speeding up 
 	{
@@ -683,11 +683,11 @@ public abstract class Car extends Entity implements Oriented2D
 	 * NOTE: It is possible that some execution paths will allow setDirection to be called a second time from
 	 * the step routine, and this could result in the vehicle turning further than maxCarTurning during one
 	 * simulation step, which could contravene the physics of the system.	  
-	 * @param Double2D WPlocation (coordinates of location for new WP)
-	 * @param COModel sim (access to simulation environment)
-	 * @param Double2D location (current location)
-	 * @param boolean isReplacement (true = should replace existing and steal its next point)
-	 * @param Entity eTarget_current (current WP so we don't have to search through all entities to find it)
+	 * @param WPlocation (Double2D - coordinates of location for new WP)
+	 * @param sim (COModel - access to simulation environment)
+	 * @param location (Double2D - current location)
+	 * @param isReplacement (boolean - true = should replace existing and steal its next point)
+	 * @param eTarget_current (Entity - current WP so we don't have to search through all entities to find it)
 	 * @return Waypoint (the waypoint that is created)
 	 */
 	protected Waypoint createWaypoint(Double2D WPlocation, COModel sim, Double2D location, int type, boolean isReplacement, Entity eTarget_current)
@@ -758,13 +758,13 @@ public abstract class Car extends Entity implements Oriented2D
 	 *  test location, and the distance, so that repeated search will allow us to find the closest 
 	 *  obstacle.  The coordinates of the closest test location to receive a 'hit' on the obstacle are
 	 *  returned at the end of the method call.  
-	 *  @param COModel sim (access to the simulation environment)
-	 *  @param Car inCar (the vehicle that we want to test whether it is in range)
-	 *  @param Double2D sensorLoc (location of sensor for oncoming traffic, pass in the offside front corner location of UGV)
-	 *  @param boolean sameLane (true if we are looking for other moving vehicles ahead of us in the lane, false for oncoming vehicles)
-	 *  @param double inAngle (angular range to use for search, relative to UGV direction checks +/- inAngle/2)
-	 *  @param double inRange (how far ahead of the UGV should be searched)
-	 *  @param double inSensitivity (increment to use in x and y directions when moving test location further from sensor)
+	 *  @param sim (COModel - access to the simulation environment)
+	 *  @param inCar (Car - the vehicle that we want to test whether it is in range)
+	 *  @param sensorLoc (Double2D - location of sensor for oncoming traffic, pass in the offside front corner location of UGV)
+	 *  @param sameLane (boolean - true if we are looking for other moving vehicles ahead of us in the lane, false for oncoming vehicles)
+	 *  @param inAngle (double - angular range to use for search, relative to UGV direction checks +/- inAngle/2)
+	 *  @param inRange (double - how far ahead of the UGV should be searched)
+	 *  @param inSensitivity (double - increment to use in x and y directions when moving test location further from sensor)
 	 *  @return Double2D (coordinates of the closest location where the sensor detected a vehicle)
 	 */
 	private Double2D checkForMovingObstacle(COModel sim, Car inCar, Double2D sensorLoc, boolean sameLane, double inAngle, double inRange, double inSensitivity) {
@@ -880,12 +880,12 @@ public abstract class Car extends Entity implements Oriented2D
 	 * range and range sensitivity provided as arguments.  Can also specify whether we are looking 
 	 * for vehicles in the sameLane, or oncoming vehicles.  Record and return the coordinates of 
 	 * the closest 'hit'.
-	 * @param COModel sim (access to the simulation environment)
-	 * @param Bag inCars (access to all the cars in the simulation)
-	 * @param boolean sameLane (true indicates search for vehicle in lane ahead, false means oncoming vehicle)
-	 * @param double inAngle (angular range to use for search, relative to UGV direction checks +/- inAngle/2)
-	 * @param double inRange (how far ahead of the UGV should be searched)
-	 * @param double inSensitivity (increment to use in x and y directions when moving test location further from sensor)
+	 * @param sim (COModel - access to the simulation environment)
+	 * @param inCars (Bag - access to all the cars in the simulation)
+	 * @param sameLane (boolean - true indicates search for vehicle in lane ahead, false means oncoming vehicle)
+	 * @param inAngle (double - angular range to use for search, relative to UGV direction checks +/- inAngle/2)
+	 * @param inRange (double - how far ahead of the UGV should be searched)
+	 * @param inSensitivity (double - increment to use in x and y directions when moving test location further from sensor)
 	 * @return Double2D (coordinates of the closest location where the sensor detected a vehicle)
 	 */
 	protected Double2D checkAllMovingObstacles(COModel sim, Bag inCars, boolean sameLane, double inAngle, double inRange, double inSensitivity)
@@ -898,7 +898,7 @@ public abstract class Car extends Entity implements Oriented2D
 		// and that Car.location returns the coordinates of the centre-front of the vehicle.  Note that we
 		// make use of the movement methods here as the displacement is the same as if we were to move the
 		// vehicle to that location.  A movement to the front right, from front-centre is equivalent to moving 
-		// at -90 degrees to the direction of travel, at a speed of UGV_WIDTH/2 (distance travelled in one step.
+		// at -90 degrees to the direction of travel, at a 'speed' of UGV_WIDTH/2 (distance travelled in one step).
 		Double2D sensorLoc;
 		double xDispl = Utility.xMovement(Utility.correctAngle(getDirection() - 90), UGV_WIDTH/2);
 		double yDispl = Utility.yMovement(Utility.correctAngle(getDirection() - 90), UGV_WIDTH/2);
@@ -934,31 +934,36 @@ public abstract class Car extends Entity implements Oriented2D
 		}
 		
 		return reqCoord; // Need to do a check on return value as if this returns a value greater
-							// than the maximum sensor range then it denotes *no obstacle*
+						 // than the maximum sensor range then it denotes *no obstacle*
 	}
 
 	/**
-	 * HH 9.9.14 - Based on Car.checkCourse (Robert Lee)
-	 *  
-	 * @param roads
-	 * @param findNearest - whether we are interested in the closest or furthest RM found
-	 * @param sim // HH 28.7.14 - added for fault insertion
-	 * @param reqLine - which line are we searching for (nearside, offside, centre)
-	 * @return coordinates of the furthermost road marking detected.
-	 * 
-	 * HH 3.12.14 Changed to Protected
+	 * Search through all roads looking for road-markings of the appropriate type which fall into 
+	 * the range of the Car.  Configure to search for the nearest or farthest road marking in range,
+	 * and choose whether to search for nearside, offside or centre lines.  Method can also be used
+	 * to simulate different sensors by adjusting the range, angle and sensitivity e.g. to simulate 
+	 * a less accurate sensor with a much further range and narrower angle which looks ahead for 
+	 * upcoming bends in the road.
+	 * @param roads (Bag - access to the collection of roads)
+	 * @param findNearest (boolean - true to return the closest RM found; false to return the farthest RM found)
+	 * @param COModel sim (COModel - required for fault insertion)
+	 * @param reqLine (genLineType - which line are we searching for: nearside, offside, centre)
+	 * @param inAngle (double - viewing angle of vehicle - range of vision)
+	 * @param inRange (double - viewing depth of vehicle)
+	 * @param inSensitivity (double - increment to be used for range increases: search resolution)
+	 * @return Double2D (coordinates of the furthermost road marking detected)
 	 */
 	protected Double2D locateRoadMarkings_AllRoads(Bag roads, boolean findNearest, COModel sim, genLineType reqLine, double inAngle, double inRange, double inSensitivity)
 	{
 		Double2D currentXY = new Double2D(0,0);
 		
-		// HH 4.12.14 Initialisation matters here or the conditions below won't evaluate correctly
+		// Initialisation matters here or the conditions below won't evaluate correctly
 		Double2D requiredXY;
 		if (findNearest == false) {
 			// Want to find the largest value, so the closest one would be the current location
 			requiredXY = location;
 		} else {
-			// Want to find the furthest value, and can't be any further away than fictional point 2x max X/Y
+			// Want to find the farthest value, and can't be any further away than fictional point 2x max X/Y
 			requiredXY = new Double2D((2 * Constants.WorldXVal),(2 * Constants.WorldYVal));
 		}
 		
@@ -976,29 +981,28 @@ public abstract class Car extends Entity implements Oriented2D
 					requiredXY = currentXY;
 				}
 			}
-
 		}
 		
 		return requiredXY;
 	}
 	
 	/** 
-	 * HH 9.9.14 - Based on Car.onCourse (Robert Lee), and some code in Car.alterCourse (Robert Lee)
-	 * New version of findRoadMarkings which is less of a 'cheat' as it moves left and right from the
-	 * current bearing until it reaches a road marking (or exceeds range).  It will only continue to look
-	 * for as long as it detects either road surface, or a line, so this should be more aligned with image
-	 * processing methods for finding the lines on the roads.  This should restrict the algorithm to finding
-	 * lines that are on the same road as the UGV without needing 'special' access to the road that the
-	 * UGV is currently on as was done in the previous method.
-	 * 
-	 * @param road // passed in from the Bag of all roads (assume we will be in a loop searching all of them)
-	 * @param findNearest // true = return the nearest point found; false = return the furthest
-	 * @param sim // supports failure insertion
-	 * @param reqLine - which line are we searching for (nearside, offside, centre)
-	 * @param inAngle - viewing angle of vehicle
-	 * @param inRange - viewing range of vehicle
-	 * @param inSensitivity - increment to be used for range increases
-	 * @return the coordinate location of road markings that are detected within the range of the vehicle sensor
+	 * Based on Car.onCourse (Robert Lee), and some code in Car.alterCourse (Robert Lee)
+	 * This version of findRoadMarkings which is less of a 'cheat' than previous implementations as it 
+	 * searches at bearings from left to right, testing points at various distances from the sensor
+	 * location until it reaches a road marking (or exceeds range). It will only continue to look for 
+	 * as long as it detects either road surface, or a line, so this should be more aligned with image 
+	 * processing methods for finding the lines on the roads.  This should restrict the algorithm to 
+	 * finding lines that are on the same road as the UGV without needing 'special' access to the road 
+	 * that the UGV is currently on as was the case in the previous method.
+	 * @param road (Road - the road whose lane markings we want to check against)
+	 * @param findNearest (boolean - true = return the nearest point found; false = return the farthest)
+	 * @param sim (COModel - required for failure insertion)
+	 * @param reqLine (genLineType - the line type we searching for: nearside, offside, centre)
+	 * @param inAngle (double - viewing angle of vehicle)
+	 * @param inRange (double - viewing range of vehicle: how far into the distance can it detect road markings)
+	 * @param inSensitivity (double - increment to be used for range increases: search resolution)
+	 * @return Double2D (coordinate location of road markings that are detected nearest/farthest within the range of the vehicle sensor)
 	 */
 	private Double2D locateRoadMarkings(Road road, boolean findNearest, COModel sim, genLineType reqLine, double inAngle, double inRange, double inSensitivity)
 	{
@@ -1012,80 +1016,88 @@ public abstract class Car extends Entity implements Oriented2D
 		Double2D RM = new Double2D(-1, -1); // Default value
 		
 		// For each angle that the sensor is able to view, turning in realistic increments
-		double resolution = 0.5;
+		double resolution = 0.5; // angular search resolution (fixed)
 		double newBearing = 0.0;
 		
-		// Set defaults (appropriate for centre line and offside line)
-		double startAngle = 0; // HH 23.9.14 - Swapped these over
-		double endAngle = -(inAngle/2); // HH 23.9.14 - Swapped these over
+		// Set defaults (appropriate for centre line and offside line) as these lines will never be 
+		// found to the left of the direction of travel
+		double startAngle = 0; // Start facing forwards
+		double endAngle = -(inAngle/2); // End looking towards the right-hand side
 		double startRange = 0;
-		double endRange = inRange;
-		double rangeSensitivity = inSensitivity;		
+		double endRange = inRange; // How far into the distance can we see
+		double rangeSensitivity = inSensitivity; // Resolution at which the range is adjusted	
 		
 		// Alter the search params for nearside search
 		if (reqLine == genLineType.NEARSIDE) 
 		{
-			startAngle = (inAngle / 2); // HH 23.9.14 - Swapped these over
-			endAngle = 0; // HH 23.9.14 - Swapped these over
+			startAngle = (inAngle / 2); // Start facing to the right
+			endAngle = 0; // End looking straight ahead
 		}
 		
-		// New Fault #8 (FAULT #17) - HH 28/7/14 - Force the angle loop to start half-way through
-		if (sim.getFault(8) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
+		// New Fault #8 (FAULT #17) - Force the angle loop to start half-way through
+		if (sim.getFault(8) == true && this.getType() == TUGV) { 
 			startAngle = 0;
-			sim.setFault(8); // HH 13.11.14 Added
+			sim.setFault(8); 
 		} 
 
-		// New Fault #9 (FAULT #18) - HH 28/7/14 - Force the angle loop to end half-way through
-		if (sim.getFault(9) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
+		// New Fault #9 (FAULT #18) - Force the angle loop to end half-way through
+		if (sim.getFault(9) == true && this.getType() == TUGV) { 
 			endAngle = 0;
-			sim.setFault(9); // HH 13.11.14 Added
+			sim.setFault(9); 
 		} 
 		
-		// New Fault #10 (FAULT #19) - HH 28/7/14 - Force the angle sensor to 'reduce' range resolution (double iterator step)
-		if (sim.getFault(10) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
+		// New Fault #10 (FAULT #19) - Force the angle sensor to 'reduce' range resolution (double iterator step)
+		if (sim.getFault(10) == true && this.getType() == TUGV) { 
 			resolution = resolution*2;
-			sim.setFault(10); // HH 13.11.14 Added
+			sim.setFault(10); 
 		}  
 				
-		// Check the viewable range at each angle		
+		// Check the viewable range at each angle
 		for(double i = startAngle; i >= endAngle; i -= resolution)
 		{
-			// HH 6.8.14 - Each iteration we need to reset the testCoord so it is back at the current location
+			// Each iteration we need to reset the testCoord so it is back at the current location
 			// of the vehicle (sensor)
 			testCoord.setTo(0,0);
 			testCoord.addIn(location);
-			//newBearing = Utility.correctAngle(getDirection() + i); // HH 6.8.14 - Reset the bearing for this iteration
-			newBearing = Utility.correctAngle(Utility.getDirectionDeg(getDirection()) + i); // HH 8.12.14 - Replaced with the direction of desired movement, rather than pointing
 			
+			// Calculate the current direction (bearing) in which the 'sensor' is pointing - this
+			// is based on the desired heading e.g. North, South etc, rather than the direction the
+			// Car is pointing in.  The desired heading is approximated from the current direction
+			// by Utility.getDirectionDeg.  The angular offset (i) is then applied to this value
+			// to give the sensor direction.
+			newBearing = Utility.correctAngle(Utility.getDirectionDeg(getDirection()) + i); 
+			
+			// New Fault #13 (FAULT #23) - Force the sensor to 'reduce' distance resolution (double iterator step)
+			if (sim.getFault(13) == true && this.getType() == TUGV) { 
+				rangeSensitivity = inSensitivity*2;
+				sim.setFault(13); 
+			} 			
+			
+			// Calculate the x and y displacements corresponding to a movement along newBearing 
+			// of length rangeSensitivity
 			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 			
-			// New Fault #11 (FAULT #21) - HH 28/7/14 - Force the angle loop to start half-way through
-			if (sim.getFault(11) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
+			// New Fault #11 (FAULT #21) - Force the distance loop to start half-way through
+			if (sim.getFault(11) == true && this.getType() == TUGV) { 
 				startRange = inRange/2;
-				sim.setFault(11); // HH 13.11.14 Added
+				sim.setFault(11); 
 			} 
 
-			// New Fault #12 (FAULT #22) - HH 28/7/14 - Force the angle loop to end half-way through
-			if (sim.getFault(12) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
+			// New Fault #12 (FAULT #22) - Force the distance loop to end half-way through
+			if (sim.getFault(12) == true && this.getType() == TUGV) { 
 				endRange = inRange/2;
-				sim.setFault(12); // HH 13.11.14 Added
+				sim.setFault(12); 
 			} 
-			
-			// New Fault #13 (FAULT #23) - HH 28/7/14 - Force the sensor to 'reduce' angular resolution (double iterator step)
-			if (sim.getFault(13) == true && this.getType() == TUGV) { // HH 29.1.15 Added check for type
-				rangeSensitivity = inSensitivity*2;
-				sim.setFault(13); // HH 13.11.14 Added
-			} 
-						
-			// HH 6.8.14 - we don't use j, this just ensures we run the loop the right num
+				
+			// Note: We don't use j, this just ensures we run the loop the right number of times
 			for(double j = startRange; j <= endRange; j += rangeSensitivity)
 			{
-				// keep adding the amountAdd on and seeing if the coordinate is still on the road, or whether it 
+				// Keep adding the amountAdd on and seeing if the coordinate is still on the road, or whether it 
 				// is on a road marking.  There would likely be no way to tell the difference between nearside and
-				// offside road markings, so inaccurate to use this detail from the object model.  Centre markings
-				// would be different, so can use this detail to differentiate between centre and offside.
+				// offside road markings, so is slightly inaccurate to use this detail from the object model.  
+				// Centre markings would be different, so can use this detail to differentiate between centre and offside.
 				
-				// HH 6.8.14 - Adding in the first increment prior to the test, rather than after as no point
+				// Adding in the first increment prior to the test, rather than after as no point
 				// testing the location the vehicle is already in
 				testCoord.addIn(amountAdd);
 				
@@ -1107,8 +1119,8 @@ public abstract class Car extends Entity implements Oriented2D
 					}
 				} else { // Check both sets of edge markings as the vision algorithms are unlikely to know which are which
 						 // as they would be the same colour/shape
-					if ((((Road) road).getLine(LineType.NWSIDE)).contains(testCoord.x, testCoord.y) ||
-						(((Road) road).getLine(LineType.SESIDE)).contains(testCoord.x, testCoord.y))
+					if ((((Road) road).getLine(LineType.NESIDE)).contains(testCoord.x, testCoord.y) ||
+						(((Road) road).getLine(LineType.SWSIDE)).contains(testCoord.x, testCoord.y))
 					{
 						if (((location.distance(testCoord.x, testCoord.y) > location.distance(RM)) && findNearest == false) || RM.x == -1) {
 							RM = new Double2D(testCoord.x, testCoord.y);
@@ -1123,19 +1135,26 @@ public abstract class Car extends Entity implements Oriented2D
 		return RM; 
 	}	
 	
-	/*
-	 *  HH 4.12.14 Method to determine (without cheating) whether the point supplied
+	/**
+	 *  Method to determine (without cheating) whether the point supplied
 	 *  is in the same lane as the vehicle.  We use the lane marking sensors to find
 	 *  the lane boundaries and then compare these to the location at which the 
 	 *  vehicle has been detected.
-	 */
-	protected boolean checkSameLane(COModel sim, Double2D testLoc, double inRange, double inAngle, double inSensitivity, double inBearing) {
-		
+	 *  @param sim (COModel - access to the simulation environment)
+	 *  @param testLoc (Double2D - coordinates of location we want to check against lane)
+	 *  @param inRange (double - maximum distance reached by lane marking sensor)
+	 *  @param inAngle (double - maximum range of vision of lane marking sensor: angular)
+	 *  @param inSensitivity (double - increment to be used for range increases: search resolution)
+	 *  @param inBearing (double - direction in which vehicle is pointing)
+	 *  @return boolean (true if testLoc is in the same lane as the vehicle)
+	 **/
+	protected boolean checkSameLane(COModel sim, Double2D testLoc, double inRange, double inAngle, double inSensitivity, double inBearing) 
+	{	
 		// Need to restrict the obstacle checks to those which are in the same lane as
 		// the UGV, so need to know direction in order to restrict in method below
 		UGV_Direction direction = Utility.getDirection(inBearing);
 		
-		// Use the road marking detection algorithm to find the centre of the road so that we can make 
+		// Use the road marking detection algorithm to find the edge of the road so that we can make 
 		// sure that we only detect obstacles on the same side of the road as the UGV's direction of travel.		
 		Double2D furthestLaneMarking = locateRoadMarkings_AllRoads(sim.roads, false, sim, Constants.genLineType.NEARSIDE, inAngle , inRange, inSensitivity);
 
@@ -1143,6 +1162,10 @@ public abstract class Car extends Entity implements Oriented2D
 		boolean inLane = true;
 		double centre;
 		
+		// Calculate where the centre of the road is (based on direction of travel) and
+		// check to make sure that the testLoc is located between the centre and the edge
+		// of the section of road corresponding to the lane that the Car is in (it doesn't
+		// have to be within the lane markings).
 		switch (direction) {
 
 			case NORTH : {
@@ -1177,30 +1200,10 @@ public abstract class Car extends Entity implements Oriented2D
 			
 		return inLane;
 	}
-	
-	/*
-	 * HH 24.9.14 - Return the distance between the location of this vehicle, and the supplied coordinates.  
-	 * The distance will be enhanced with a sign (+/-) to indicate whether the point is likely to be behind
-	 * the current location (-), or in front (+).  This method is crude and may not always be accurate.
-	 * NOTE: Returns WorldX*2 if inCoord is (-1,-1)  
-	 */
-	public double calcDistance(Double2D inCoord)
-	{
-		// HH 29.9.14 - New method will just return the distance, which can then be compared to any previous
-		// distance for the purposes of checking whether the vehicle is getting too close to the one ahead
-
-		if (inCoord.x == -1)
-		{
-			return Constants.WorldXVal*2; // Don't try and calculate the distance to (-1,-1), it's meaningless!!!
-		}
 		
-		double retVal = 1; // we're going to use this as a multiplier, so this is the default +ve case
-			
-		return (retVal * location.distance(inCoord));
-	}
-	
-	/* 
-	 * HH 24.9.14 - Abstract method so don't have to cast to run from subclasses
-	 */
+	/**
+	 * Abstract method so don't have to cast to run from subclasses
+	 * @return Shape (return the shape of the Car object)
+	 **/
 	public abstract Shape getShape();
 }

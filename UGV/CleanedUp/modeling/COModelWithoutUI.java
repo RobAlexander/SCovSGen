@@ -12,7 +12,11 @@ public class COModelWithoutUI
 {	
 	protected COModelBuilder sBuilder; // = new COModelBuilder((COModel) state);
    
-	// HH 27.8.14 - Added argument for percentage faults to support multi-batch runs
+	/** HH 27.8.14 - Added argument for percentage faults to support multi-batch runs
+    * @param double percentageFaults ()
+    * @param long mapNo ()
+    * @param boolean inWantRandomFaults ()
+    */
     public COModelWithoutUI(double percentageFaults, long mapNo, boolean inWantRandomFaults) 
     { 
     	// HH 3.9.14 - Updated the below call as seemed to be reporting that had a UI, when doesn't
@@ -20,19 +24,30 @@ public class COModelWithoutUI
     	System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
     }
  
-    // HH 22.1.15 - Dummy constructor to get around some initialisation errors in RunComparison.java
+    /** 
+     * HH 22.1.15 - Dummy constructor to get around some initialisation errors in RunComparison.java
+     */
     public COModelWithoutUI()
     {
     	// DO nothing
     }
     
+    /**
+     * This method...
+     * @param int noRuns ()
+     * @param long newExternalSeed ()
+     */
     public void runBatch(int noRuns, long newExternalSeed)
     {
     	for (int i=0; i< noRuns; i++) {
     		start(newExternalSeed);
     	}
     }
-        
+    
+    /**
+     * This method...
+     * @param long newExternalSeed ()
+     */
 	public void start(long newExternalSeed)
 	{
 		System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
@@ -56,5 +71,4 @@ public class COModelWithoutUI
 		System.out.println("COModelWithoutUI finished.");
 		sBuilder.sim.finish();
 	}
-	
 }

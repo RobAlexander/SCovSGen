@@ -58,7 +58,7 @@ public class AccidentDetector implements Constants,Steppable {
 
 	/**
 	 * Sets total number of accidents logged
-	 * @param noAccidents
+	 * @param noAccidents (int - number of accidents)
 	 */
 	public void setNoAccidents(int noAccidents) {
 		this.noAccidents = noAccidents;
@@ -74,7 +74,7 @@ public class AccidentDetector implements Constants,Steppable {
 
 	/**
 	 * Sets bag of tracked cars (those that are checked for failures on each timestep).
-	 * @param Bag trackedCars
+	 * @param trackedCars (Bag - bag of tracked cars to set)
 	 */
 	public void setTrackedCars(Bag trackedCars) {
 		this.trackedCars = trackedCars;
@@ -89,8 +89,8 @@ public class AccidentDetector implements Constants,Steppable {
 	 * are being selected to be active.  mapNo is commonly used to record the level of search
 	 * effort which is applied, and/or to separate outputs from repetition runs with different 
 	 * maps.  Adds header information to the summary file.
-	 * @param double percentageFaults (used to generate a more unique filename)
-	 * @param long mapNo (used to generate a more unique filename)
+	 * @param percentageFaults (double - used to generate a more unique filename)
+	 * @param mapNo (long - used to generate a more unique filename)
 	 */	
 	public AccidentDetector(double percentageFaults, long mapNo){ 
 		
@@ -137,7 +137,7 @@ public class AccidentDetector implements Constants,Steppable {
 	 * Log file is updated if necessary, as are the accident counts, and for physical interactions, 
 	 * the location of the tracked car is reported back to the SimState so the failure location can be 
 	 * recorded for display purposes.  In the event of a timeout failure, the simulation is terminated.
-	 * @param SimState state
+	 * @param state (SimState - access to the simulation environment)
 	 */
 	@Override
 	public void step(SimState state) {
@@ -147,16 +147,15 @@ public class AccidentDetector implements Constants,Steppable {
 		Car car1;
 		Car car2;
 
-		// For each tracked car, check for a the different types of failure.  
-		
+		// For each tracked car, check for the different types of failure.  
+		// Update log file and appropriate accident counts in the event of a collision.  Record a crash
+		// at the location of the tracked vehicle and pass this information to the SimState so the crash
+		// can be visualised.
 		for (int i=0; i<trackedCars.size(); i++)
 		{
 			car1= (Car)trackedCars.get(i);
 			
 			// Check for a collision against all obstacles present in the simulation
-			// Update log file and appropriate accident counts in the event of a collision.  Record a crash
-			// at the location of the tracked vehicle and pass this information to the SimState so the crash
-			// can be visualised.
 			for(int j=0; j<sim.obstacles.size(); j++)
 			{
 				obstacle=(ParkedCar)sim.obstacles.get(j);
@@ -167,15 +166,12 @@ public class AccidentDetector implements Constants,Steppable {
 					noAccidents++;
 					AccCrashObs++;
 					
-					// HH 13.11.14 - Updated so have visualisation of crashes with obstacles
+					// Add visualisation of crashes with obstacles
 					sim.recordCrash(car1.getLocation()); // TODO : Update to actual collision point between vehicles
 				}
 			}
 			
-			// HH 15.7.14 Added some road departure logging
-			// Update log file and appropriate accident counts in the event of a failure.  Record a failure
-			// at the location of the tracked vehicle and pass this information to the SimState so the failure		
-			// can be visualised.
+			// Check for a collision with the pavement
 			if(detectCollisionWithPavement(car1, sim.roads) == true)
 			{
 				addLog(AccidentType.LEAVEROAD, car1.getID(), sim.schedule.getSteps(), car1.getLocation(), null);
@@ -184,10 +180,7 @@ public class AccidentDetector implements Constants,Steppable {
 				sim.recordOffRoad(car1.location);
 			}
 			
-			// HH 16.7.14 Added some line crossing logging - Centre Line
-			// Update log file and appropriate accident counts in the event of a failure.  Record a failure
-			// at the location of the tracked vehicle and pass this information to the SimState so the failure		
-			// can be visualised.
+			// Check for crossing of centre line
 			Double2D intersect = detectLineCrossing(car1, sim.roads, LineType.CENTRE, sim.junctions);
 			if(intersect.x > -1)
 			{
@@ -197,36 +190,27 @@ public class AccidentDetector implements Constants,Steppable {
 				sim.recordCrossLine(intersect);
 			}
 			
-			// HH 17.7.14 Added some line crossing logging - Kerb line to N or W
-			// Update log file and appropriate accident counts in the event of a failure.  Record a failure
-			// at the location of the tracked vehicle and pass this information to the SimState so the failure		
-			// can be visualised.
-			Double2D intersectNW = detectLineCrossing(car1, sim.roads, LineType.NWSIDE, sim.junctions);
-			if(intersectNW.x > -1)
+			// Check for line crossing - Kerb line to N or W
+			Double2D intersectNE = detectLineCrossing(car1, sim.roads, LineType.NESIDE, sim.junctions);
+			if(intersectNE.x > -1)
 			{
-				addLog(AccidentType.CROSS_NW_LINE, car1.getID(), sim.schedule.getSteps(), intersectNW, null);
+				addLog(AccidentType.CROSS_NE_LINE, car1.getID(), sim.schedule.getSteps(), intersectNE, null);
 				noAccidents++;
 				AccCrossNW++;		
-				sim.recordCrossLine(intersectNW);
+				sim.recordCrossLine(intersectNE);
 			}
 			
-			// HH 17.7.14 Added some line crossing logging - Kerb line to S or E
-			// Update log file and appropriate accident counts in the event of a failure.  Record a failure
-			// at the location of the tracked vehicle and pass this information to the SimState so the failure		
-			// can be visualised.
-			Double2D intersectSE = detectLineCrossing(car1, sim.roads, LineType.SESIDE, sim.junctions);
-			if(intersectSE.x > -1)
+			// Check for line crossing - Kerb line to S or E
+			Double2D intersectSW = detectLineCrossing(car1, sim.roads, LineType.SWSIDE, sim.junctions);
+			if(intersectSW.x > -1)
 			{
-				addLog(AccidentType.CROSS_SE_LINE, car1.getID(), sim.schedule.getSteps(), intersectSE, null);
+				addLog(AccidentType.CROSS_SW_LINE, car1.getID(), sim.schedule.getSteps(), intersectSW, null);
 				noAccidents++;
 				AccCrossSE++;	
-				sim.recordCrossLine(intersectSE);
+				sim.recordCrossLine(intersectSW);
 			}
 			
 			// Check for a collision against all other cars present in the simulation
-			// Update log file and appropriate accident counts in the event of a collision.  Record a crash
-			// at the location of the tracked vehicle and pass this information to the SimState so the crash		
-			// can be visualised.
 			for (int j=0; j<sim.cars.size(); j++)
 			{
 				car2= (Car)sim.cars.get(j);
@@ -240,13 +224,13 @@ public class AccidentDetector implements Constants,Steppable {
 							" Collision with Car: " + car2.getID() + " (" + car2.getLocation() + "." );
 					noAccidents++;
 					AccCrashCar++;
-					sim.recordCrash(car1.getLocation()); // TO DO : Update to actual collision point between vehicles
+					sim.recordCrash(car1.getLocation()); // TODO : Update to actual collision point between vehicles
 				}
 			}
 			
 		}
 		
-		// HH - 21/07/14 Added a limiter on the number of steps that have been executed (this is also an failure condition)
+		// Check limit on the number of steps that have been executed (this is also an failure condition)
 		// Update log file and appropriate accident counts in the event of a 'timeout' failure.  Kill the simulation.
 		if (sim.schedule.getSteps() > 5000)
 		{
@@ -266,11 +250,11 @@ public class AccidentDetector implements Constants,Steppable {
 	/**
 	 * Add a structured log entry to the AccidentLog file containing the supplied parameters,
 	 * including a free-text string.
-	 * @param AccidentType t (Type of accident, for logging)
-	 * @param int carID (Unique id of tracked vehicle involved in failure)
-	 * @param long step (Simulation time step)
-	 * @param Double2D coor (Location of tracked vehicle at time of failure)
-	 * @param String str (A string containing any additional information about the failure)
+	 * @param t (AccidentType - Type of accident, for logging)
+	 * @param carID (int - Unique id of tracked vehicle involved in failure)
+	 * @param step (long - Simulation time step)
+	 * @param coor (Double2D - Location of tracked vehicle at time of failure)
+	 * @param str (String - A string containing any additional information about the failure)
 	 */
 	public void addLog(AccidentType t, int carID, long step, Double2D coor, String str)
 	{
@@ -284,13 +268,13 @@ public class AccidentDetector implements Constants,Steppable {
 	 * Sets up the output string for the summary output file by clearing it, and adding any
 	 * information that is known about the run a priori (other information is appended at the end
 	 * and the string is written to file by method addFooter).
-	 * @param COModel state (Simulation state which can be interrogated for model configuration)
+	 * @param state (COModel - Simulation state which can be interrogated for model configuration)
 	 **/
 	public void addHeader(COModel state)
 	{
 		sim = (COModel)state;
 	
-		// HH 26.11.14 Added some more logging
+		// Add some more logging
 		targetInfo myTargetInfo = sim.HgetTargetSeparations(sim.getTargetLoc());
 		
 		ps.println("*** New Run, Seed = "+ sim.seed() + "*** External Seed = " + sim.getExternalSeed() + 
@@ -303,7 +287,7 @@ public class AccidentDetector implements Constants,Steppable {
 					sim.HgetMinTargetCentreSeparation() + "; MinTargetKerbSep = " + sim.HgetMinTargetKerbSeparation() + 
 					"; DistPrevJctToTarget = " + myTargetInfo.fromPrevJct + "; DistTargetToNextJct = " + myTargetInfo.toNextJct + ".");
 		
-		// HH 28.8.14 - reset the summary string, and start to add information to it.  We'll 
+		// Reset the summary string, and start to add information to it.  We'll 
 		// write it all out in one go at the end
 		// FORMAT:
 		// "RandomSeed, ExternalRandomSeed, #Junctions, #Roads, #Obstacles, #Cars, MinJunctionSep, DistanceUGVtoTarget, " +
@@ -326,7 +310,7 @@ public class AccidentDetector implements Constants,Steppable {
 		summaryString += sim.HgetMinTargetCentreSeparation()  + ", ";
 		summaryString += sim.HgetMinTargetKerbSeparation()  + ", ";
 		
-		// HH 26.11.14 Added some more logging
+		// Add some more logging
 		summaryString += myTargetInfo.fromPrevJct + ", ";
 		summaryString += myTargetInfo.toNextJct + ", ";
 	}
@@ -340,13 +324,13 @@ public class AccidentDetector implements Constants,Steppable {
 	 * count for each accident type is formatted and the final output string (which
 	 * represents the results of the current simulation) is printed to the output file.  Object 
 	 * fields relating to accident tracking are all reset for the next simulation run.
-	 * @param COModel state (Simulation state which can be interrogated for model configuration)
+	 * @param state (COModel - Simulation state which can be interrogated for model configuration)
 	 **/
 	public void addFooter(COModel state)
 	{
 		sim = (COModel)state;
 	
-		// HH 30.7.14 - Work out the % faults that are active
+		// Work out the % faults that are active
 		int noFaults = 0;
 		for (int i = 0; i < Constants.MAX_FAULTS; i++)
 		{
@@ -355,7 +339,7 @@ public class AccidentDetector implements Constants,Steppable {
 			}
 		}
 		
-		ps.println(state.HgetUGVTargetSuccess()); // HH 22.7.14 Add extra footer re: targets found
+		ps.println(state.HgetUGVTargetSuccess()); // Add extra footer re: targets found
 		
 		ps.println("*** End of run, Seed = "+ sim.seed() + ", External Seed = " + sim.getExternalSeed()  + 
 				"*** NoCars = " + sim.noCars + "; CarMaxDeceleration = " + sim.getCarMaxDecceleration() + 
@@ -366,7 +350,7 @@ public class AccidentDetector implements Constants,Steppable {
 				"; NoSteps = " + sim.schedule.getSteps() + "; % Faults = " + noFaults + "/" + 
 				Constants.MAX_FAULTS + "=" + (noFaults/Constants.MAX_FAULTS) + "; End time = " + Utility.timeToString() + "."); // HH 30.7.14 Updated to include % faults
 		
-		// HH 28.8.14 - Add the remaining summary log information and write to the file
+		// Add the remaining summary log information and write to the file
 		// FORMAT:
 		// "RandomSeed, #Junctions, #Roads, #Obstacles, #Cars, MinJunctionSep, DistanceUGVtoTarget, DistanceTargetToObs, " +
 		// "#Faults, #Steps, #Accidents, #LeaveRoad, #CrossCentre, #CrossSE, #CrossNW, #CrashObs, #CrashCar");
@@ -385,7 +369,7 @@ public class AccidentDetector implements Constants,Steppable {
 				
 		psSummary.println(summaryString);
 		
-		// Reset noAccidents // HH 28.8.14 and associated measures
+		// Reset noAccidents and associated measures
 		this.setNoAccidents(0);
 		AccLeaveRoad = 0;
 		AccCrossCentre = 0;
@@ -400,8 +384,8 @@ public class AccidentDetector implements Constants,Steppable {
 	 * Add a passed string to the log file, alongside the current #steps; used by
 	 * COModel.start and COModel.finish to report which faults are active and how
 	 * many times each has been called.
-	 * @param COModel state (Simulation state which can be interrogated for current step count)
-	 * @param String inString (String to be output to the log file)
+	 * @param state (COModel - Simulation state which can be interrogated for current step count)
+	 * @param inString (String - to be output to the log file)
 	 **/
 	public void addString(COModel state, String inString)
 	{
@@ -418,8 +402,8 @@ public class AccidentDetector implements Constants,Steppable {
 	 * on an Area created from the obstacle Shape, to check for intersection 
 	 * with an Area created from the car Shape.  If this intersection is null,
 	 * there is no collision.
-	 * @param Car car (in use this would be the tracked car, UGV)
-	 * @param ParkedCar obstacle (object we are checking for collision against)
+	 * @param car (Car - in use this would be the tracked car, UGV)
+	 * @param obstacle (ParkedCar - object we are checking for collision against)
 	 * @return boolean (true if a collision is detected)
 	 **/	
 	private boolean detectCollisionWithObstacle(Car car, ParkedCar obstacle)
@@ -427,12 +411,6 @@ public class AccidentDetector implements Constants,Steppable {
 		return obstacle.inShape(car.getShape());
 	}
 	
-	// HH 24.9.14 - Improved this method so that it uses the actual vehicle outlines
-	// rather than some approximation based on whether the centres of each object are 
-	// less than 2m apart
-	// HH 3.12.14 - Force the first parameter to be a UGV so that we can ignore any
-	// collisions where the UGV is stationary (assume these to be the fault of one
-	// of the other DumbCars)
 	/** 
 	 * If the tracked car is stationary, it is not considered to be at fault for
 	 * any collision, return false.  Otherwise... check to see whether there 
@@ -446,13 +424,12 @@ public class AccidentDetector implements Constants,Steppable {
 	 * that both cars are active, and that they are not the same vehicle.  This
 	 * method then checks a series of conditions under which the trackedCar is
 	 * not deemed to be at fault (see code comments no. 1-3 for details): 
-	 * @param Car trackedCar (the tracked car, UGV)
-	 * @param Car car2 (Car we are checking for collision against)
+	 * @param trackedCar (Car - the tracked car, UGV)
+	 * @param car2 (Car - Car we are checking for collision against)
 	 * @return boolean (true if a collision is detected)
 	 **/
 	private boolean detectCollisionWithOtherCar(Car trackedCar, Car car2)
 	{
-	
 		// Firstly let's see if the UGV is stationary, because if so, we are going to attribute
 		// any accident to one of the other cars (so we can ignore it)
 		if (trackedCar.getSpeed() == 0)
@@ -543,7 +520,7 @@ public class AccidentDetector implements Constants,Steppable {
 	 * Format the supplied inArea as a String suitable for the log file (to enable debugging).
 	 * The string is enclosed in square brackets, and contains all the coordinates that make 
 	 * up the Area, each enclosed in curly brackets, and annotated with the type of each point.  
-	 * @param Area inArea (Area to be formatted as a String)
+	 * @param inArea (Area - Area to be formatted as a String)
 	 * @return String (inArea formatted as a String)
 	 **/
 	private String areaToString(Area inArea)
@@ -570,8 +547,8 @@ public class AccidentDetector implements Constants,Steppable {
 	 * Detect whether the centre point of the car (car.getLocation) has left the road
 	 * by checking for intersection of this location with all of the road Shapes on the
 	 * map.  If the location does not intersect with any of the roads, false is returned.
-	 * @param Car car (car being checked for 'LEAVEROAD')
-	 * @param Bag roads (all roads on the map)
+	 * @param car (Car - being checked for 'LEAVEROAD')
+	 * @param roads (Bag - all roads on the map)
 	 * @return boolean (true if the centre of the car has left the road)
 	 **/
 	private boolean detectCollisionWithPavement(Car car, Bag roads)
@@ -605,10 +582,10 @@ public class AccidentDetector implements Constants,Steppable {
 	 * of the line, to return a *likely* future intersection point.  This method *may* return two detections for a single
 	 * crossing if the UGV ends the step 'on' the line i.e. within the rectangle which represents the painted line of 10cm 
 	 * width.
-	 * @param Car car (car being checked for 'LINE CROSSING')
-	 * @param Bag roads (all roads on the map)
-	 * @param LineType inLineType (which line we are checking against: NEARSIDE, CENTRE, OFFSIDE)
-	 * @param Bag junctions (all junctions on the map)
+	 * @param car (Car - being checked for 'LINE CROSSING')
+	 * @param roads (Bag - all roads on the map)
+	 * @param inLineType (LineType - which line we are checking against: NEARSIDE, CENTRE, OFFSIDE)
+	 * @param junctions (Bag - all junctions on the map)
 	 * @return Double2D (location at which centre of vehicle crosses centre of line, or -1,0 to indicate no line crossing failure)
 	 **/
 	private Double2D detectLineCrossing(Car car, Bag roads, LineType inLineType, Bag junctions)
@@ -681,5 +658,4 @@ public class AccidentDetector implements Constants,Steppable {
 			return retVal;
 		}
 	}	
-
 }

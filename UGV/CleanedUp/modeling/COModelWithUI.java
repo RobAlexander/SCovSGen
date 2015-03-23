@@ -42,7 +42,11 @@ public class COModelWithUI extends GUIState
 	// HH 17.6.14 - Road markings portrayal 
 	FastValueGridPortrayal2D roadMarkingPortrayal = new FastValueGridPortrayal2D("Road Markings", true); // immutable
    
-	// HH 29.1.15 - Set arguments to 0, True if want a 'normal' standard run
+	/** HH 29.1.15 - Set arguments to 0, True if want a 'normal' standard run
+	 * 
+	 * @param double percentageFaults ()
+	 * @param boolean inWantRandomFaults ()
+	 */
     public COModelWithUI(double percentageFaults, boolean inWantRandomFaults) 
     { 
     	//super(new COModel( System.nanoTime(), Constants.WorldXVal, Constants.WorldYVal, true, 0, 0)); // HH 22/7/14 Added percentage faults parameter to end
@@ -52,14 +56,23 @@ public class COModelWithUI extends GUIState
     	System.out.println("COModelWithUI is being called!"+ "it's state(model)is: "+ state.toString());
     	sBuilder = new COModelBuilder((COModel) state);
     }
-        
+    
+    /**
+     * This method...
+     * @param SimState state ()
+     */
     public COModelWithUI(SimState state) {super(state); }    
     
+    /**
+     * This method...
+     * @return String ()
+     */
     public static String getName() { return "Robot-Testing-Sim"; } //[TODO] rename this
    
-    //code for the portraying of the field
-
-	public void start()
+    /**
+     * This method...
+     */
+    public void start()
 	{
 		System.out.println("COModelWithUI.start is called  "+ sBuilder.sim);
 		sBuilder.sim.reset();
@@ -82,6 +95,7 @@ public class COModelWithUI extends GUIState
 	 * the example simulations that MASON comes with include a load method in the
 	 * with UI class so I have done as well even though I have not found a reason
 	 * as to if it is important to have one.
+	 * @param SimState state ()
 	 */
 	public void load(SimState state)
 	{
@@ -91,8 +105,6 @@ public class COModelWithUI extends GUIState
 		super.load(state);
 		setupPortrayals();
 	}
-
-	
 	
 	/**
 	 * A method which sets up the portrayals of the different layers in the UI,
@@ -309,8 +321,10 @@ public class COModelWithUI extends GUIState
 		display.repaint();
 	}
 	
-	
-
+	/**
+	 * This method...
+	 * @param Controller c ()
+	 */
     public void init(Controller c)
         {
         super.init(c);
@@ -342,6 +356,9 @@ public class COModelWithUI extends GUIState
         System.out.println("COModelWithUI.init is called!");
         }
     
+    /**
+     * This method...
+     */
     public void quit()
     {
         super.quit();
@@ -351,13 +368,20 @@ public class COModelWithUI extends GUIState
         display = null;
     }
     
+    /**
+     * This method...
+     * @return Object ()
+     */
     public Object getSimulationInspectedObject(){return state;}
     
+    /**
+     * This method..
+     * @return Inspector ()
+     */
     public Inspector getInspector()
     {
     	Inspector i = super.getInspector();
     	i.setVolatile(true);
     	return i;
     }   
-	
 }

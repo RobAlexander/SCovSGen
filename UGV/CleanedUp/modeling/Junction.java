@@ -21,15 +21,11 @@ import sim.util.*;
  */
 public class Junction extends Entity
 {	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public static final int jctApproachLen = (20 + (int)Math.ceil(CAR_SPEED));  // HH - 30/7/14 updated in line with new car performance (45km/hr to 0 in 20m) 
 	                                                          // HH 27.8.14 Added car speed to increase buffer as assumes starts to decel at 20m (varies due to speed)
 	
-	//private int direction;
 	private double[] lengthDir = new double[T_WEST+1];
 	
 	// HH 3.9.14 Implementing 4 Way Stop
@@ -39,6 +35,16 @@ public class Junction extends Entity
 	// HH 23.12.14 - Store the ID of the vehicle who has occupied the junction (used to validate unOccupy requests)
 	private long occupierID = 0;
 	
+	/**
+	 * Constructor.
+	 * @param int idNo ()
+	 * @param double x ()
+	 * @param double y ()
+	 * @param double nDir ()
+	 * @param double eDir ()
+	 * @param double sDir ()
+	 * @param double wDir ()
+	 */
 	public Junction(int idNo, double x, double y, double nDir, double eDir, double sDir, double wDir)
 	{
 		super(idNo, TTJUNCTION);
@@ -52,6 +58,8 @@ public class Junction extends Entity
 	
 	/**
 	 * Method returns true if coord intersects with the junction object (when extended by required width), false otherwise
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
 	{
@@ -64,6 +72,8 @@ public class Junction extends Entity
 	
 	/**
 	 * Method returns true if coord intersects with the junction or junction approach (when extended by required width), false otherwise
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inApproach(Double2D coord)
 	{
@@ -77,6 +87,8 @@ public class Junction extends Entity
 	/**
 	 * HH - 18.8.14 Method returns true if coord intersects with the junction or junction exit - analoguous to approach (when extended by 
 	 * required width), false otherwise
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inExit(Double2D coord)
 	{
@@ -89,6 +101,7 @@ public class Junction extends Entity
 	
 	/**
 	 *  Method returns a Rectangle2D which represents the internal junction area (rather than just the centre point)
+	 *  @return Rectangle2D.Double ()
 	 */
 	public Rectangle2D.Double getJunctionArea()
 	{
@@ -106,6 +119,7 @@ public class Junction extends Entity
 	 *  road is left either side of each newly created junction.
 	 *  
 	 *  HH - Modified on 9.7.14 so that only include the actual approach lanes, rather than the lanes that are leaving the junction
+	 *  @return Path2D.Double ()
 	 */	
 	public Path2D.Double getJunctionApproach()
 	{
@@ -160,7 +174,7 @@ public class Junction extends Entity
 	 *  simply a right-angle corner.  Currently, this will still draw as a T-junction.  TO DO - Could solve this
 	 *  by storing 2 directions to ignore, but more complicated to pass to constructor as need to check how much 
 	 *  road is left either side of each newly created junction.
-
+	 *  @return Path2D.Double ()
 	 */	
 	public Path2D.Double getJunctionExit()
 	{
@@ -225,8 +239,12 @@ public class Junction extends Entity
 	 *  
 	 *  22/12/13 - Updated so return type now includes the target direction so that we can prevent the
 	 *  UGV from overshooting the target direction of travel.
+	 *  @param Double2D target ()
+	 *  @param UGV theUGV ()
+	 *  @param int idx ()
+	 *  @param COModel sim ()
+	 *  @return jctExitDirInfo ()
 	 */	
-	//public Double2D getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
 	public jctExitDirInfo getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
 	{
 		// HH 3.9.14 - Implementing 4-way stops (not necessarily fair when more than one car is waiting
@@ -337,6 +355,10 @@ public class Junction extends Entity
 	 *  upon 'collection' by the Car, the Car is no longer in the junction.
 	 *  Loop continues until a valid exit is chosen.  Where the junction is actually a dead end, the
 	 *  vehicle is permitted to continue straight ahead and leave the road network.
+	 *  @param DumbCar theCar ()
+	 *  @param int idx ()
+	 *  @param COModel sim ()
+	 *  @return jctExitInfo ()
 	 */	
 	public jctExitInfo getRandomExit(DumbCar theCar, int idx, COModel sim)
 	{
@@ -444,7 +466,10 @@ public class Junction extends Entity
 		return new jctExitInfo(exitCoords, this.ID);
 	}
 	
-	// HH 23.12.14 Update to include a check on the id of the vehicle that is trying to clear the lock on the junction
+	/** 
+	 * HH 23.12.14 Update to include a check on the id of the vehicle that is trying to clear the lock on the junction
+	 * @param long inID ()
+	 */
 	public void unOccupy(long inID)
 	{
 		if (occupierID == inID) {
@@ -454,11 +479,18 @@ public class Junction extends Entity
 		}
 	}
 	
-	// HH 23.12.14 For logging
+	/**
+	 * HH 23.12.14 For logging
+	 * @return long ()
+	 */
 	public long getOccupierID() {
 		return occupierID;
 	}
 	
+	/**
+	 * This method...
+	 * @return boolean ()
+	 */
 	public boolean isDeadEnd()
 	{
 		int dirCount = 0;
@@ -486,9 +518,10 @@ public class Junction extends Entity
 		}
 	}
 	
-	/*
+	/**
 	 * HH 9.9.14 getDeadEndEntry() - Return the coordinate pair representing the 
 	 * entry point that should be used to add a new vehicle to the network.
+	 * @return Double2D ()
 	 */
 	public Double2D getDeadEndEntry()
 	{
@@ -516,5 +549,4 @@ public class Junction extends Entity
 				
 		return new Double2D(-1,-1); // Shouldn't ever get here...
 	}
-	
 }

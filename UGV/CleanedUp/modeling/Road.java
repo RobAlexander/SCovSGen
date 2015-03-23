@@ -15,9 +15,6 @@ import sim.util.*;
 
 public class Road extends Line2D.Double implements Steppable 
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	protected final int ID;
@@ -27,6 +24,13 @@ public class Road extends Line2D.Double implements Steppable
 	private double roadLength;
 	private double direction; // HH 2.10.14 This can range from 0 (incl) to 180 (excl) where 0 is equivalent to N/S and 90 to E/W
 	
+	/** 
+	 * Constructor.
+	 * @param int idNo ()
+	 * @param int typeNo ()
+	 * @param Double2D start ()
+	 * @param Double2D end ()
+	 */
 	public Road(int idNo, int typeNo, Double2D start, Double2D end)
 	{
 		ID = idNo;
@@ -49,36 +53,61 @@ public class Road extends Line2D.Double implements Steppable
 	}	
 		
 	/**
-	 * @return the direction
+	 * This method...
+	 * @return double (the direction)
 	 */
 	public double getDirection() {
 		return direction;
 	}
 
 	/**
-	 * @param direction the direction to set
+	 * This method...
+	 * @param double direction (the direction to set)
 	 */
 	public void setDirection(double direction) {
 		this.direction = direction;
 	}
 
+	/**
+	 * This method...
+	 * @param SimState state ()
+	 */
 	@Override
 	public void step(SimState state) {
 		// TODO Auto-generated method stub
 	}
 	
+	/**
+	 * This method...
+	 * @return boolean ()
+	 */
 	public boolean isSchedulable() {
 		return isSchedulable;
 	}
 	
+	/**
+	 * This method...
+	 * @return int ()
+	 */
 	public int getType() {return type;}
+	
+	/**
+	 * This method...
+	 * @return int ()
+	 */
 	public int getID() {return ID;}
+	
+	/**
+	 * This method...
+	 * @return double ()
+	 */
 	public double getLength() {return roadLength;}
 	
-	/* 
+	/** 
 	 * HH 2.10.14 - Updated to use direction field
 	 * 
 	 * TODO: It may not be appropriate to call this method when we have reverted to non-grid road layout
+	 * @return boolean ()
 	 */
 	public boolean getIsNS() 
 	{
@@ -90,6 +119,10 @@ public class Road extends Line2D.Double implements Steppable
 		}
 	}
 
+	/**
+	 * This method...
+	 * @return String ()
+	 */
 	public String toString() 
 	{
 		return "" + getID();
@@ -97,6 +130,8 @@ public class Road extends Line2D.Double implements Steppable
 	
 	/**
 	 * Method returns true if coord intersects with the road object (when extended by required width), false otherwise
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
 	{
@@ -110,6 +145,8 @@ public class Road extends Line2D.Double implements Steppable
 		
 	/**
 	 * Method returns true if rectangle intersects with the road object (when extended by required width), false otherwise
+	 * @param Rectangle2D.Double inRectangle ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Rectangle2D.Double inRectangle)
 	{
@@ -121,6 +158,7 @@ public class Road extends Line2D.Double implements Steppable
 	
 	/**
 	 *  Method returns a Rectangle2D which represents the whole road area (rather than just the centre line)
+	 *  @return Rectangle2D.Double ()
 	 */
 	public Rectangle2D.Double getSurface()
 	{
@@ -150,22 +188,12 @@ public class Road extends Line2D.Double implements Steppable
 	}
 	
 	/**
-	 * Returns the distance from the closest part of the obstacle to the coord provided.
-	 * 
-	 * @param coord the coordinate the distance to be checked for
-	 */
-	public double obstacleToPoint(Double2D coord)
-	{
-		return java.lang.Double.MAX_VALUE; // TO DO - Implement
-	}
-
-	/**
 	 *  HH 16/6/14 Method returns a Rectangle2D which represents the painted lines on the specified location on the
 	 *  road.  Assumes a line thickness of 10cm at the sides, and 10cm in the centre.  For now, assume continuous single
 	 *  line in both cases (this should be adjusted in time to allow for broken lines at junctions, and broken lines in 
 	 *  the centre (warning/standard) - see workbook for details (or Traffic Signs Manual, Ch 5, 2003).
-	 *  
-	 *  argument: nearside / centre / offside
+	 *  @param LineType inLineType (argument: NESIDE / CENTRE / SWSIDE)
+	 *  @return Rectangle2D.Double ()
 	 */
 	public Rectangle2D.Double getLine(LineType inLineType)
 	{
@@ -175,7 +203,7 @@ public class Road extends Line2D.Double implements Steppable
 		Rectangle2D.Double paintedLine = new Rectangle2D.Double();
 		
 		switch (inLineType) {
-			case NWSIDE : {
+			case NESIDE : {
 		
 				// Calculate the coordinates of the upper left corner of the rectangle
 				if (x1 == x2) {
@@ -195,7 +223,7 @@ public class Road extends Line2D.Double implements Steppable
 				}
 				break;
 			}
-			case SESIDE : {
+			case SWSIDE : {
 				// Calculate the coordinates of the upper left corner of the rectangle
 				if (x1 == x2) {
 					// Vertical line
@@ -246,6 +274,8 @@ public class Road extends Line2D.Double implements Steppable
 	 *  the centre (warning/standard) - see workbook for details (or Traffic Signs Manual, Ch 5, 2003).
 	 *  
 	 *  argument: nearside / offside
+	 *  @param LineType inLineType ()
+	 *  @return Line2D.Double ()
 	 */
 	public Line2D.Double getThinLine(LineType inLineType)
 	{
@@ -255,7 +285,11 @@ public class Road extends Line2D.Double implements Steppable
 		Line2D.Double paintedLine = new Line2D.Double();
 		
 		switch (inLineType) {
-			case SESIDE : {
+			case CENTRE : {
+				paintedLine = new Line2D.Double(-1, -1, -1, -1); // Return inappropriate values to cascade the error
+				break;
+			}
+			case NESIDE : {
 		
 				// Calculate the coordinates of the upper left corner of the rectangle
 				if (x1 == x2) {
@@ -275,7 +309,7 @@ public class Road extends Line2D.Double implements Steppable
 				}
 				break;
 			}
-			case NWSIDE : {
+			case SWSIDE : {
 				// Calculate the coordinates of the upper left corner of the rectangle
 				if (x1 == x2) {
 					// Vertical line
@@ -296,16 +330,15 @@ public class Road extends Line2D.Double implements Steppable
 			}
 		default:
 			break;
-			
-			//[TODO] - May want to error if supplied with CENTRE
 		}
 		
 		return paintedLine;
-		
 	}
 	
 	/*
-	 * HH 4.9.14 getLane(coord) - return 1 for N or E; 2 for S or W
+	 * This method returns 1 for N or E; 2 for S or W
+	 * @param Double2D coord ()
+	 * @return int ()
 	 */
 	public int getLane(Double2D coord)
 	{

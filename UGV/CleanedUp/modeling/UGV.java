@@ -13,18 +13,13 @@ import sim.util.Bag;
 import sim.util.Double2D;
 import sim.util.MutableDouble2D;
 
-/* 
+/**
  * HH 7.5.14 - derived class created to provide road-driving functionality to existing Car class
  * 
  * @author HH
- * 
  */
-
 public class UGV extends Car {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private final double sensitivityForRoadTracking = 0.5;
@@ -54,6 +49,15 @@ public class UGV extends Car {
 	
 	// HH 18.6.14 - New constructor to allow initialisation of direction/bearing
 	// HH 22.7.14 - Added COModel as argument to allow faults
+	/**
+	 * Constructor.
+	 * @param int idNo ()
+	 * @param int idTarget ()
+	 * @param CarPerformance performance ()
+	 * @param double bearing ()
+	 * @param int noJcts ()
+	 * @param COModel sim ()
+	 */
 	public UGV(int idNo, int idTarget, CarPerformance performance, double bearing, int noJcts, COModel sim) {
 		super(idNo, idTarget, performance, bearing, TUGV);
 				
@@ -79,12 +83,12 @@ public class UGV extends Car {
 		targetFound = false; // HH 22.7.14 
 	}
 		
-	/*
+	/**
 	 * Based on modeling.Car.step (Robert Lee) - functionality changed to force vehicle to restrict movement to
 	 * remain on road network.
-	 * 
 	 * (non-Javadoc)
 	 * @see modeling.Car#step(sim.engine.SimState)
+	 * @param SimState state ()
 	 */
 	@Override
 	public void step(SimState state)
@@ -790,9 +794,8 @@ public class UGV extends Car {
 	 * 
 	 *  Check the direction in which the vehicle is travelling and reports whether the 
 	 *  vehicle is getting close to the wall.
-	 * 
-	 * @param bearing
-	 * @return true if getting too close to the wall (i.e. within vision)
+	 * @param double bearing ()
+	 * @return boolean (true if getting too close to the wall (i.e. within vision))
 	 */
 	private boolean checkWallClose(double bearing)
 	{
@@ -831,11 +834,11 @@ public class UGV extends Car {
 	 * should maintain its current heading whilst making slight allowances if the vehicle has temporarily moved
 	 * away from the nearside road marking.
 	 * 
-	 * @param roads All of the roads in the environment
-	 * @param location of the vehicle (me)
-	 * @param wpID id for the Waypoint
-	 * @param environment so that we can add the new waypoint
-	 * @param destination: either the target if we're in a junction approach, or the required position at the limit of the range, assuming current heading might not get vehicle there
+	 * @param Bag roads (all of the roads in the environment)
+	 * @param Double2D me (location of the vehicle)
+	 * @param int wpID (id for the Waypoint)
+	 * @param Continuous2D environment (so that we can add the new waypoint)
+	 * @param Double2D destination (either the target if we're in a junction approach, or the required position at the limit of the range, assuming current heading might not get vehicle there)
 	 */
 	public void alterCourseRM(Bag roads, Double2D me, int wpID, Continuous2D environment, Double2D destination)
 	{
@@ -861,10 +864,9 @@ public class UGV extends Car {
 	 * HH 10.7.14 - Work out a new waypoint location to allow a U-turn (based on current location and heading)
 	 * should just be a 180 degree flip, but need to know whether this equates to a translation in the N, E, S
 	 * or W direction.  Width of translation should be equivalent to roadWidth/2
-	 * 
-	 * @param me
-	 * @param bearing
-	 * @return Double2D with location of waypoint to allow a U-turn
+	 * @param Double2D me ()
+	 * @param double bearing ()
+	 * @return Double2D (location of waypoint to allow a U-turn)
 	 */
 	public Double2D getUTurn(Double2D me, double bearing)
 	{
@@ -901,11 +903,11 @@ public class UGV extends Car {
 	 * maximum intersection, and for the final stage will be a 'dummy' intersection of (-1,-1) as no intersection 
 	 * should be detected here and the constant offset of OBSTACLE_HEADWAY should be used instead
 	 * 
-	 * @param me
-	 * @param bearing
-	 * @param distance - can 
-	 * @param isReturn - if this WP is to return the vehicle to the centre of the lane
-	 * @return Double2D with location of waypoint to allow start of overtake
+	 * @param Double2D me ()
+	 * @param double bearing ()
+	 * @param Double2D distancePt () 
+	 * @param OvertakeStage isStage ()
+	 * @return Double2D (location of waypoint to allow start of overtake)
 	 */
 	public Double2D getOvertakeWP(Double2D me, double bearing, Double2D distancePt, OvertakeStage inStage)
 	{
@@ -1002,6 +1004,10 @@ public class UGV extends Car {
 		return new Double2D(0,0);
 	}
 	
+	/**
+	 * This method...
+	 * @return boolean ()
+	 */
 	private boolean checkWall()
 	{
 		Double2D me = this.location;
@@ -1032,12 +1038,11 @@ public class UGV extends Car {
 	}
 	
 	/** 
-	 * HH 14.7.14 - Work out whether the supplied location is about to leave one of the road surfaces
-	 * 
-	 * @param Bag: roads collection
-	 * @param Double2D: location to be checked
-	 * @param double: bearing on which UGV is travelling
-	 * @return boolean: true if offset location will leave the road surface
+	 * Work out whether the supplied location is about to leave one of the road surfaces
+	 * @param Bag roads (collection)
+	 * @param Double2D location (to be checked)
+	 * @param double bearing (on which UGV is travelling)
+	 * @return boolean (true if offset location will leave the road surface)
 	 */
 	private boolean nearlyOffRoad(Bag roads, Double2D location, double bearing)
 	{
@@ -1067,9 +1072,8 @@ public class UGV extends Car {
 	}
 	
 	/** 
-	 * HH 15.7.14
-	 * 
-	 * @return the 2D array of information about junction that have been visited
+	 * This method...
+	 * @return int[][] (the 2D array of information about junction that have been visited)
 	 */	
 	public int[][] getJunctionHistory()
 	{
@@ -1077,7 +1081,9 @@ public class UGV extends Car {
 	}
 	
 	/** 
-	 * HH 15.7.14 - update the 2D array of information about junction that have been visited
+	 * Update the 2D array of information about junction that have been visited
+	 * @param int idx ()
+	 * @param UGV_Direction direction ()
 	 */
 	public void updateJunctionHistory(int idx, UGV_Direction direction)
 	{
@@ -1087,14 +1093,19 @@ public class UGV extends Car {
 		}
 	}
 	
-	//
+	/**
+	 * This method..
+	 * @return boolean ()
+	 */
 	public boolean getTargetFound() {
 		return targetFound;
 	}
 	
-	/*
-	 *  HH 6.8.14 - return the number of steps required to complete the manoeuvre, based
+	/**
+	 *  Return the number of steps required to complete the manoeuvre, based
 	 *  on various assumptions about obstacle length, headway and speed/acceleration.
+	 *  @param double distanceToObstacle ()
+	 *  @return int ()
 	 */
 	private int getAvgManoeuvreTime(double distanceToObstacle) {
 
@@ -1122,13 +1133,19 @@ public class UGV extends Car {
 		return noSteps;
 	}
 	
-	/*
+	/**
 	 *  HH 6.8.14 - return the distance to an obstacle which is found in the current lane.  Search conducted at a 
 	 *  range of up to 25m.  Search progresses in a similar way to the roadMarkings search, and looks for the closest
 	 *  hit on an obstacle within a narrow range: Constants.UGVObsViewingAngle
 	 *  HH 3.12.14 - removed input inRoad as the UGV cannot be allowed to 'query the road', it can only build up
 	 *  an image of its surroundings by using sensors.
 	 *  HH 30.12.14 - allow the caller to restrict the search range to a supplied limit, or if 0 is supplied then use the default range
+	 *  @param COModel sim ()
+	 *  @param double bearing ()
+	 *  @param Obstacle obstacle ()
+	 *  @param boolean getMax ()
+	 *  @param double inRangeLimit ()
+	 *  @return Double2D ()
 	 */
 	private Double2D checkForObstacle(COModel sim, double bearing, Obstacle obstacle, boolean getMax, double inRangeLimit) {
 		
@@ -1265,15 +1282,15 @@ public class UGV extends Car {
 	}
 
 	/**
-	 * HH 7.8.14 - Based on Car.checkCourse (Robert Lee)
-	 *  
-	 *  HH 30.12.14 Added new param inLimitRange - this should be set to 0 to use the defaults, but otherwise can
-	 *  be used to limit the search range so that it can be used to find an intermediate obstacle where there might
-	 *  be three obstacles in a row.
-	 *  
-	 * @param sim
-	 * @param bearing
-	 * @return distance to the obstacle
+	 * Based on Car.checkCourse (Robert Lee)
+	 * HH 30.12.14 Added new param inLimitRange - this should be set to 0 to use the defaults, but otherwise can
+	 * be used to limit the search range so that it can be used to find an intermediate obstacle where there might
+	 * be three obstacles in a row.
+	 * @param COModel sim ()
+	 * @param double bearing ()
+	 * @param boolean getMax ()
+	 * @param double inLimitRange ()
+	 * @return Double2D ()
 	 */
 	private Double2D checkAllObstacles(COModel sim, double bearing, boolean getMax, double inLimitRange)
 	{
@@ -1331,10 +1348,10 @@ public class UGV extends Car {
 	 * overshot it (because it couldn't turn fast enough etc) - log this in the InfoLog, but not as an Accident
 	 * - an accident will be logged if the overshoot has resulted in a collision.
 	 * 
-	 * @param Double2D: waypoint location to be checked
-	 * @param double: bearing on which UGV is travelling
-	 * @return boolean: true if the current UGV location has overshot the waypoint, assuming it has 
-	 *                  been travelling along the bearing
+	 * @param Double2D WPlocation (waypoint location to be checked)
+	 * @param double bearing (on which UGV is travelling)
+	 * @return boolean  (true if the current UGV location has overshot the waypoint, assuming it has 
+	 *                  been travelling along the bearing)
 	 */
 	private boolean overshotWaypoint(Double2D WPlocation, double bearing)
 	{
@@ -1359,7 +1376,10 @@ public class UGV extends Car {
 		return false;
 	}
 
-	// HH 25.8.14 - Returns true if UGV currently engaged in overtaking manouevre
+	/**
+	 * Returns true if UGV currently engaged in overtaking manouevre
+	 * @return boolean ()
+	 */
 	public boolean isOvertaking() {
 		
 		if (overtakeStage != OvertakeStage.NOT_OVERTAKING) {
@@ -1369,7 +1389,10 @@ public class UGV extends Car {
 		}
 	}
 		
-	// HH 16.12.14 - Returns true if UGV currently engaged in uturn manouevre
+	/**
+	 * Returns true if UGV currently engaged in uturn manouevre
+	 * @return boolean ()
+	 */
 	public boolean isUTurning() {
 		
 		Bag everything = sim.environment.getAllObjects();
@@ -1393,7 +1416,8 @@ public class UGV extends Car {
 		}
 	}
 	/**
-	 * HH 24.9.14 - method which returns a (square) Rectangle2D representing the UGV (location is at front of vehicle)
+	 * Method which returns a (square) Rectangle2D representing the UGV (location is at front of vehicle)
+	 * @return Shape ()
 	 */
 	public Shape getShape()
 	{
@@ -1419,8 +1443,11 @@ public class UGV extends Car {
 	}	
 
 	/**
-	 * HH 13/10/14 - method which returns a (square) Rectangle2D representing the UGV and centred at supplied location
+	 * Method which returns a (square) Rectangle2D representing the UGV and centred at supplied location
 	 * and with supplied Orientation (which should be using the same reference frame as Orientation2D would) 
+	 * @param Double2D inLocation ()
+	 * @param double inOrientation2D ()
+	 * @return Shape ()
 	 */
 	public Shape getShapeAtOffset(Double2D inLocation, double inOrientation2D)
 	{
@@ -1441,7 +1468,9 @@ public class UGV extends Car {
 	}	
 	
 	/**
-	 * HH 24.9.14 method which returns true or false if a provided coordinate is in the shape
+	 * Method which returns true or false if a provided coordinate is in the shape
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
 	{
@@ -1450,10 +1479,11 @@ public class UGV extends Car {
 	}
 	
 	/**
-	 * HH 12.12.14 - Check for any moving obstacles within a 3m radius of the centre of the UGV/Car
-	 *  
-	 * @param sim
-	 * @return boolean
+	 * Check for any moving obstacles within a 3m radius of the centre of the UGV/Car
+	 * @param COModel sim ()
+	 * @param Bag inCars ()
+	 * @param double inSensitivity ()
+	 * @return boolean ()
 	 */
 	protected boolean checkAllMovingObsCircle(COModel sim, Bag inCars, double inSensitivity)
 	{
@@ -1482,13 +1512,14 @@ public class UGV extends Car {
 	}
 	
 	/*
-	 *  HH 12.12.14 - Search around the centre of the UGV at the specified range using 
+	 *  Search around the centre of the UGV at the specified range using 
 	 *  range sensitivity supplied, and default angle sensitivity.  Return true if a 
 	 *  moving obstacle is found during this search
-	 *  
-	 *  @param sim
-	 *  @param inCar - the vehicle that has been detected as being on the same road
-	 *  @return boolean - is an obstacle found in range
+	 *  @param COModel sim ()
+	 *  @param Car inCar (the vehicle that has been detected as being on the same road)
+	 *  @param double inRange ()
+	 *  @param double inSensitivity ()
+	 *  @return boolean (true if an obstacle is found in range)
 	 */
 	
 	private boolean checkForMovingObsCircle(COModel sim, Car inCar, double inRange, double inSensitivity) {
@@ -1538,7 +1569,6 @@ public class UGV extends Car {
 		
 		return false;
 	}
-	
 }
 
 

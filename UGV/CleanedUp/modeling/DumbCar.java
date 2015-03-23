@@ -12,26 +12,32 @@ import sim.util.Bag;
 import sim.util.Double2D;
 import sim.util.MutableDouble2D;
 
-/*
+/**
  * HH 25.8.14 - Moving obstacles which appear at entrances to the network, choose junction exits at random,
  * and follow a trajectory that involves them following a fixed offset from the kerb - based on 'knowing'
  * their location on the road.  TO DO - Rob has suggested varying the road position based on a double sine wave
  * to simulate drunk-driving as a future test scenario.  Other similar movement variation could be introduced.
  */
-
 public class DumbCar extends Car {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Constructor.
+	 * @param int idNo ()
+	 * @param CarPerformance performance ()
+	 * @param double initialBearing ()
+	 */
 	public DumbCar(int idNo, CarPerformance performance,
 			double initialBearing) {
 		super(idNo, -1, performance, initialBearing, DUMBCAR);
 		// NOTE: The targetId of a DumbCar will be -1 as it does not have a target
 	}
 
+	/**
+	 * This method...
+	 * @param SimState state ()
+	 */
 	@Override
 	public void step(SimState state)
 	{
@@ -342,6 +348,10 @@ public class DumbCar extends Car {
 		}
     }
 	
+	/**
+	 * This method..
+	 * @return String ()
+	 */
 	@Override
 	public String toString()
 	{
@@ -349,7 +359,8 @@ public class DumbCar extends Car {
 	}
 	
 	/**
-	 * method which returns a rectangle representing the moving car obstacle and centred at location
+	 * Method which returns a rectangle representing the moving car obstacle and centred at location
+	 * @return Shape ()
 	 */
 	public Shape getShape()
 	{
@@ -373,8 +384,10 @@ public class DumbCar extends Car {
 	}	
 	
 	/**
-	 * method which returns true or false if a provided coordinate is in the shape
+	 * Method which returns true or false if a provided coordinate is in the shape
 	 * would have to be overwritten when implemented
+	 * @param Double2D coord ()
+	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
 	{
@@ -382,6 +395,11 @@ public class DumbCar extends Car {
 		return carShape.contains(coord.x, coord.y);
 	}
 	
+	/**
+	 * This method...
+	 * @param Bag cars ()
+	 * @return double ()
+	 */
 	private double findImminentCrash(Bag cars)
 	{
 		double retVal = Constants.WorldXVal * 2; // Default return value, suggests nothing found in range
@@ -438,6 +456,5 @@ public class DumbCar extends Car {
 		}
 		
 		return retVal;
-	}
-	
+	}	
 }

@@ -18,16 +18,18 @@ import sim.util.Double2D;
 public class Utility {
 
 	/**
-	 * 
+	 * Constructor - unnecessary as we only use the static methods.
 	 */
 	public Utility() {
 		// TODO Auto-generated constructor stub
 	}
 	
 	/**
-	 * HH 15.10.14 utility method to return the 'centre' of an area - as defined by (max+min)/2 for
-	 * both x and y directions/	 * 	 
-	 * */
+	 * Utility method to return the 'centre' of an area - as defined by (max+min)/2 for
+	 * both x and y directions
+	 * @param Area inArea ()
+	 * @return Double2D ()
+	 */
 	public static Double2D getAreaCentre(Area inArea)
 	{
 		double xMax = -1;
@@ -87,9 +89,11 @@ public class Utility {
 	}
 
 	/**
-	 * HH 15.10.14 utility method to return the 'largest' vertex of an area - as defined by Max(x+y) for
-	 * all points (x,y)	 
-	 * */
+	 * Utility method to return the 'largest' vertex of an area - as defined by Max(x+y) for
+	 * all points (x,y)	
+	 * @param Area inArea ()
+	 * @return Double2D ()
+	 */
 	public static Double2D getAreaMaxPt(Area inArea)
 	{
 		double xMax = -1;
@@ -167,8 +171,13 @@ public class Utility {
 		return new Double2D(xMax, yMax);
 	}
 	
-	// HH 4.11.14 - As the basic contains method does not include points which are located *on* the eastern and
-	//southern boundaries of the rectangular shape
+	/**
+	 * As the basic 'contains' method does not include points which are located *on* the eastern and
+	 * southern boundaries of the rectangular shape
+	 * @param Rectangle2D.Double testRect ()
+	 * @param Double2D testPt ()
+	 * @return boolean ()
+	 */
 	public static boolean betterContains(Rectangle2D.Double testRect, Double2D testPt)
 	{
 		// Simple case
@@ -203,10 +212,9 @@ public class Utility {
 	// HH 21.11.14 - Seven static direction methods (below) moved from UGV/Car class.
 	
 	/** 
-	 * HH 18.6.14 - Work out which direction the vehicle is pointing in, based on its heading
-	 * 
-	 * @param bearing
-	 * @return either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
+	 * Work out which direction the vehicle is pointing in, based on its heading
+	 * @param double bearing ()
+	 * @return UGV_Direction (either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle)
 	 */
 	public static UGV_Direction getDirection(double bearing)
 	{
@@ -222,11 +230,10 @@ public class Utility {
 	}
 
 	/** 
-	 * HH 21.11.14 - Work out which direction the vehicle is pointing in, based on its heading,
+	 * Work out which direction the vehicle is pointing in, based on its heading,
 	 * but return the degrees-equivalent for this compass direction
-	 * 
-	 * @param bearing
-	 * @return either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
+	 * @param double bearing ()
+	 * @return int (either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle)
 	 */
 	public static int getDirectionDeg(double bearing)
 	{
@@ -241,11 +248,13 @@ public class Utility {
 		}
 	}
 
-	/*
-	 * HH 30.12.14 getDirectionInt(coord) - return 1 for N or E; 2 for S or W
+	/**
+	 * Return 1 for N or E; 2 for S or W
 	 * Designed to compliment Road.getLane which returns similar coded directions.
 	 * Used to check that the target is on the side of the road which aligns with the
 	 * direction of travel of the UGV (for clarity when the UGV is performing an O/T).
+	 * @param double bearing ()
+	 * @return int ()
 	 */
 	public static int getDirectionInt(double bearing)
 	{
@@ -261,10 +270,9 @@ public class Utility {
 	}
 	
 	/** 
-	 * HH 22.12.14 - Return the degrees-equivalent for this compass direction
-	 * 
-	 * @param bearing either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle
-	 * @return angular equivalent of bearing
+	 * Return the degrees-equivalent for this compass direction 
+	 * @param UGV_Direction bearing (either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle)
+	 * @return int (angular equivalent of bearing)
 	 */
 	public static int getDirectionDeg(UGV_Direction bearing)
 	{
@@ -281,9 +289,8 @@ public class Utility {
 	
 	/** 
 	 * A method which changes a bearing to be in the range of 0 (inclusive) to 360 (exclusive)
-	 * 
-	 * @param b the bearing to be corrected
-	 * @return a bearing equivalent to b which has been converted to be in the correct range
+	 * @param double b (the bearing to be corrected)
+	 * @return double (a bearing equivalent to b which has been converted to be in the correct range)
 	 */
 	protected static double correctAngle(double b) // HH 7.5.14 - Changed from private to protected
 	{
@@ -300,9 +307,11 @@ public class Utility {
 		return b;
 	}
 	
-	/*
-	 * HH 13.10.14 - returns the current orientation of the object in radians (as per
+	/**
+	 * Returns the current orientation of the object in radians (as per
 	 * OrientedPortrayal2D) for the supplied bearing
+	 * @param double inBearing ()
+	 * @return double ()
 	 */
 	public static double getOrientation2D(double inBearing)
 	{
@@ -316,13 +325,11 @@ public class Utility {
 	/**
 	 * Calculates the bearing the vehicle should be travelling on to move directly
 	 * from a location to another.
-	 * 
-	 * @param point1
-	 * @param point2
-	 * @return 
+	 * @param Double2D point1 ()
+	 * @param Double2D point2 ()
+	 * @return double ()
 	 */
-	//protected double calculateAngle(Double2D point1, Double2D point2) // HH 7.5.14 - changed this from private to protected
-	public static double calculateAngle(Double2D point1, Double2D point2) // HH 2.9.14 - Changed to public static
+	public static double calculateAngle(Double2D point1, Double2D point2) 
 	{
 		Double2D vector = point2.subtract(point1);
 		double angle;
@@ -372,12 +379,12 @@ public class Utility {
     /**
      * A function which based on the direction the car is facing and the speed it
 	 * is travelling at 
-	 * it returns a value for how much the x position should change in one step.
-	 * 
-	 * @param speed the speed
-     * @return the change in x coordinate of the car in the world
+	 * it returns a value for how much the x position should change in one step. 
+	 * @param double angle ()
+	 * @param double speed (the speed)
+     * @return double (the change in x coordinate of the car in the world)
      */
-	public static double xMovement(double angle, double speed) // HH 2.9.14 - Changed to public static
+	public static double xMovement(double angle, double speed) 
 	{
 		double xChange;
 		
@@ -394,13 +401,13 @@ public class Utility {
 		return xChange;
     }
 	
-    
 	/**
 	 * The y axis equivalent of the xMovement method
-	 * 
-	 * @return the change in y coordinate of the car in the world
+	 * @param double angle ()
+	 * @param double speed ()
+	 * @return double (the change in y coordinate of the car in the world)
 	 */
-	public static double yMovement(double angle, double speed) // HH 2.9.14 - Changed to public static
+	public static double yMovement(double angle, double speed)
 	{
 		double yChange;
 		if (angle <= 90) 
@@ -416,6 +423,10 @@ public class Utility {
 		return yChange;
     }
 	
+	/**
+	 * This method...
+	 * @return String ()
+	 */
 	public static String timeToString() {
 		
 		Calendar timeNow = Calendar.getInstance();

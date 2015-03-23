@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import modeling.COModelWithoutRun;
 
-
-
 /**
  * @author HH 3/11/14
  * 
@@ -25,9 +23,9 @@ import modeling.COModelWithoutRun;
 public class RunSpecificBatchFromFile {
 
 	/**
-	 * @param args
+	 * This method...
+	 * @param String[] args
 	 */
-	
     public static void main(String[] args)
     {
     	// HH Parameters that we need to read from file
@@ -111,6 +109,5 @@ public class RunSpecificBatchFromFile {
 		} // Close the file   	
     	
     	ps.close(); // Close the file 
-
     }   
 }

@@ -13,9 +13,9 @@ import sim.display.Console;
 public class SimulationWithUI {
 
 	/**
-	 * @param args
+	 * This method...
+	 * @param String[] args ()
 	 */
-	
     public static void main(String[] args)
     {
     	System.out.println("Before we do anything: Free =" + Runtime.getRuntime().freeMemory());
@@ -26,7 +26,5 @@ public class SimulationWithUI {
     	COModelWithUI vid = new COModelWithUI(16, false); 
     	Console c = new Console(vid);
 		c.setVisible(true);
-
     }
-
 }

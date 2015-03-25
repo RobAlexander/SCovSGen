@@ -19,14 +19,16 @@ import sim.portrayal.grid.FastValueGridPortrayal2D;
 
 
 /**
- * A class for running a simulation with a UI, run to see a simulation with a UI
- * showing it running.
+ * A class for running a simulation with a UI visualisation. This contains 'portrayals' which seem to
+ * be synonymous with layers.  In general these are dicretised grids on which we can represent static
+ * elements of the model, such as roads, junctions and obstacles.  A continuous portrayal is used to 
+ * capture other moving elements of the simulation.   
  * 
- * @author Robert Lee
+ * @author Robert Lee/hh940
  */
 public class COModelWithUI extends GUIState
 {	
-	protected COModelBuilder sBuilder; // = new COModelBuilder((COModel) state);
+	protected COModelBuilder sBuilder;
 	
 	public Display2D display;
 	public JFrame displayFrame;
@@ -35,54 +37,46 @@ public class COModelWithUI extends GUIState
 	FastValueGridPortrayal2D terrainPortrayal = new FastValueGridPortrayal2D("Terrain", true);  // immutable
 	FastValueGridPortrayal2D wallPortrayal = new FastValueGridPortrayal2D("Wall", true);  // immutable
 	
-	// HH 30/4/14 - Roads portrayal
+	// Roads/Junction/Road Marking portrayals
 	FastValueGridPortrayal2D roadsPortrayal = new FastValueGridPortrayal2D("Roads", true); // immutable    
 	FastValueGridPortrayal2D junctionsPortrayal = new FastValueGridPortrayal2D("Junctions", true); // immutable
 	FastValueGridPortrayal2D jctApproachPortrayal = new FastValueGridPortrayal2D("Junction Approaches", true); // immutable
-	// HH 17.6.14 - Road markings portrayal 
 	FastValueGridPortrayal2D roadMarkingPortrayal = new FastValueGridPortrayal2D("Road Markings", true); // immutable
    
-	/** HH 29.1.15 - Set arguments to 0, True if want a 'normal' standard run
+	/** 
+	 * Create a new simulation, complete with a UI from which the internal and external random seeds can be
+	 * defined to repeat an earlier run.  Alternatively, run repeatedly with different random seeds to see a
+	 * variety of different maps and behaviour.  Set arguments to 0, True if want a 'normal' standard run
+	 * without any faults inserted.
 	 * 
-	 * @param double percentageFaults ()
-	 * @param boolean inWantRandomFaults ()
+	 * @param percentageFaults (double - value of 0..1 (incl) to set % of faults to be injected 
+	 *                                   into the model OR index of single fault to be injected)
+	 * @param inWantRandomFaults (boolean - true if faults should be activated at random at supplied frequency, 
+	 *                                      false to specify one active fault)
 	 */
     public COModelWithUI(double percentageFaults, boolean inWantRandomFaults) 
     { 
-    	//super(new COModel( System.nanoTime(), Constants.WorldXVal, Constants.WorldYVal, true, 0, 0)); // HH 22/7/14 Added percentage faults parameter to end
-    	// HH 3.9.14 Changed seed method as concerned that integer casting of long value that occurs later could 
-    	//result in lots of seeds having MAX_VALUE
-    	super(new COModel( new SecureRandom().nextInt(), Constants.WorldXVal, Constants.WorldYVal, true, percentageFaults, 0, inWantRandomFaults));     	
+    	super(new COModel(new SecureRandom().nextInt(), Constants.WorldXVal, Constants.WorldYVal, true, percentageFaults, 0, inWantRandomFaults));     	
     	System.out.println("COModelWithUI is being called!"+ "it's state(model)is: "+ state.toString());
     	sBuilder = new COModelBuilder((COModel) state);
     }
-    
+        
     /**
-     * This method...
-     * @param SimState state ()
-     */
-    public COModelWithUI(SimState state) {super(state); }    
-    
-    /**
-     * This method...
-     * @return String ()
-     */
-    public static String getName() { return "Robot-Testing-Sim"; } //[TODO] rename this
-   
-    /**
-     * This method...
+     * This method actually runs the simulation, first resetting it, and then generating the map using the 
+     * external and internal random seeds that are supplied in the UI - where they are not present e.g. for
+     * the external seed, then they will be added during the generateSimulation method.  In addition to 
+     * generating the map and starting the simulation, this method also sets up the portrayals so that the
+     * map and simulation can be visualised.
      */
     public void start()
 	{
 		System.out.println("COModelWithUI.start is called  "+ sBuilder.sim);
 		sBuilder.sim.reset();
 		
-		// HH 30/4/14 Updated to add roads to simulations
-		sBuilder.generateSimulation();//((COModel) state).noObstacles,((COModel) state).noCars); // HH 31/7/14 Updated 
-		// HH end
+		sBuilder.generateSimulation();
 		
 		super.start();
-		setupPortrayals();	
+		setupPortrayals();
 		
     	System.out.println("Just started the simulation: Free =" + Runtime.getRuntime().freeMemory());
     	System.out.println("Just started the simulation: Total =" + Runtime.getRuntime().totalMemory());
@@ -95,12 +89,12 @@ public class COModelWithUI extends GUIState
 	 * the example simulations that MASON comes with include a load method in the
 	 * with UI class so I have done as well even though I have not found a reason
 	 * as to if it is important to have one.
-	 * @param SimState state ()
+	 * @param state (SimState - the simulation state)
 	 */
 	public void load(SimState state)
 	{
 		sBuilder.sim.reset();
-		sBuilder.generateSimulation();// HH 31/7/14 Updated
+		sBuilder.generateSimulation();
 		
 		super.load(state);
 		setupPortrayals();
@@ -108,75 +102,83 @@ public class COModelWithUI extends GUIState
 	
 	/**
 	 * A method which sets up the portrayals of the different layers in the UI,
-	 * this is where details of the simulation are coloured and set to different
-	 * parts of the UI
+	 * this is where details of the simulation are given specific colours/shapes
+	 * so that they can be visualised in the UI.  Static objects such as the roads 
+	 * are given their own discrete grid at an appropriate resolution, while moving
+	 * objects such as Cars, or point objects such as the Target are added to the
+	 * continuous and mutable grid environmentPortrayal.
 	 */
 	public void setupPortrayals()
 	{		
 		COModel simulation = (COModel) state;
 		
-		// HH 6.11.14 Moved the background images portrayals to be drawn first to try and improve appearance of vehicles driving
-		// over the Junction Approaches - they currently change colour due to the transparency of the approaches
+		// Background images portrayals e.g. roads should be drawn first to try and improve appearance of vehicles driving
+		// over e.g. the Junction Approaches - otherwise vehicles will change colour due to the transparency of the approaches
 		
-		// HH 30/4/14 Roads portrayal
+		// Roads portrayal
 		roadsPortrayal.setField(simulation.roadMap);
 		roadsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				0,
 				Constants.DUALTWOWAY,
 				new Color(0,0,0,0),
-				new Color(0,0,255,255)
+				new Color(0,0,255,255) // Light grey
 				));
 
-		// draw the junction approaches (ordering here not important though)
+		// Draw the junction approaches (ordering here not important though)
 		jctApproachPortrayal.setField(simulation.jctApproachMap);
 		jctApproachPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				0,
 				1,
 				new Color(0,0,0,0),
-				new Color(102,51,0,50) // slightly opaque
+				new Color(102,51,0,50) // slightly opaque brown/beige
 				));
 		
-		// draw the junctions
+		// Draw the junctions
 		junctionsPortrayal.setField(simulation.junctionMap);
 		junctionsPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				0,
 				1,
 				new Color(0,0,0,0),
-				new Color(102,51,0,60) // slightly opaque
+				new Color(102,51,0,60) // slightly darker opaque brown beige
 				));
 		
-		// HH - 17.6.14 - add the road markings
+		// Add the road markings (these are on a higher resolution grid) and are
+		// not always visible unless you zoom in.
 		roadMarkingPortrayal.setField(simulation.roadMarkingMap);
 		roadMarkingPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				0,
 				Constants.WHITERPAINT,
 				new Color(0,0,0,0),
-				new Color(255,255,255,255)
+				new Color(255,255,255,255) // White
 				));
 		
+		// Add the Parked Car obstacles
 		obstaclesPortrayal.setField(simulation.obstacleMap);
 		obstaclesPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				0,
 				1,
 				new Color(0,0,0,0),
-				new Color(0,0,255,255)
+				new Color(0,0,255,255) // Blue
 				));
         
+		// Add the walls - appears as a boundary around the map
 		wallPortrayal.setField(simulation.wallMap);
 		wallPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				0,
 				1,
 				new Color(0,0,0,0),
-				new Color(255,0,0,255)
+				new Color(255,0,0,255) // Red
 				));		
 				
-		// HH 6.11.14 - Portrayals for DumbCar i.e. the Moving Obstacles
+		// Portrayals for DumbCar i.e. the Moving Obstacles
 		// tell the portrayals what to portray and how to portray them
-		environmentPortrayal.setField( simulation.environment );	
+		environmentPortrayal.setField(simulation.environment);	
 		environmentPortrayal.setPortrayalForClass(DumbCar.class, new OrientedPortrayal2D( new LabelledPortrayal2D( new RectanglePortrayal2D(Constants.OBSTACLE_WIDTH * 6)
 		{
 			/**
-			 * 
+			 * Green rectangles, labelled with ID, and displaying orientation (highlighted with red line pointing in direction of travel)
+			 * TODO: This implementation does not scale well if the zoom level is changed in the user-interface; vehicles are displaced
+			 * to inaccurate locations on the map. 
 			 */
 			private static final long serialVersionUID = 1L;
 
@@ -188,35 +190,37 @@ public class COModelWithUI extends GUIState
 				}
 				else
 				{
-					graphics.setPaint(new Color(0,0,0));
+					graphics.setPaint(new Color(0,0,0)); // Black if inactive (shouldn't happen)
 				}
-				
-				// HH 18.9.14 Create a rectangle object that we can rotate to point in the right direction
+
+				// Create a rectangle object that we can rotate to point in the right direction, note that the
+				// location of the vehicle is taken to mean the centre front of the vehicle
 				Rectangle2D.Double carRectangle = new Rectangle2D.Double();
-				
-				// HH 8.10.14 - Changed so location is the front of the vehicle, rather than in the centre
-				// previously: (info.draw.x - ((Constants.OBSTACLE_LENGTH/2)*info.draw.width))
-				carRectangle = new Rectangle2D.Double((info.draw.x - ((Constants.OBSTACLE_LENGTH)*info.draw.width)), (info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.height)), 
-				(info.draw.width*Constants.OBSTACLE_LENGTH), 
-				(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
-								
-				AffineTransform rotateTransform = AffineTransform.getRotateInstance(((Car) object).orientation2D(), ((Car)object).getLocation().x*6, ((Car)object).getLocation().y*6);
+				carRectangle = new Rectangle2D.Double(
+						(info.draw.x - ((Constants.OBSTACLE_LENGTH)*info.draw.width)), (info.draw.y - ((Constants.OBSTACLE_WIDTH/2)*info.draw.height)), 
+						(info.draw.width*Constants.OBSTACLE_LENGTH), 
+						(info.draw.height*Constants.OBSTACLE_LENGTH*(Constants.OBSTACLE_WIDTH/Constants.OBSTACLE_LENGTH)));
+
+				AffineTransform rotateTransform = AffineTransform.getRotateInstance(((Car) object).orientation2D(), 
+						((Car)object).getLocation().x*6, ((Car)object).getLocation().y*6);
+
 				Shape carShape = rotateTransform.createTransformedShape(carRectangle);
 				graphics.draw(carShape);
-				graphics.fill(carShape); // HH 6.11.14 Added to make Shape more visible
-
+				graphics.fill(carShape);
 			}
 		}, null, new Color(0, 0, 0), false), 0, 2)
 		
-		);
+		); // end setPortrayalForClass DumbCar
 		
-		// HH 7.5.14 - Added portrayal for UGVs
+		// Portrayal for UGVs
 		// tell the portrayals what to portray and how to portray them
 		environmentPortrayal.setField( simulation.environment );	
 		environmentPortrayal.setPortrayalForClass(UGV.class, new OrientedPortrayal2D(new RectanglePortrayal2D(Constants.UGV_WIDTH)
 		{
 			/**
-			 * 
+			 * Orange squares, displaying orientation (highlighted with red line pointing in direction of travel)
+			 * TODO: This implementation does not scale well if the zoom level is changed in the user-interface; vehicles are displaced
+			 * to inaccurate locations on the map. 
 			 */
 			private static final long serialVersionUID = 1L;
 
@@ -228,81 +232,81 @@ public class COModelWithUI extends GUIState
 				}
 				else
 				{
-					graphics.setPaint(new Color(0,0,0));
+					graphics.setPaint(new Color(0,0,0)); // Black (for when reaches Target)
 				}
 				
-				AffineTransform rotateTransform = AffineTransform.getRotateInstance(((Car) object).orientation2D(), ((Car)object).getLocation().x*6, ((Car)object).getLocation().y*6);
-				Shape carShape = rotateTransform.createTransformedShape(new Rectangle2D.Double((info.draw.x - ((Constants.UGV_WIDTH)*info.draw.width)), (info.draw.y - ((Constants.UGV_WIDTH/2)*info.draw.height)), 
+				AffineTransform rotateTransform = AffineTransform.getRotateInstance(((Car) object).orientation2D(), 
+						((Car)object).getLocation().x*6, ((Car)object).getLocation().y*6);
+				
+				Shape carShape = rotateTransform.createTransformedShape(new Rectangle2D.Double((info.draw.x - ((Constants.UGV_WIDTH)*info.draw.width)), 
+						(info.draw.y - ((Constants.UGV_WIDTH/2)*info.draw.height)), 
 						(info.draw.width*Constants.UGV_WIDTH), (info.draw.height*Constants.UGV_WIDTH)));
+				
 				graphics.draw(carShape);
-				graphics.fill(carShape); // HH 6.11.14 Add fill
+				graphics.fill(carShape); 
 			}
 		}, 0, 2)
 		
-		);
-		// HH - end
+		); // end setPortrayalForClass UGV
 
-		// HH 18.9.14 - Added portrayal for Waypoints (in order to make them less obstrusive in the display)
+		// Portrayal for Waypoints (in order to make them less intrusive in the display)
 		// tell the portrayals what to portray and how to portray them
 		environmentPortrayal.setField( simulation.environment );	
 		environmentPortrayal.setPortrayalForClass(Waypoint.class, (new RectanglePortrayal2D(0.3)
 		{
 			/**
-			 * 
+			 * Yellow points - very small rectangles
 			 */
 			private static final long serialVersionUID = 1L;
 
 			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
 			{
-				paint = new Color(255, 255, 0, 255); // Yellow
-												
+				paint = new Color(255, 255, 0, 255); // Yellow								
 			    super.draw(object, graphics, info);
 			}
 		})
 		
-		);
-		// HH - end
+		); // end setPortrayalForClass Waypoint
 		
-		// HH 7.5.14 - Added portrayal for Failures
+		// Portrayal for Failures
 		// tell the portrayals what to portray and how to portray them
 		environmentPortrayal.setField( simulation.environment );	
-		environmentPortrayal.setPortrayalForClass(Failure.class, new RectanglePortrayal2D(0.75) // HH 22.12.14 Increased size from 0.5
+		environmentPortrayal.setPortrayalForClass(Failure.class, new RectanglePortrayal2D(0.75)
 		{
 			/**
-			 * 
+			 * Black points - small rectangles
 			 */
 			private static final long serialVersionUID = 1L;
 
 			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
 			{
-				paint = new Color(0, 0, 0, 255); // HH 22.12.14 Changed from red to black							
+				paint = new Color(0, 0, 0, 255); // Black							
 			    super.draw(object, graphics, info);
 			}
-		});
-		// HH - end
+		}); // end setPortrayalForClass Failure
+		
 
-		// HH 26.8.14 - Added portrayal for Crashes
+		// Portrayal for Crashes
 		// tell the portrayals what to portray and how to portray them
 		environmentPortrayal.setField( simulation.environment );	
 		environmentPortrayal.setPortrayalForClass(Crash.class, new RectanglePortrayal2D(1)
 		{
 			/**
-			 * 
+			 * Red points - small rectangles
 			 */
 			private static final long serialVersionUID = 1L;
 
 			public void draw(Object object, Graphics2D graphics, DrawInfo2D info)
 			{
-				paint = new Color(255, 0, 0, 255);							
+				paint = new Color(255, 0, 0, 255);	// Red						
 			    super.draw(object, graphics, info);
 			}
-		});
-		// HH - end
+		}); // end setPortrayalForClass Crashes
 		
 		environmentPortrayal.setPortrayalForClass(Target.class, new LabelledPortrayal2D( new HexagonalPortrayal2D()
 		{
 			/**
-			 * 
+			 * Black points - small hexagon labelled with a 'T'
 			 */
 			private static final long serialVersionUID = 1L;
 
@@ -313,7 +317,7 @@ public class COModelWithUI extends GUIState
 			}
 		}, "T", new Color(0, 0, 0), false) 
 				
-		);
+		); // end setPortrayalForClass Target
 		
 		// reschedule the displayer
 		display.reset();
@@ -322,42 +326,42 @@ public class COModelWithUI extends GUIState
 	}
 	
 	/**
-	 * This method...
-	 * @param Controller c ()
+	 * This method sets up the display and attaches all the portrayals/layers
+	 * ready for visualisation
+	 * @param c (Controller - controls windows and visualisation)
 	 */
     public void init(Controller c)
-        {
+    {
         super.init(c);
 
-        // make the displayer
+        // Make the displayer
         display = new Display2D((6*Constants.WorldXVal),(6*Constants.WorldYVal),this); // HH 30.7.14 Constants.WorldXVal and WorldYVal From (600x600)
-        // turn off clipping
+        // Turn off clipping
         display.setClipping(false);
 
         displayFrame = display.createFrame();
         displayFrame.setTitle("Environment Display");
-        c.registerFrame(displayFrame);   // register the frame so it appears in the "Display" list
+        c.registerFrame(displayFrame);   // Register the frame so it appears in the "Display" list
         displayFrame.setVisible(true);
 		
-		//adding the different layers to the display
+		// Adding the different layers to the display
 		display.attach(terrainPortrayal,"Terrain");
 		display.attach(obstaclesPortrayal,"Obstacles");	
         display.attach(environmentPortrayal, "Environment" );
         display.attach(wallPortrayal,"Wall");
         
-        // HH 30/4/14 Add road portrayals (in right order)
+        // Add road portrayals (in right order)
         display.attach(roadsPortrayal, "Roads");
         display.attach(jctApproachPortrayal, "Junction Approaches");
         display.attach(junctionsPortrayal, "Junctions");
-        // HH 17.6.14 Add road markings
+        // Add road markings
         display.attach(roadMarkingPortrayal, "Road Markings");
-        // HH end
         
         System.out.println("COModelWithUI.init is called!");
-        }
+    }
     
     /**
-     * This method...
+     * This method removes the UI.
      */
     public void quit()
     {
@@ -369,14 +373,14 @@ public class COModelWithUI extends GUIState
     }
     
     /**
-     * This method...
-     * @return Object ()
+     * This method returns the SimState object.
+     * @return Object (the SimState object)
      */
-    public Object getSimulationInspectedObject(){return state;}
+    public Object getSimulationInspectedObject() {return state;}
     
     /**
-     * This method..
-     * @return Inspector ()
+     * This method returns the Inspector object.
+     * @return Inspector (the Inspector object)
      */
     public Inspector getInspector()
     {

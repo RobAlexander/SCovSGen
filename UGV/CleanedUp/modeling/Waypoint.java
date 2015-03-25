@@ -13,8 +13,8 @@ public class Waypoint extends Entity
 	private int nextPoint; //the id of the point to go to after this waypoint
 	
 	/** Constructor for Waypoint
-	 * @param int ID (the id of the waypoint)
-	 * @param int next (the id of the point that should be travelled to after this waypoint is reached)
+	 * @param ID (int - the id of the waypoint)
+	 * @param next (int - the id of the point that should be travelled to after this waypoint is reached)
 	 */
 	public Waypoint(int ID, int next)
 	{
@@ -24,9 +24,9 @@ public class Waypoint extends Entity
 	
 	/**
 	 * Additional Constructor for Waypoint used to enforce a U-turn
-	 * @param int ID (the id of the waypoint)
-	 * @param int next (the id of the point that should be travelled to after this waypoint is reached)
-	 * @param int type (the integer type)
+	 * @param ID (int - the id of the waypoint)
+	 * @param next (int - the id of the point that should be travelled to after this waypoint is reached)
+	 * @param type (int - the integer type)
 	 */
 	public Waypoint(int ID, int next, int type)
 	{

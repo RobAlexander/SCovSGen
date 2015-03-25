@@ -37,13 +37,13 @@ public class Junction extends Entity
 	
 	/**
 	 * Constructor.
-	 * @param int idNo ()
-	 * @param double x ()
-	 * @param double y ()
-	 * @param double nDir ()
-	 * @param double eDir ()
-	 * @param double sDir ()
-	 * @param double wDir ()
+	 * @param idNo (int - )
+	 * @param x (double - )
+	 * @param y (double - )
+	 * @param nDir (double - )
+	 * @param eDir (double - )
+	 * @param sDir (double - )
+	 * @param wDir (double - )
 	 */
 	public Junction(int idNo, double x, double y, double nDir, double eDir, double sDir, double wDir)
 	{
@@ -58,7 +58,7 @@ public class Junction extends Entity
 	
 	/**
 	 * Method returns true if coord intersects with the junction object (when extended by required width), false otherwise
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
@@ -72,7 +72,7 @@ public class Junction extends Entity
 	
 	/**
 	 * Method returns true if coord intersects with the junction or junction approach (when extended by required width), false otherwise
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public boolean inApproach(Double2D coord)
@@ -87,7 +87,7 @@ public class Junction extends Entity
 	/**
 	 * HH - 18.8.14 Method returns true if coord intersects with the junction or junction exit - analoguous to approach (when extended by 
 	 * required width), false otherwise
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public boolean inExit(Double2D coord)
@@ -239,10 +239,10 @@ public class Junction extends Entity
 	 *  
 	 *  22/12/13 - Updated so return type now includes the target direction so that we can prevent the
 	 *  UGV from overshooting the target direction of travel.
-	 *  @param Double2D target ()
-	 *  @param UGV theUGV ()
-	 *  @param int idx ()
-	 *  @param COModel sim ()
+	 *  @param target (Double2D - )
+	 *  @param theUGV (UGV - )
+	 *  @param idx (int - )
+	 *  @param sim (COModel - )
 	 *  @return jctExitDirInfo ()
 	 */	
 	public jctExitDirInfo getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
@@ -355,9 +355,9 @@ public class Junction extends Entity
 	 *  upon 'collection' by the Car, the Car is no longer in the junction.
 	 *  Loop continues until a valid exit is chosen.  Where the junction is actually a dead end, the
 	 *  vehicle is permitted to continue straight ahead and leave the road network.
-	 *  @param DumbCar theCar ()
-	 *  @param int idx ()
-	 *  @param COModel sim ()
+	 *  @param theCar (DumbCar - )
+	 *  @param idx (int - )
+	 *  @param sim (COModel - )
 	 *  @return jctExitInfo ()
 	 */	
 	public jctExitInfo getRandomExit(DumbCar theCar, int idx, COModel sim)
@@ -468,7 +468,7 @@ public class Junction extends Entity
 	
 	/** 
 	 * HH 23.12.14 Update to include a check on the id of the vehicle that is trying to clear the lock on the junction
-	 * @param long inID ()
+	 * @param inID (long - )
 	 */
 	public void unOccupy(long inID)
 	{

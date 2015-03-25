@@ -255,20 +255,20 @@ public class COModel extends SimState
     public void setFault(int idx) {	faultCalled[idx] ++; } // Increment the entry in the fault called array found at the specified index
     
     // Get/set methods for various parameters
-	public  int getNoJunctions() { return noJunctions; }
-	public  void setNoJunctions(int inNoJunctions) { noJunctions = inNoJunctions; }  
+	public int getNoJunctions() { return noJunctions; }
+	public void setNoJunctions(int inNoJunctions) { noJunctions = inNoJunctions; }  
 	
-	public  double getCarMaxSpeed() { return carMaxSpeed; }
-	public  void setCarMaxSpeed(double MaxSpeed) { carMaxSpeed = MaxSpeed; }
+	public double getCarMaxSpeed() { return carMaxSpeed; }
+	public void setCarMaxSpeed(double MaxSpeed) { carMaxSpeed = MaxSpeed; }
 	
-	public  double getCarMaxAcceleration() { return carMaxAcceleration;	}
-	public  void setCarMaxAcceleration(double MaxAcceleration) { carMaxAcceleration = MaxAcceleration; }
+	public double getCarMaxAcceleration() { return carMaxAcceleration;	}
+	public void setCarMaxAcceleration(double MaxAcceleration) { carMaxAcceleration = MaxAcceleration; }
 	
-	public  double getCarMaxDecceleration() { return carMaxDecceleration; }
-	public  void setCarMaxDecceleration(double MaxDecceleration) { carMaxDecceleration = MaxDecceleration; }
+	public double getCarMaxDecceleration() { return carMaxDecceleration; }
+	public void setCarMaxDecceleration(double MaxDecceleration) { carMaxDecceleration = MaxDecceleration; }
 	
-	public  double getCarMaxTurning() { return carMaxTurning; }
-	public  void setCarMaxTurning(double MaxTurning) { carMaxTurning = MaxTurning; }
+	public double getCarMaxTurning() { return carMaxTurning; }
+	public void setCarMaxTurning(double MaxTurning) { carMaxTurning = MaxTurning; }
 	
 	public int getNoObstacles() { return this.noObstacles; }
 	public void setNoObstacles(int noObstacles) { this.noObstacles = noObstacles; }

@@ -35,7 +35,7 @@ public class InfoLogFile {
 
 	/**
 	 * Simple log function to allow messages about each run to be printed to the info log file
-	 * @param String str ()
+	 * @param str (String - )
 	 */
 	public void addLog(String str)
 	{
@@ -45,7 +45,7 @@ public class InfoLogFile {
 	/** 
 	 * HH 6/5/14 - Adds header information to file to enable run
 	 * to be reproduced.  An entry in the log will be made for all runs.
-	 * @param COModel state () 
+	 * @param state (COModel - ) 
 	 **/
 	public void addHeader(COModel state)
 	{

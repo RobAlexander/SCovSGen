@@ -17,9 +17,9 @@ public abstract class Obstacle extends Entity implements Oriented2D
 	
 	/**
 	 * Constructor.
-	 * @param int idNo ()
-	 * @param int typeNo ()
-	 * @param double inDirection ()
+	 * @param idNo (int - )
+	 * @param typeNo (int - )
+	 * @param inDirection (double - )
 	 */
 	public Obstacle(int idNo, int typeNo, double inDirection)
 	{
@@ -39,14 +39,14 @@ public abstract class Obstacle extends Entity implements Oriented2D
 	/**
 	 * method which returns true or false if a provided coordinate is in the shape
 	 * would have to be overwritten when implemented
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public abstract boolean inShape(Double2D coord);	
 	
 	/**
 	 * Returns the distance from the closest part of the obstacle to the coord provided.
-	 * @param Double2D coord (the coordinate the distance to be checked for)
+	 * @param coord (Double2D - the coordinate the distance to be checked for)
 	 * @return boolean ()
 	 */
 	public double obstacleToPoint(Double2D coord)

@@ -325,8 +325,8 @@ public class Utility {
 	/**
 	 * Calculates the bearing the vehicle should be travelling on to move directly
 	 * from a location to another.
-	 * @param Double2D point1 ()
-	 * @param Double2D point2 ()
+	 * @param point1 (Double2D - )
+	 * @param point2 (Double2D - )
 	 * @return double ()
 	 */
 	public static double calculateAngle(Double2D point1, Double2D point2) 
@@ -380,8 +380,8 @@ public class Utility {
      * A function which based on the direction the car is facing and the speed it
 	 * is travelling at 
 	 * it returns a value for how much the x position should change in one step. 
-	 * @param double angle ()
-	 * @param double speed (the speed)
+	 * @param angle (double - )
+	 * @param speed (double - the speed)
      * @return double (the change in x coordinate of the car in the world)
      */
 	public static double xMovement(double angle, double speed) 
@@ -403,8 +403,8 @@ public class Utility {
 	
 	/**
 	 * The y axis equivalent of the xMovement method
-	 * @param double angle ()
-	 * @param double speed ()
+	 * @param angle (double - )
+	 * @param speed (double - )
 	 * @return double (the change in y coordinate of the car in the world)
 	 */
 	public static double yMovement(double angle, double speed)

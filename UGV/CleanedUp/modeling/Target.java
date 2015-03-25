@@ -10,7 +10,7 @@ public class Target extends Entity
 
 	/**
 	 * Constructor
-	 * @param int idNo ()
+	 * @param idNo (int - )
 	 */
 	public Target(int idNo)
 	{

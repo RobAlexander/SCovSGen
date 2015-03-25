@@ -19,8 +19,8 @@ public class Entity implements Steppable, Constants
 	
 	/**
 	 * Constructor.
-	 * @param int idNo ()
-	 * @param int typeNo ()
+	 * @param idNo (int - )
+	 * @param typeNo (int - )
 	 */
 	public Entity(int idNo, int typeNo)
 	{
@@ -31,7 +31,7 @@ public class Entity implements Steppable, Constants
 	
 	/**
 	 * This method...
-	 * @param SimState state ()
+	 * @param state (SimState - )
 	 */
 	public void step(SimState state)
 	{
@@ -48,7 +48,7 @@ public class Entity implements Steppable, Constants
 
 	/**
 	 * A meethod which sets the stored location to the supplied coordinates
-	 * @param Double2D location ()
+	 * @param location (Double2D - )
 	 */
 	public void setLocation(Double2D location) {
 		this.location = location;

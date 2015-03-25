@@ -88,7 +88,7 @@ public class RunSpecificBatchFromFile {
     		
     		// Set up the run with these parameters
     		COModelWithoutRun mod = new COModelWithoutRun(percentageFaults, 99, InternalSeed); // 99 'cos We don't need the unique filenames for each run
-    		outputString = mod.start(ExternalSeed, 99);
+    		outputString = mod.start(ExternalSeed);
     		
     		ps.println(InternalSeed + ", " + ExternalSeed + ", " + percentageFaults + ", " + outputString);
     		

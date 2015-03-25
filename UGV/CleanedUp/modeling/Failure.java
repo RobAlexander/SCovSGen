@@ -13,8 +13,8 @@ public class Failure extends Entity {
 
 	/**
 	 * Constructor.
-	 * @param int idNo ()
-	 * @param int typeNo ()
+	 * @param idNo (int - )
+	 * @param typeNo (int - )
 	 */
 	public Failure(int idNo, int typeNo) {
 		super(idNo, typeNo);

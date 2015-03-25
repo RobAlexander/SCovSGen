@@ -24,9 +24,9 @@ public class DumbCar extends Car {
 
 	/**
 	 * Constructor.
-	 * @param int idNo ()
-	 * @param CarPerformance performance ()
-	 * @param double initialBearing ()
+	 * @param idNo (int - )
+	 * @param performance (CarPerformance - )
+	 * @param initialBearing (double - )
 	 */
 	public DumbCar(int idNo, CarPerformance performance,
 			double initialBearing) {
@@ -36,7 +36,7 @@ public class DumbCar extends Car {
 
 	/**
 	 * This method...
-	 * @param SimState state ()
+	 * @param state (SimState - )
 	 */
 	@Override
 	public void step(SimState state)
@@ -386,7 +386,7 @@ public class DumbCar extends Car {
 	/**
 	 * Method which returns true or false if a provided coordinate is in the shape
 	 * would have to be overwritten when implemented
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
@@ -397,7 +397,7 @@ public class DumbCar extends Car {
 	
 	/**
 	 * This method...
-	 * @param Bag cars ()
+	 * @param cars (Bag - )
 	 * @return double ()
 	 */
 	private double findImminentCrash(Bag cars)

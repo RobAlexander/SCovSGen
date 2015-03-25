@@ -26,10 +26,10 @@ public class Road extends Line2D.Double implements Steppable
 	
 	/** 
 	 * Constructor.
-	 * @param int idNo ()
-	 * @param int typeNo ()
-	 * @param Double2D start ()
-	 * @param Double2D end ()
+	 * @param idNo (int - )
+	 * @param typeNo (int - )
+	 * @param start (Double2D - )
+	 * @param end (Double2D - )
 	 */
 	public Road(int idNo, int typeNo, Double2D start, Double2D end)
 	{
@@ -62,7 +62,7 @@ public class Road extends Line2D.Double implements Steppable
 
 	/**
 	 * This method...
-	 * @param double direction (the direction to set)
+	 * @param direction (double - the direction to set)
 	 */
 	public void setDirection(double direction) {
 		this.direction = direction;
@@ -70,7 +70,7 @@ public class Road extends Line2D.Double implements Steppable
 
 	/**
 	 * This method...
-	 * @param SimState state ()
+	 * @param state (SimState - )
 	 */
 	@Override
 	public void step(SimState state) {
@@ -130,7 +130,7 @@ public class Road extends Line2D.Double implements Steppable
 	
 	/**
 	 * Method returns true if coord intersects with the road object (when extended by required width), false otherwise
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
@@ -145,7 +145,7 @@ public class Road extends Line2D.Double implements Steppable
 		
 	/**
 	 * Method returns true if rectangle intersects with the road object (when extended by required width), false otherwise
-	 * @param Rectangle2D.Double inRectangle ()
+	 * @param inRectangle (Rectangle2D.Double - )
 	 * @return boolean ()
 	 */
 	public boolean inShape(Rectangle2D.Double inRectangle)
@@ -192,7 +192,7 @@ public class Road extends Line2D.Double implements Steppable
 	 *  road.  Assumes a line thickness of 10cm at the sides, and 10cm in the centre.  For now, assume continuous single
 	 *  line in both cases (this should be adjusted in time to allow for broken lines at junctions, and broken lines in 
 	 *  the centre (warning/standard) - see workbook for details (or Traffic Signs Manual, Ch 5, 2003).
-	 *  @param LineType inLineType (argument: NESIDE / CENTRE / SWSIDE)
+	 *  @param inLineType (LineType - NESIDE / CENTRE / SWSIDE)
 	 *  @return Rectangle2D.Double ()
 	 */
 	public Rectangle2D.Double getLine(LineType inLineType)
@@ -274,7 +274,7 @@ public class Road extends Line2D.Double implements Steppable
 	 *  the centre (warning/standard) - see workbook for details (or Traffic Signs Manual, Ch 5, 2003).
 	 *  
 	 *  argument: nearside / offside
-	 *  @param LineType inLineType ()
+	 *  @param inLineType (LineType - )
 	 *  @return Line2D.Double ()
 	 */
 	public Line2D.Double getThinLine(LineType inLineType)
@@ -337,7 +337,7 @@ public class Road extends Line2D.Double implements Steppable
 	
 	/*
 	 * This method returns 1 for N or E; 2 for S or W
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return int ()
 	 */
 	public int getLane(Double2D coord)

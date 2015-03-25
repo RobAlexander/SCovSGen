@@ -16,10 +16,10 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	
 	/**
 	 * Updated to pass in the direction
-	 * @param int idNo ()
-	 * @param int typeNo ()
-	 * @param double inDirection ()
-	 * @param int inRoadId ()
+	 * @param idNo (int - )
+	 * @param typeNo (int - )
+	 * @param inDirection (double - )
+	 * @param inRoadId (int - )
 	 */
 	public ParkedCar(int idNo, int typeNo, double inDirection, int inRoadId) {
 		super(idNo, typeNo, inDirection);
@@ -29,7 +29,7 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	/**
 	 * method which returns true or false if a provided coordinate is in the shape
 	 * would have to be overwritten when implemented
-	 * @param Double2D coord ()
+	 * @param coord (Double2D - )
 	 * @return boolean ()
 	 */
 	public boolean inShape(Double2D coord)
@@ -41,7 +41,7 @@ public class ParkedCar extends Obstacle implements Oriented2D {
 	/**
 	 * HH 2.10.14 method which returns true or false if a provided area intersects with the
 	 * shape
-	 * @param Shape inShape ()
+	 * @param inShape (Shape - )
 	 * @return boolean ()
 	 */
 	public boolean inShape(Shape inShape)

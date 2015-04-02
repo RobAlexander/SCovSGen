@@ -66,7 +66,6 @@ public class COModel extends SimState
     // Integer Grid Based Maps to store different layers? of the environment/map
 	public IntGrid2D obstacleMap; // Map (layer?) to store the obstacle locations
 	private int obstacleMapResolution = 3; //multiplier used to change resolution of obstacles image
-	public IntGrid2D terrainMap; // Map (layer?) to store the terrain
 	private int terrainMapResolution = 3;
 	public IntGrid2D wallMap; // Map (layer?) to store the wall
 	private int wallMapResolution = 3;
@@ -100,7 +99,7 @@ public class COModel extends SimState
 		}
 	}
 	
-	private final int JCTARRAYLENGTH = 100;
+	private final int JCTARRAYLENGTH = 100; // This must be greater than the sum of the maximum number of roads and junctions in the model
 	private jctPairInfo[] junctionArray[] = new jctPairInfo[JCTARRAYLENGTH][JCTARRAYLENGTH]; // Array of the above to cover all possible jct-jct pairs
 	
 	/**
@@ -217,7 +216,6 @@ public class COModel extends SimState
 		// Construct the discrete maps at the appropriate size and resolution
 		// NOTE: This may not be the most efficient way to represent the map environment, it is inherited from an 
 		// earlier model.
-		terrainMap = new IntGrid2D((int) (xDouble * terrainMapResolution), (int) (yDouble * terrainMapResolution), 0);
 		wallMap = new IntGrid2D((int) (xDouble * wallMapResolution), (int) (yDouble * wallMapResolution), 0);
     	roadMap = new IntGrid2D((int) (xDouble * roadMapResolution), (int) (yDouble * roadMapResolution), 0);
     	junctionMap = new IntGrid2D((int) (xDouble * junctionMapResolution), (int) (yDouble * junctionMapResolution), 0);
@@ -434,7 +432,6 @@ public class COModel extends SimState
 		toSchedule.clear();
 		allEntities.clear();
 		environment.clear();
-		terrainMap.setTo(Constants.NORMAL);
 		roadMap.setTo(Constants.NOTROAD);
 		roads.clear();
 		junctions.clear();

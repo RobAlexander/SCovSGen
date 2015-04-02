@@ -564,7 +564,7 @@ public abstract class Car extends Entity implements Oriented2D
 		return foundOnRoad;
 	}
 	
-	/*
+	/**
 	 * Resolve any conflicting speed requirements, giving priority to the (safety critical) braking,
 	 * and ensuring that a single call to doSpeedCalcs will result in a single ACCELERATE or DECELERATE
 	 * command, even if there have been multiple requests to speedUp or slowDown in the step routine.

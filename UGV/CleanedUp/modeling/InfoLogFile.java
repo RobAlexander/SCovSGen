@@ -6,20 +6,21 @@ import java.io.PrintStream;
 
 /*
  * Class to provide a simple run logging facility to detect interesting or unusual features of 
- * program runs e.g. when the road network cannot be fully generated. 
- * 
+ * program runs e.g. when the road network cannot be fully generated. NOTE that this output file
+ * is repeatedly overwritten in the case of a batch run as it is not supplied with a unique 
+ * identifier to include in the filename. * 
  * NOTE: Based on File I/O from AccidentDetector.java (Xueyi)
- * 
- * @author HH 
+ * @author hh940
  */
 public class InfoLogFile {
 
-	private File infoLog = new File(Constants.outFilePath + "InfoLog.txt");
+	private File infoLog = new File(Constants.outFilePath + "InfoLog.txt"); // Specify the name and location of the file
 	private COModel sim;
 	private PrintStream ps;
 	
 	/**
-	 * Constructor
+	 * Constructor - create a new output stream at the required location/name, and 
+	 * catch an exception if the file cannot be found.
 	 */
 	public InfoLogFile(){ 
 				
@@ -35,7 +36,7 @@ public class InfoLogFile {
 
 	/**
 	 * Simple log function to allow messages about each run to be printed to the info log file
-	 * @param str (String - )
+	 * @param str (String - string to be printed to the output file as a single line)
 	 */
 	public void addLog(String str)
 	{
@@ -43,9 +44,11 @@ public class InfoLogFile {
 	}
 	
 	/** 
-	 * HH 6/5/14 - Adds header information to file to enable run
-	 * to be reproduced.  An entry in the log will be made for all runs.
-	 * @param state (COModel - ) 
+	 * Add header information to file to enable run to be reproduced, and some basic set-up params to be
+	 * reported.  An entry in the log will be made for all runs, although these can be overwritten during a 
+	 * batch run. TODO: These parameters may no longer be the most relevant to report, and perhaps should be
+	 * revised/updated.
+	 * @param state (COModel - access to the model environment) 
 	 **/
 	public void addHeader(COModel state)
 	{

@@ -14,7 +14,9 @@ import sim.util.Double2D;
 import sim.util.MutableDouble2D;
 
 /**
- * HH 7.5.14 - derived class created to provide road-driving functionality to existing Car class
+ * Derived class created to provide automated road-driving functionality over existing Car class.
+ * This vehicle uses road markings to determine its location on the road, and vision/lidar sensors to 
+ * detect static and moving obstacles on the road ahead.
  * 
  * @author HH
  */
@@ -26,61 +28,60 @@ public class UGV extends Car {
 	private double UGVViewingRange = 10;
 	private double UGVViewingAngle = 90;
 	
-	// HH 6.8.14 - Obstacle Detection Params
+	// Obstacle Detection Params (wide angle, short range)
 	private double UGVObsViewingRange = 25;
-	private double UGVObsViewingAngle = 180; // HH 20.8.14 Had to expand range so can detect obstacle length better.
+	private double UGVObsViewingAngle = 180; // Wider range so can detect obstacle length better.
 	
-	// HH 8.9.14 - Moving Obstacle Detection Params
+	// Moving Obstacle Detection Params (narrow angle, long range)
 	private double UGVMovObsViewingRange = 100;
 	private double UGVMovObsViewingAngle = 30; // We will assume that the sensor is placed on the offside front corner of the vehicle
-											   // so this should provide sufficient search breadth to cover most of the road (>7m away)
-	// HH 30.12.14 Changed the above angle from 10 to 30 as nearby obstacles are being missed
+											   // so this should provide sufficient search breadth to cover most of the road (>6m away)
 	
-	private int[][] junctionHistory; // HH 15.7.14 Store true/false for each junction index and direction to show where we have already been, 16.7.14 updated to int
+	private int[][] junctionHistory; // Store visit count for each junction index and direction to show where we have already been
 	private Entity finalTarget;
 	private boolean targetFound = false;
 	
 	private OvertakeStage overtakeStage = OvertakeStage.NOT_OVERTAKING;
 	
+	// variable for tracking IN-RUN situation metrics
 	private int prevJct = -1;
 	private Double2D prevJctLoc;
 	
-	private int UTurnTargetDir = -1; // HH 22.12.14 - store the target direction in degrees when we are in a UTurn so that we don't overshoot chosen direction
+	private int UTurnTargetDir = -1; // Store the target direction in degrees when we are in a UTurn so that we don't overshoot it
 	
-	// HH 18.6.14 - New constructor to allow initialisation of direction/bearing
-	// HH 22.7.14 - Added COModel as argument to allow faults
 	/**
-	 * Constructor.
-	 * @param idNo (int - )
-	 * @param idTarget (int - )
-	 * @param performance (CarPerformance - )
-	 * @param bearing (double - )
-	 * @param noJcts (int - )
-	 * @param sim (COModel - )
+	 * Construct the UGV, initialising with the start direction/bearing, target ID, and various other
+	 * elements to enable to the UGV to function correctly, including access to the COModel for fault
+	 * seeding/tracking, and noJcts for setting up the junctionHistory array.
+	 * @param idNo (int - unique identifier for UGV object)
+	 * @param idTarget (int - unique identifier for the Target object which the UGV is aiming for)
+	 * @param performance (CarPerformance - performance characteristics for UGV e.g. maxSpeed)
+	 * @param bearing (double - initial direction in which the UGV will travel)
+	 * @param noJcts (int - number of junctions in the simulation environment)
+	 * @param sim (COModel - access to the simulation environment)
 	 */
 	public UGV(int idNo, int idTarget, CarPerformance performance, double bearing, int noJcts, COModel sim) {
 		super(idNo, idTarget, performance, bearing, TUGV);
 				
-		// HH 15.7.14 For junction navigation - to prevent loops which always check the same incorrect 
-		// turning, when the 'nearest' junction arm is not the one that will bring the UGV to the target
+		// Create and clear the junctionHistory array.  This can be used to ensure that the UGV
+		// explores the map space in a more systematic way, rather than always taking the same exit 
+		// (e.g. to bring it closer to the Target), or compared to a completely random approach.
+		// The junction selection mechanism is explained in detail in Junction.getJunctionExit() 
 		int jIdx = 0;
-		
 		junctionHistory = new int[noJcts][UGV_Direction.values().length];
 		
 		for (int i = 0; i < noJcts; i++)
 		{
-			// HH 15/7/14 Loop for compass directions, using correct Enum index, and init to false
+			// Loop for compass directions, using correct Enum index, and init to false
 			for (UGV_Direction j : UGV_Direction.values()) {
 				
 				jIdx = j.ordinal();
-				junctionHistory[i][jIdx] = 0; // HH 16.7.14 - a zero indicates that this approach has not been visited
+				junctionHistory[i][jIdx] = 0; // A zero indicates that this approach has not been visited
 			}
 		}
 		
-		finalTarget = new Entity(-1, TOTHER); // Invalid type for instantiation
-		// HH end
-		
-		targetFound = false; // HH 22.7.14 
+		finalTarget = new Entity(-1, TOTHER); // Invalid type, this field is set at the beginning of the step routine
+		targetFound = false; // Used in logging to report whether the target has been found
 	}
 		
 	/**
@@ -88,47 +89,44 @@ public class UGV extends Car {
 	 * remain on road network.
 	 * (non-Javadoc)
 	 * @see modeling.Car#step(sim.engine.SimState)
-	 * @param state (SimState - )
+	 * @param state (SimState - access to the simulation environment)
 	 */
 	@Override
 	public void step(SimState state)
 	{
-		// Set these variables outside of the main loop as they are used to call the dealWithTermination code below
+		// Set outside of the main loop as is used to call the dealWithTermination code below
 		sim = (COModel) state;
 		
 		if(this.isActive == true)
 		{
-			resetSpeedParams(); // HH 22.9.14 - Reset these for this step
+			resetSpeedParams(); // Reset these for this step
 			
 			Continuous2D environment = sim.environment;
-			
 			Double2D me = environment.getObjectLocation(this);
 						
-			MutableDouble2D sumForces = new MutableDouble2D(); //used to record the changes to be made to the location of the car
+			MutableDouble2D sumForces = new MutableDouble2D(); // Record the changes to be made to the location of the car
 
-			// HH 16/7/14 - Store the previous location now, before we do anything with it
+			// Store the previous location now, before we do anything with it
 			storePrevLoc(me);
-			// HH - end
 			
-			//Double2D targetCoor = me; // HH - not sure why we init this to point to the car location, maybe just so it is initialised?
-			double moveV; //vertical component of the cars movement
-			double moveH; //horizontal component of the cars movement
+			double moveV; // Vertical component of the cars movement
+			double moveH; // Horizontal component of the cars movement
 			
-			//get location of target
-			Bag everything = environment.getAllObjects(); //this will get all of the objects in the world, then start filtering :)
+			// Get location of target
+			Bag everything = environment.getAllObjects(); // This will get all of the objects in the world, then start filtering :)
 			
 			this.setStats(sim.getCarMaxSpeed(), sim.getCarMaxAcceleration(), sim.getCarMaxDecceleration(), sim.getCarMaxTurning());
 	        
 			Entity e;		
-			Entity eTarget = new Entity(-1, TOTHER); //this id for the target is illegal, to get ids one should use COModel.getNewID()
+			Entity eTarget = new Entity(-1, TOTHER); // This id for the target is illegal
 							
-			// Find the target from the bag of all entities (is probably item 0)
+			// Find the target from the bag of all entities
 			for(int i = 0; i < everything.size(); i++)
 			{
 				e = (Entity) everything.get(i);			
 				if (e.getID() == this.getTargetID())
 				{
-					eTarget =  e;
+					eTarget = e;
 				}
 				
 				// If the final target has not been set yet, extract the info from here too
@@ -141,28 +139,27 @@ public class UGV extends Car {
 				}
 			}
 			
-			// HH 16.12.14 Check to see if we have recently started to leave a junction, and are just
+			// Check to see if we have recently started to leave a junction, and are just
 			// waiting for the 'back-end' to vacate the junction so we can mark it as cleared.
 			if (getJctID() > 0)
 			{
-				// Check that we have started to leave the junction
+				// Check that we have started to leave the junction (i.e. that front of UGV has left junction)
 				if (sim.junctionAtPoint(me, sim.junctions) == 0 || sim.junctionAtPoint(me, sim.junctions) != this.getJctID())
 				{
 					// See if we have entirely left the junction
-					if (sim.junctionAtArea(new Area(this.getShape()), sim.junctions) <= 0) // HH 17.12.14 Include if now in a different jct
+					if (sim.junctionAtArea(new Area(this.getShape()), sim.junctions) <= 0) // ...or in a different jct
 					{
 						// We've left the junction, so reset the junction occupancy so someone else can enter
 						sim.unOccupyJunction(getJctID(), sim.junctions, this.getID());
 						setJctID(0);
 						
-						// HH 22.12.14 Clear the targetDirection flag too
-						UTurnTargetDir = -1;
+						UTurnTargetDir = -1; // Clear the targetDirection flag too
 					}
 				}
 			}			
 			
-			// HH 12.12.14 Work out the stopping distance for the vehicle based on speed and maxDeceleratione
-			double stoppingDistance = getSpeed(); // HH 23.12.14 - Add an extra buffer (0 -> getSpeed) as a number of failures see UGV hitting rear of vehicle in front
+			// Work out the stopping distance for the vehicle based on speed and maxDeceleratione
+			double stoppingDistance = getSpeed(); 
 			double tempSpeed = getSpeed();
 			
 			while (tempSpeed > 0) {
@@ -172,66 +169,66 @@ public class UGV extends Car {
 			
 			stoppingDistance = Math.max(stoppingDistance, Constants.MIN_STOPPINGDISTANCE); // Make sure we are at least above a minimum distance
 						
-			// HH 12.12.14 Regardless of what we are doing, if we are travelling at a slow enough speed, and
+			// Regardless of what we are doing, if we are travelling at a slow enough speed, and
 			// moving looks likely to cause a collision, then we should stop immediately.  As the speed threshold
 			// is set at the maxDeceleration, we aren't breaking any motion laws to just stop entirely.
 			if (getSpeed() <= getStats().getCurrentMaxDecel())
 			{
 				// Check the area around the UGV to ensure that there is no overlap.  Method will be to 
-				// extend the UGV shape slightly (+1m) in all directions and check for overlapping with any
+				// search around the UGV shape in all directions and check for overlapping with any
 				// Moving obstacles.  If any overlap is detected, the vehicle should stop immediately.  To try 
 				// and simulate sensing appropriately, we will check outwards in a circle from the centre of the
-				// UGV to a range of 3m
+				// UGV to a range of 3m from the centre.
 				if (checkAllMovingObsCircle(sim, sim.cars, sensitivityForRoadTracking) == true)
 				{
-					emergencyStop(); // HH 22.12.14 - Actually need to set speed to zero to avoid crashes registering even tho we're stopped
+					emergencyStop(); // Actually need to set speed to zero to avoid crashes registering even 'tho we're not going to move
 					return; // No need to continue with Step, we're just going to stay still!
 				}
 			}
 			
-			// Check whether the current course is going to take the vehicle further away from the detected lane marking at the limit 
-			// of the current viewing range, or whether we need to change direction at a junction to get nearer to the destination, or
-			// explore a new area (that may not be directly nearer to the destination). If so, turn right or left to adjust heading 
-			// by adding a new waypoint.
-			//boolean inJunction = false;
+			// Check whether we have just entered a junction, or junction approach.  If so, process the various 
+			// options for decreasing speed, waiting at an occupied junction, or choosing a junction exit point.
 			boolean inJunctionApproach = false;
 			
-			// HH 15.7.14 - Check to see whether we are already executing a turning manoeuvre, if so, 
+			// Check to see whether we are already executing a turning manoeuvre, if so, 
 			// don't need to check the junctions as it's immaterial until we have finished the turn.
 			if (eTarget.getType() != TUTURNWP)
 			{
 				for(int i = 0; i < sim.junctions.size(); i++) 
 				{
-					// New Fault #7 (FAULT #12) - HH 28/7/14 - Exit the loop half-way through
+					// New Fault #7 - Exit the loop half-way through
 					if (sim.getFault(7) == true) {
 						if (i == (sim.junctions.size()/2)) {
 							break;
 						}
-						sim.setFault(7); // HH 13.11.14 Added
+						sim.setFault(7);
 					}
 										
-					// ARE WE INSIDE A JUNCTION
+					// ARE WE INSIDE A JUNCTION (i.e. is the front of the UGV inside the junction)?
 					if (((Junction) sim.junctions.get(i)).inShape(me)) {
 								
 						// Vehicle currently within the junction, ensure that we are checking whether we need a new waypoint to redirect
 						// towards the destination
-						jctExitDirInfo junctionDirInfo = ((Junction) sim.junctions.get(i)).getJunctionExit(finalTarget.getLocation(), this, i, sim); // HH 22.12.14 Replaced the above
+						jctExitDirInfo junctionDirInfo = ((Junction) sim.junctions.get(i)).getJunctionExit(finalTarget.getLocation(), this, i, sim);
 						Double2D junctionWP = junctionDirInfo.exitWP;
 						UTurnTargetDir = junctionDirInfo.direction; // Store the direction
 						
-						// HH 3.9.14 Implementing 4-way Stop						
 						// Check on the return value, if we don't get a valid WP back, we haven't
 						// succeeded in entering the junction.  We need to slow down to zero (perhaps log an emergency
 						// stop if that exceeds the maximum deceleration of the vehicle), and we shouldn't set 
 						// the inJunctionFlag.  ALSO, make sure that we can't execute any movements by following the 
 						// methods which follow - may need to set a new mode for TWAIT.
-						if (junctionWP.x == -1 && junctionWP.y == -1) // HH 18.12.14 Added y as very unlikely that both would be -1 through being close to the edge
+						if (junctionWP.x == -1 && junctionWP.y == -1)
 						{
 							// Something has gone wrong, an exit has not been chosen - maybe the junction is
 							// already occupied
 							// TODO - do we need to set a flag, or stop the vehicle
 							double overshoot = emergencyStop();
 							
+							// NOTE: An emergencyStop command will set the speed to zero immediately.  If the UGV
+							// has not decelerate appropriately on the approach to the junction, this command may
+							// result in it reducing speed at a rate faster than maxDeceleration.  This might be a
+							// contravention of the vehicle physics that we are trying to replicate.
 							if (overshoot > 0) {
 								sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", Car: " + this.getID() + " would not have stopped in time, excess speed = " + 
 										overshoot + " in junction " + ((Junction)sim.junctions.get(i)).getID() + 
@@ -240,20 +237,37 @@ public class UGV extends Car {
 							
 							startWaiting(); // Go into waiting mode
 							
-							// HH 18.12.14 - To try and see why vehicles are entering occupied junctions
+							// To try and see why vehicles are entering occupied junctions
 							sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV is waiting at junction with the following...");
 							
+						// The turning WP location has been chosen successfully, now create the actual WP, and complete
+						// housekeeping associated with the junctionArray/IN-RUN situation metrics
 						} else {
-							// HH 14.7.14 - Make sure the WP is on the road surface
+							// Make sure the WP is on the road surface
 							if (ptOnRoad(sim.roads, junctionWP) == true) 
 							{
-								// HH 15.7.14 Created generic method to create and return the new waypoint
-								eTarget = createWaypoint(junctionWP, sim, me, TUTURNWP, false, null); //set eTarget to be new WP - HH 21.11.14 added new params
+								// Execute generic method to create and return the new waypoint
+								eTarget = createWaypoint(junctionWP, sim, me, TUTURNWP, false, null); //set eTarget to be new WP
 								
-								// HH 6.11.14 Store the combination of prevJct and thisJct so that we can use it to calculate IN_RUN
-								// Situation Metrics
+								// As we are entering a junction, compute the metrics from the stretch of road we've
+								// just passed along...
+								// Store the combination of prevJct and thisJct so that we can use it to calculate IN_RUN
+								// Situation Metrics.  Note that in contrast to the junctionHistory array, the indexing
+								// here does use the ID of the junctions.  This is because the junctions are amongst the
+								// first entities to be added to the simulation, and therefore they have the lowest ID
+								// numbers.  Roads are also added at the same time, so IDs are likely to be allocated to 
+								// Roads/Junctions in turn and as a result, the junctionArray will be sparsely populated.
+								
+								// Get the ID of the junction that we are currently looping through; get it's location
 								int currentJct = ((Junction)sim.junctions.get(i)).getID();
 								Double2D currentLoc = ((Junction)sim.junctions.get(i)).getLocation();
+								
+								// If we've got a valid previous junction, store the locations of the previous
+								// and current junctions in the junctionArray and update the previous junction
+								// information for the next iteration.  In COModel.HgetIRJunctionSep(), this array
+								// is used to calculate the distribution (in terms of length) of the sections of 
+								// road that are traversed by the UGV.  It does not track how many times each road
+								// section is traversed, only that is was completed at least once.
 								if (prevJct > -1 && prevJct != currentJct)
 								{
 									jctPairInfo jctLocs = sim.new jctPairInfo(prevJctLoc, currentLoc);
@@ -267,17 +281,17 @@ public class UGV extends Car {
 								}
 							}
 							
-							goSlow();
+							goSlow(); // We're in a junction now, so vote for a slow speed.
 						}
 
-						// HH 24.7.14 - To try and work out why vehicles are leaving the road during turns, create
+						// To try and work out why vehicles are leaving the road during turns, create
 						// a log of the speed, location, and bearing of the UGV when it enters a junction
 						sim.infoLog.addLog("Step: " + sim.schedule.getSteps() + ", UGV (" + this.getID() + ") = (" + me.x + "," + me.y + "), bearing = " +
 								this.getDirection() + " : " + Utility.getDirection(this.getDirection()) + ", speed = " + this.getSpeed() + 
 								". Attempting to enter Junction #" + ((Junction)sim.junctions.get(i)).getID() + 
 								", currently occupied by ID #" + ((Junction)sim.junctions.get(i)).getOccupierID() + ".");
 						
-						// ARE WE INSIDE A JUNCTION APPROACH
+					// ARE WE INSIDE A JUNCTION APPROACH
 					} else if (((Junction) sim.junctions.get(i)).inApproach(me)) {
 						// Vehicle currently within the junction approach, slow down and maintain current direction
 						goSlow(); 
@@ -286,59 +300,57 @@ public class UGV extends Car {
 				}
 			}
 			
-			// HH 10.7.4 - The next thing we need to check is that we are not coming to the edge of the map, or the edge of
+			// The next thing we need to check is that we are not coming to the edge of the map, or the edge of
 			// the road.  In either of these cases, we want to execute a U-turn.  This can be achieved in the same way as a U-turn
 			// within a junction i.e. by inserting a waypoint at the same location in the adjacent lane (opposite direction) after
 			// slowing the vehicle down almost to a stop (to allow it to make the tight turn).
 			
 			// Firstly make sure we are not about to reach the target, as that can confuse everything due to strange bearings etc.
-			// HH adjusted distance to target from 10 to 3 as causing issues at junctions)
-			// HH 8.10.14 - Fixed a bug here by replacing everything.get(0) with finalTarget
 			if (me.distance(finalTarget.getLocation()) >= 3 && eTarget.getType() != TUTURNWP && isWaiting() == false) // Check we haven't already set a WP to follow
 			{
-				// HH 15/7/14 - Are we about to leave the road, or hit the wall
+				// Are we about to leave the road, or hit the wall
 				if (((nearlyOffRoad(sim.roads, me, this.getDirection()) == true) || (checkWallClose(this.getDirection()) == true)))
 				{
 					// The vehicle is going to leave the road or hit the wall if it remains on this bearing so slow down
 					// to prepare for manoeuvre
 					goSlow();
 
-					// HH 15/7/14 - We only want to execute a Uturn if we are about to leave the road, or hit the wall, not just
-					// because we happen to have just collected another Uturn WP.
+					// We only want to execute a Uturn if we are about to leave the road, or hit the wall
 					if (checkWall() == true || nearlyOffRoad(sim.roads, me, this.getDirection()) == true) 
 					{
 						// We've run out of road or map
 						Double2D uTurnWP = getUTurn(me, this.getDirection());
 
-						// HH 15.7.14 Created generic method to create and return the new waypoint
-						eTarget = createWaypoint(uTurnWP, sim, me, TUTURNWP, false, null); //set eTarget to be new WP - HH 21.11.14 added new params
+						// Create and return the new waypoint
+						eTarget = createWaypoint(uTurnWP, sim, me, TUTURNWP, false, null); // Set eTarget to be new WP
 					}
 				}
 			} 
 			
-			// HH 7.8.14 - before we set a straight ahead, we need to check for any static obstacles on the path 
+			// Before we set a straight ahead, we need to check for any static obstacles on the path 
 			// in front of us.  Only do this if we are not in a junction or a junction approach (as the map 
 			// generator has been configured to prevent obstacles being added in these locations - similar to 
 			// rules of the road and not parking near or in junctions)
+			// TODO this might be considered a naive implementation as it won't respond very well to 
+			// situations where other drivers have 'broken the rules'.
 			if (eTarget.getType() != TUTURNWP && isWaiting() == false) { 
 				
-				// HH 21.11.14 Need these outside of the if stmt below
+				// Need these outside of the if statement below
 				Double2D maxDistanceToObsCoord;
 				Double2D minDistanceToObsCoord;
 				
-				// HH 21.11.14 Add a seedable fault to replicate a bug found in the code
-				// HH 3.12.14 New Fault #18 (Fault #31)
+				// New Fault #18 - A seedable fault to replicate a bug found in the code
 				if (sim.getFault(18) == true) {
 					// Look for an obstacle in front and evaluate the distance
-					maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true, 0); // HH 30.12.14 Added new param
-					minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false, 0); // HH 30.12.14 Added new param
+					maxDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), true, 0); 
+					minDistanceToObsCoord = this.checkAllObstacles(sim, this.getDirection(), false, 0); 
 					sim.setFault(18);
 				} else {
-					// HH 21.11.14 Try this with the bearing instead as we can't see obstacles properly once
+					// Try this with the /desired direction of travel/ instead as we can't see obstacles properly once
 					// we have pulled out into the overtake as we are not looking in the direction of travel
 					// anymore - (but our sensor could be)
-					maxDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), true, 0); // HH 30.12.14 Added new param
-					minDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), false, 0); // HH 30.12.14 Added new param
+					maxDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), true, 0); 
+					minDistanceToObsCoord = this.checkAllObstacles(sim, Utility.getDirectionDeg(this.getDirection()), false, 0); 
 				}
 
 				// HH 30.12.14 If the maxDistanceToObs is going to suggest a large separation (and to pull back in between
@@ -1480,6 +1492,8 @@ public class UGV extends Car {
 	
 	/**
 	 * Check for any moving obstacles within a 3m radius of the centre of the UGV/Car
+	 * Check that this really is a 3m radius around the centre, and not using the location
+	 * which is now at the front of the UGV
 	 * @param sim (COModel - )
 	 * @param inCars (Bag - )
 	 * @param inSensitivity (double - )
@@ -1532,6 +1546,10 @@ public class UGV extends Car {
 				
 		// For this search, we don't care whether the obstacle is in our lane, or whether it is in front of 
 		// us or behind us. 
+		
+		// TODO To try 
+		// and simulate sensing appropriately, we will check outwards in a circle from the centre of the
+		// UGV to a range of 3m from the centre.
 		
 		// For each angle that the sensor is able to view, turning in realistic increments
 		double resolution = 0.5;

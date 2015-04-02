@@ -9,12 +9,12 @@ import sim.util.*;
 /**
  * This class will describe an intersection, or junction which can be of type T or X, and
  * which is used for enforcing 'special' driving behaviour in the vicinity of a junction
- * e.g. slow down to stop, 3/4 way stop behaviour.  Vehicles will need to be aware that they
+ * e.g. slow down to stop, 3 or 4 way stop behaviour.  Vehicles will need to be aware that they
  * are approaching a junction in order to adapt their behaviour accordingly.  The junctions
  * will be stored as 'point' objects corresponding to the centre of the junction, they will
  * be drawn as squares (rectangles with a length and width equal to Road.roadWidth), and they 
  * will have methods for representing themselves as a small square like the above, or a larger
- * square which will include the junction approaches where vehicles may need to start to slow
+ * polygon which will include the junction approaches where vehicles may need to start to slow
  * down.
  *
  * @author hh940
@@ -23,27 +23,29 @@ public class Junction extends Entity
 {	
 	private static final long serialVersionUID = 1L;
 
-	public static final int jctApproachLen = (20 + (int)Math.ceil(CAR_SPEED));  // HH - 30/7/14 updated in line with new car performance (45km/hr to 0 in 20m) 
-	                                                          // HH 27.8.14 Added car speed to increase buffer as assumes starts to decel at 20m (varies due to speed)
-	
+	// Car speed is added to increase buffer as assumes starts to decel at 20m (varies due to speed)
+	public static final int jctApproachLen = (20 + (int)Math.ceil(CAR_SPEED));  // Supposed to reflect car performance (45km/hr to 0 in 20m) 
+	                                                          
 	private double[] lengthDir = new double[T_WEST+1];
 	
-	// HH 3.9.14 Implementing 4 Way Stop
+	// Implementing 4 Way Stop
 	private boolean occupied = false;
 	private long occupiedTime = 0; // store the timestep at which the junction became occupied
 	
-	// HH 23.12.14 - Store the ID of the vehicle who has occupied the junction (used to validate unOccupy requests)
+	// Store the ID of the vehicle who has occupied the junction (used to validate unOccupy requests)
 	private long occupierID = 0;
 	
 	/**
-	 * Constructor.
-	 * @param idNo (int - )
-	 * @param x (double - )
-	 * @param y (double - )
-	 * @param nDir (double - )
-	 * @param eDir (double - )
-	 * @param sDir (double - )
-	 * @param wDir (double - )
+	 * Constructor.  Create the Entity, set its location, and populated the lengthDir array with either
+	 * the length of road extending in each direction from the junction, or jctApproachLen if the road
+	 * extends beyond the junction approach distance.
+	 * @param idNo (int - unique identifier assigned to junction)
+	 * @param x (double - x coordinate of junction centre)
+	 * @param y (double - y coordinate of junction centre)
+	 * @param nDir (double - length of road extending from junction in NB direction; limited to jctApproachLen)
+	 * @param eDir (double - length of road extending from junction in EB direction; limited to jctApproachLen)
+	 * @param sDir (double - length of road extending from junction in SB direction; limited to jctApproachLen)
+	 * @param wDir (double - length of road extending from junction in WB direction; limited to jctApproachLen)
 	 */
 	public Junction(int idNo, double x, double y, double nDir, double eDir, double sDir, double wDir)
 	{
@@ -58,50 +60,45 @@ public class Junction extends Entity
 	
 	/**
 	 * Method returns true if coord intersects with the junction object (when extended by required width), false otherwise
-	 * @param coord (Double2D - )
-	 * @return boolean ()
+	 * @param coord (Double2D - coordinates of location we want to check for intersection with the junction)
+	 * @return boolean (returns true if the location is inside the junction)
 	 */
 	public boolean inShape(Double2D coord)
 	{
 		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
+		// and check whether it contains the supplied coordinates.
 		Rectangle2D.Double junctionArea = getJunctionArea();
-		
-		// TODO - DOes this method need to be updated?
-		return junctionArea.contains(coord.x, coord.y);
+		return Utility.betterContains(junctionArea, coord);
 	}	
 	
 	/**
-	 * Method returns true if coord intersects with the junction or junction approach (when extended by required width), false otherwise
-	 * @param coord (Double2D - )
-	 * @return boolean ()
+	 * Method returns true if coord intersects with the junction or junction approach (when constructed at required dimensions), false otherwise
+	 * @param coord (Double2D - coordinates of location we want to check for intersection with the junction approach)
+	 * @return boolean (returns true if the location is inside the junction approach)
 	 */
 	public boolean inApproach(Double2D coord)
 	{
-		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
-		Path2D.Double junctionApproach= getJunctionApproach();
-		
-		// TODO - DOes this method need to be updated?
+		// Construct a Path2D that is the size of the whole junction approach area
+		Path2D.Double junctionApproach = getJunctionApproach();
 		return junctionApproach.contains(coord.x, coord.y);
 	}
 	
 	/**
-	 * HH - 18.8.14 Method returns true if coord intersects with the junction or junction exit - analoguous to approach (when extended by 
+	 * Method returns true if coord intersects with the junction or junction exit - analoguous to approach (when extended by 
 	 * required width), false otherwise
-	 * @param coord (Double2D - )
-	 * @return boolean ()
+	 * @param coord (Double2D - coordinates of location we want to check for intersection with the junction exit)
+	 * @return boolean (returns true if the location is inside the junction exit)
 	 */
 	public boolean inExit(Double2D coord)
 	{
-		// Construct a rectangle that is the size of the whole road area (rather than just the centre line)
+		// Construct a Path2D that is the size of the whole junction exit area
 		Path2D.Double junctionExit = getJunctionExit();
-		
-		// TODO - DOes this method need to be updated?
 		return junctionExit.contains(coord.x, coord.y);
 	}
 	
 	/**
 	 *  Method returns a Rectangle2D which represents the internal junction area (rather than just the centre point)
-	 *  @return Rectangle2D.Double ()
+	 *  @return Rectangle2D.Double (returns a Rectangle2D which represents the shape of the junction area)
 	 */
 	public Rectangle2D.Double getJunctionArea()
 	{
@@ -111,15 +108,12 @@ public class Junction extends Entity
 	
 	/**
 	 *  Method returns a Path2D which represents the junction approaches (rather than just the centre point)
-	 *  
-	 *  NOTE: This can only handle T-junctions at present (or cross-roads if the direction is set to -1), 
-	 *  and in the case where a road is joined very close to the end of another road, the resulting junction is 
-	 *  simply a right-angle corner.  Currently, this will still draw as a T-junction.  TO DO - Could solve this
-	 *  by storing 2 directions to ignore, but more complicated to pass to constructor as need to check how much 
-	 *  road is left either side of each newly created junction.
-	 *  
-	 *  HH - Modified on 9.7.14 so that only include the actual approach lanes, rather than the lanes that are leaving the junction
-	 *  @return Path2D.Double ()
+	 *  The lengths of each junction arm are used to determine whether to construct a junction approach
+	 *  in each direction.  If the arm length is zero, the path is not extended to include a junction approach
+	 *  in that direction.  The junction approach length is limited to jctApproachLen or the length of the 
+	 *  junction arm (if that is shorter).  Only includes the actual approach lanes, rather than including the 
+	 *  lanes that are leaving the junction.
+	 *  @return Path2D.Double (return a Path2D.Double which represents the area of the junction and junction approaches)
 	 */	
 	public Path2D.Double getJunctionApproach()
 	{
@@ -131,50 +125,57 @@ public class Junction extends Entity
 		
 		junctionApproach.moveTo(x+halfWidth,  y-halfWidth); // start location is inner top right so present regardless of T-junction type
 		
+		// Draw around the EB junction approach if it exists
 		if (lengthDir[T_EAST] > 0) {
 			junctionApproach.lineTo(x+halfWidth, y);
 			junctionApproach.lineTo(x+lengthDir[T_EAST], y);
 			junctionApproach.lineTo(x+lengthDir[T_EAST], y+halfWidth);
 		}
 		
+		// Either complete the EB approach, or omit the EB arm if the above was not executed
 		junctionApproach.lineTo(x+halfWidth, y+halfWidth);
 		
+		// Draw around the SB junction approach if it exists
 		if (lengthDir[T_SOUTH] > 0) {
 			junctionApproach.lineTo(x, y+halfWidth);
 			junctionApproach.lineTo(x, y+lengthDir[T_SOUTH]);
 			junctionApproach.lineTo(x-halfWidth, y+lengthDir[T_SOUTH]);
 		}
 		
+		// Either complete the SB approach, or omit the SB arm if the above was not executed
 		junctionApproach.lineTo(x-halfWidth, y+halfWidth);
 		
+		// Draw around the WB junction approach if it exists
 		if (lengthDir[T_WEST] > 0) {
 			junctionApproach.lineTo(x-halfWidth, y);
 			junctionApproach.lineTo(x-lengthDir[T_WEST], y);
 			junctionApproach.lineTo(x-lengthDir[T_WEST], y-halfWidth);
 		}
 		
+		// Either complete the WB approach, or omit the WB arm if the above was not executed
 		junctionApproach.lineTo(x-halfWidth, y-halfWidth);
 		
+		// Draw around the NB junction approach if it exists
 		if (lengthDir[T_NORTH] > 0) {
 			junctionApproach.lineTo(x, y-halfWidth);
 			junctionApproach.lineTo(x, y-lengthDir[T_NORTH]); 
 			junctionApproach.lineTo(x+halfWidth, y-lengthDir[T_NORTH]);
 		}
 			
-		junctionApproach.closePath(); // Close the cross up
+		// Either complete the NB approach, or omit the NB arm if the above was not executed
+		junctionApproach.closePath(); // Close the 'cross' up
 	
 		return junctionApproach;
 	}
 	
 	/**
 	 *  Method returns a Path2D which represents the junction exits (rather than just the centre point)
-	 *  
-	 *  NOTE: This can only handle T-junctions at present (or cross-roads if the direction is set to -1), 
-	 *  and in the case where a road is joined very close to the end of another road, the resulting junction is 
-	 *  simply a right-angle corner.  Currently, this will still draw as a T-junction.  TO DO - Could solve this
-	 *  by storing 2 directions to ignore, but more complicated to pass to constructor as need to check how much 
-	 *  road is left either side of each newly created junction.
-	 *  @return Path2D.Double ()
+	 *  The lengths of each junction arm are used to determine whether to construct a junction exit
+	 *  in each direction.  If the arm length is zero, the path is not extended to include a junction exit
+	 *  in that direction.  The junction exit length is limited to jctApproachLen or the length of the 
+	 *  junction arm (if that is shorter).  Only includes the actual exit lanes, rather than including the 
+	 *  lanes that are entering the junction.
+	 *  @return Path2D.Double (return a Path2D.Double which represents the area of the junction and junction exits)
 	 */	
 	public Path2D.Double getJunctionExit()
 	{
@@ -186,36 +187,44 @@ public class Junction extends Entity
 		
 		junctionExit.moveTo(x+halfWidth,  y-halfWidth); // start location is inner top right so present regardless of T-junction type
 		
+		// Draw around the EB junction approach if it exists
 		if (lengthDir[T_EAST] > 0) {
 			junctionExit.lineTo(x+lengthDir[T_EAST], y-halfWidth);
 			junctionExit.lineTo(x+lengthDir[T_EAST], y);
 			junctionExit.lineTo(x+halfWidth, y);
 		}
 		
+		// Either complete the EB approach, or omit the EB arm if the above was not executed
 		junctionExit.lineTo(x+halfWidth, y+halfWidth);
 		
+		// Draw around the SB junction approach if it exists
 		if (lengthDir[T_SOUTH] > 0) {
 			junctionExit.lineTo(x+halfWidth, y+lengthDir[T_SOUTH]);
 			junctionExit.lineTo(x, y+lengthDir[T_SOUTH]);
 			junctionExit.lineTo(x, y+halfWidth);
 		}
 		
+		// Either complete the SB approach, or omit the SB arm if the above was not executed
 		junctionExit.lineTo(x-halfWidth, y+halfWidth);
 		
+		// Draw around the WB junction approach if it exists
 		if (lengthDir[T_WEST] > 0) {
 			junctionExit.lineTo(x-lengthDir[T_WEST], y+halfWidth);
 			junctionExit.lineTo(x-lengthDir[T_WEST], y);
 			junctionExit.lineTo(x-halfWidth, y);
 		}
 		
+		// Either complete the WB approach, or omit the WB arm if the above was not executed
 		junctionExit.lineTo(x-halfWidth, y-halfWidth);
 		
+		// Draw around the NB junction approach if it exists
 		if (lengthDir[T_NORTH] > 0) {
 			junctionExit.lineTo(x-halfWidth, y-lengthDir[T_NORTH]); 
 			junctionExit.lineTo(x, y-lengthDir[T_NORTH]);
 			junctionExit.lineTo(x, y-halfWidth);
 		}
 			
+		// Either complete the NB approach, or omit the NB arm if the above was not executed
 		junctionExit.closePath(); // Close the cross up
 	
 		return junctionExit;
@@ -224,31 +233,33 @@ public class Junction extends Entity
 	/**
 	 *  Method returns a Double2D which represents the centre of the egress lane from the junction which 
 	 *  should bring the vehicle closer to the target.  This can return the adjacent (and opposite direction)
-	 *  lane if a U-turn is deemed to be the most appropriate movement.  
-	 *  
-	 *  15/7/14 - Updates so that location returned is slightly outside of the junction so that 
-	 *  upon 'collection' by the UGV, the UGV is no longer in the junction.
-	 *  ALSO checks the junction history to see whether the exit has already been checked
-	 *  i) on the first iteration, will ignore any exits that have already been visited
+	 *  lane if a U-turn is deemed to be the most appropriate movement.  The location returned is slightly 
+	 *  outside of the junction so that upon 'collection' by the UGV, the UGV is no longer in the junction.
+	 *  ALSO checks the junction history to see whether the exit has already been visited.
+	 *  i) on the first iteration, junctions which have not been visited yet are chosen in preference
+	 *  to those which have been visited, and those which bring the UGV closer (crow-flies) to the target
+	 *  are prioritised. This happens each time the UGV approaches the junction until all exits have been
+	 *  visited at least once, see below: 
 	 *  ii) on future iterations, exits that have already been visited *may* still be selected
-	 *  but with 50% probability; loop continues until an exit is found.
+	 *  but with reducing probability (the more times they have been visited, the less likely they are to
+	 *  be chosen again.  If more than one exit is identified as a possibility during an iteration, those 
+	 *  which bring the UGV closer (crow-flies) to the target are prioritised; loop continues until an exit 
+	 *  is found.  
 	 *  
-	 *  16/7/14 - Updated so that junction history now stores a count of the number of times an exit
+	 *  The junction history stores a count of the number of times an exit
 	 *  has been chosen so that the probability used on future iterations (as ii) will reduce the
-	 *  more times it has been chosen
-	 *  
-	 *  22/12/13 - Updated so return type now includes the target direction so that we can prevent the
+	 *  more times it has been chosen.  Return type includes the target direction so that we can prevent the
 	 *  UGV from overshooting the target direction of travel.
-	 *  @param target (Double2D - )
-	 *  @param theUGV (UGV - )
-	 *  @param idx (int - )
-	 *  @param sim (COModel - )
-	 *  @return jctExitDirInfo ()
+	 *  @param target (Double2D - coordinates of the UGV's target)
+	 *  @param theUGV (UGV - the UGV which has arrived at the junction)
+	 *  @param idx (int - index used to access this Junction in the Junctions Bag)
+	 *  @param sim (COModel - access to the simulation environment)
+	 *  @return jctExitDirInfo (return the location and bearing that the UGV should be aiming for)
 	 */	
 	public jctExitDirInfo getJunctionExit(Double2D target, UGV theUGV, int idx, COModel sim)
 	{
-		// HH 3.9.14 - Implementing 4-way stops (not necessarily fair when more than one car is waiting
-		// as this method does not take into account the length of time that a car has been waiting, it is 
+		// This is not a great implementation of 4-way stops (as not necessarily fair when more than one car 
+		// is waiting as this method does not take into account the length of time that a car has been waiting, it is 
 		// just the car/UGV which calls this method first following the junction becoming unoccupied that 
 		// will be given the chance to move.)
 		
@@ -258,77 +269,112 @@ public class Junction extends Entity
 		{	
 			// Check the time that the occupied flag was set and if it has exceeded a maximum time, then clear 
 			// the occupied flag and allow the method to continue below.  
-			if (sim.schedule.getSteps() > (occupiedTime + 80)) // HH 16.12.14 increased from 50 steps to 120 17.12.14 Down to 80 steps
+			if (sim.schedule.getSteps() > (occupiedTime + 80)) // Timeout after 80s
 			{
-				occupierID = 0; // 23.12.14 New var
+				occupierID = 0;
 				occupied = false;
 				occupiedTime = 0;
 			} else {
-				return new jctExitDirInfo(new Double2D(-1, -1), 999); // HH 18.12.14 Doesn't appear that anyone uses the ID returned!
+				return new jctExitDirInfo(new Double2D(-1, -1), 999); // Return error code, junction is legitimately occupied
 			}			
 		}
 		
-		// HH 23.12.14 Make sure that we aren't still occupying a different junction
+		// Make sure that the UGV isn't still occupying a different junction; if it is, clear that junction first
 		if (theUGV.getJctID() != this.ID)
 		{
 			sim.unOccupyJunction(theUGV.getJctID(), sim.junctions, theUGV.ID);
 		}
 		
-		// HH 3.9.14 Implementing 4-way stops, we've got here, so the junction is now occupied!
+		// We've got here, so this junction should now be occupied!
 		occupied = true;
 		occupiedTime = sim.schedule.getSteps(); // Timestamp of some kind here to facilitate timeout clearing of flag
 		
-		// HH 23.12.14 New var
-		occupierID = theUGV.getID();
+		occupierID = theUGV.getID(); // Store the ID of the UGV occupying the junction
 		
-		// HH 16.10.14 - Updated so doesn't confuse idx and ID
+		// Make sure we don't confuse idx and ID
 		theUGV.setJctID(this.ID);
 		theUGV.stopWaiting(); // Doesn't matter if the vehicle wasn't actually waiting or not, call this anyway
 		
 		double x = location.x;
 		double y = location.y;
 		double laneWidth = Road.roadWidth/2;
-		final double offset = 1.5; // HH 15.7.14 offset to move location outside of junction HH 31.12.14 Increased due to change to WP 'eating'
+		final double offset = 1.5; // Offset to move location outside of junction, distance is set a little 
+		                           // further so that WP doesn't get 'eaten' prematurely
 		
-		int [][] junctionHistory = theUGV.getJunctionHistory();
+		int [][] junctionHistory = theUGV.getJunctionHistory(); // Read in the junction history array from the UGV
 		
 		Double2D exitCoords = new Double2D(-1,-1);
 		Double2D tempCoords = new Double2D(0,0);
 		int loopCount = 0;
 		UGV_Direction selected = UGV_Direction.NORTH;
 		
+		// Loop until we find valid exit coordinates, or we reach the loop timeout at 1000 steps, note that we
+		// use the supplied idx parameter, which is the Bag.get(idx).  This is what we use in the junctionHistory
+		// array for identifying the junction as it keeps the array size to be the number of junctions, rather
+		// than a substantially larger array if we wanted to index by junction identifier.  NOTE: because we do not
+		// change the elements in the Junctions bag, the locations (idx) in the Bag should remain constant. If we 
+		// were adding/removing junctions, then we would no longer be able to guarantee the items would be in the 
+		// same places (see sim.util.Bag in MASON documentation).
 		while (exitCoords.x == -1 && exitCoords.y == -1 && loopCount < 1000) {
 		
-			if (lengthDir[T_EAST] > 0 && ((junctionHistory[idx][UGV_Direction.EAST.ordinal()] == 0) || (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.EAST.ordinal()]))))))) 
+			// Check the EB exit. If we have not visited this direction at this junction yet, or there
+			// are no junctions which haven't been visited and a biased coin flip selects this one.
+			if (lengthDir[T_EAST] > 0 && ((junctionHistory[idx][UGV_Direction.EAST.ordinal()] == 0) || 
+			     (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.EAST.ordinal()]))))))) 
 			{
-				tempCoords = new Double2D(x+laneWidth, y-(laneWidth/2));
+				tempCoords = new Double2D(x+laneWidth, y-(laneWidth/2)); // Mid-point of exit lane
+				
+				// If we haven't found a valid exit yet, or this exit location will bring us closer to our
+				// target than the one we have previously selected, then update our exitCoords to this new
+				// exit location (plus an offset into the lane).  Set this direction as selected.
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x + offset, tempCoords.y);
 					selected = UGV_Direction.EAST;
 				}
 			}
 
-			if (lengthDir[T_SOUTH] > 0 && ((junctionHistory[idx][UGV_Direction.SOUTH.ordinal()] == 0) || (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.SOUTH.ordinal()]))))))) 
+			// Check the SB exit. If we have not visited this direction at this junction yet, or there
+			// are no junctions which haven't been visited and a biased coin flip selects this one.
+			if (lengthDir[T_SOUTH] > 0 && ((junctionHistory[idx][UGV_Direction.SOUTH.ordinal()] == 0) || 
+				  (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.SOUTH.ordinal()]))))))) 
 			{
-				tempCoords = new Double2D(x+(laneWidth/2), y+laneWidth);
+				tempCoords = new Double2D(x+(laneWidth/2), y+laneWidth); // Mid-point of exit lane
+
+				// If we haven't found a valid exit yet, or this exit location will bring us closer to our
+				// target than the one we have previously selected, then update our exitCoords to this new
+				// exit location (plus an offset into the lane).  Set this direction as selected.
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y + offset);
 					selected = UGV_Direction.SOUTH;
 				}
 			}
 
-			if (lengthDir[T_WEST] > 0 && ((junctionHistory[idx][UGV_Direction.WEST.ordinal()] == 0) || (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.WEST.ordinal()]))))))) 
+			// Check the WB exit. If we have not visited this direction at this junction yet, or there
+			// are no junctions which haven't been visited and a biased coin flip selects this one.
+			if (lengthDir[T_WEST] > 0 && ((junctionHistory[idx][UGV_Direction.WEST.ordinal()] == 0) || 
+				  (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.WEST.ordinal()]))))))) 
 			{
-				tempCoords = new Double2D(x-laneWidth, y+(laneWidth/2));
+				tempCoords = new Double2D(x-laneWidth, y+(laneWidth/2)); // Mid-point of exit lane
+
+				// If we haven't found a valid exit yet, or this exit location will bring us closer to our
+				// target than the one we have previously selected, then update our exitCoords to this new
+				// exit location (plus an offset into the lane).  Set this direction as selected.
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x - offset, tempCoords.y);
 					selected = UGV_Direction.WEST;
 				}
 			}
 
-			if (lengthDir[T_NORTH] > 0 && ((junctionHistory[idx][UGV_Direction.NORTH.ordinal()] == 0) || (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.NORTH.ordinal()]))))))) 
+			// Check the NB exit. If we have not visited this direction at this junction yet, or there
+			// are no junctions which haven't been visited and a biased coin flip selects this one.
+			if (lengthDir[T_NORTH] > 0 && ((junctionHistory[idx][UGV_Direction.NORTH.ordinal()] == 0) || 
+				  (loopCount > 0 && (sim.random.nextDouble() < (Math.pow(0.8, (junctionHistory[idx][UGV_Direction.NORTH.ordinal()]))))))) 
 			{
-				tempCoords = new Double2D(x-(laneWidth/2), y-laneWidth);
+				tempCoords = new Double2D(x-(laneWidth/2), y-laneWidth); // Mid-point of exit lane
+
+				// If we haven't found a valid exit yet, or this exit location will bring us closer to our
+				// target than the one we have previously selected, then update our exitCoords to this new
+				// exit location (plus an offset into the lane).  Set this direction as selected.
 				if ((exitCoords.x == -1 && exitCoords.y == -1) || (exitCoords.distance(target) > tempCoords.distance(target))) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y - offset);
 					selected = UGV_Direction.NORTH;
@@ -338,74 +384,72 @@ public class Junction extends Entity
 			loopCount ++;
 		}
 		
-		// HH 15.7.14 - Check for a valid return value and if so, update the junctionHistory array
+		// Check for a valid return value and if so, update the junctionHistory array so that we 
+		// know we've just visited this junction exit (stores a count of the number of visits)
 		if (exitCoords.x != -1)
 		{
 			theUGV.updateJunctionHistory(idx, selected);
 		}
 		
-		return new jctExitDirInfo(exitCoords, Utility.getDirectionDeg(selected));
+		return new jctExitDirInfo(exitCoords, Utility.getDirectionDeg(selected)); // Return the location and bearing we are aiming for
 	}
 	
 	/**
-	 *  Method returns a Double2D which represents the centre of the egress lane from the junction which 
-	 *  is chosen at random.  This can return the adjacent (and opposite direction) for a U-turn.  
-	 *  
-	 *  26.8.14 - The location returned is slightly outside of the junction so that 
+	 *  Method returns a Double2D which represents the centre of the egress lane from the junction.  
+	 *  This is chosen at random, and can return the adjacent (and opposite direction) for a U-turn.  
+	 *  The location returned is slightly outside of the junction so that 
 	 *  upon 'collection' by the Car, the Car is no longer in the junction.
 	 *  Loop continues until a valid exit is chosen.  Where the junction is actually a dead end, the
 	 *  vehicle is permitted to continue straight ahead and leave the road network.
-	 *  @param theCar (DumbCar - )
-	 *  @param idx (int - )
-	 *  @param sim (COModel - )
-	 *  @return jctExitInfo ()
+	 *  @param theCar (DumbCar - the Car which has arrived at the junction)
+	 *  @param idx (int - index used to access this Junction in the Junctions Bag)
+	 *  @param sim (COModel - access to the simulation environment)
+	 *  @return jctExitInfo (return the location and bearing that the DumbCar should be aiming for)
 	 */	
 	public jctExitInfo getRandomExit(DumbCar theCar, int idx, COModel sim)
 	{
-		// HH 3.9.14 - Implementing 4-way stops
 		// Firstly need to check to see if the junction is already in use (or there is no point
 		// going any further
 		if (occupied) {
 			
 			// Check the time that the occupied flag was set and if it has exceeded a maximum time, then clear 
 			// the occupied flag and allow the method to continue below.  
-			if (sim.schedule.getSteps() > (occupiedTime + 30)) // HH 16.12.14 Changed from 20 steps to 120, 17.12.14 Down to 30 steps
+			if (sim.schedule.getSteps() > (occupiedTime + 30)) // Reset junction occupancy to zero after 30 steps (more aggressive than UGV)
 			{
-				occupierID = 0; // 23.12.14 New var
+				occupierID = 0;
 				occupied = false;
 				occupiedTime = 0;
 			} else {
-				return new jctExitInfo(new Double2D(-1, -1), this.ID); // Error Code to indicate junction occupied, returns jctID HH 18.12.14 Updated to separate parts of return value
+				return new jctExitInfo(new Double2D(-1, -1), this.ID); // Error Code to indicate junction occupied
 			}
 		}
 		
-		// HH 23.12.14 Make sure that we aren't still occupying a different junction
+		// Make sure that the Car isn't still occupying a different junction
 		if (theCar.getJctID() != this.ID)
 		{
 			sim.unOccupyJunction(theCar.getJctID(), sim.junctions, theCar.ID);
 		}
 				
-		// HH 3.9.14 Implementing 4-way stops, we've got here, so the junction is now occupied!
+		// We've reached this point, so the junction is now occupied!
 		occupied = true;
 		occupiedTime = sim.schedule.getSteps(); // Timestamp of some kind here to facilitate timeout clearing of flag
 		
-		// HH 23.12.14 New var
-		occupierID = theCar.getID();
+		occupierID = theCar.getID(); // Store the ID of the DumbCar occupying the junction
 		
-		// HH 16.10.14 Updated so doesn't confuse ID and idx
+		// Make sure we dnn't confuse ID and idx
 		theCar.setJctID(this.ID);
 		theCar.stopWaiting(); // Doesn't matter if the vehicle wasn't actually waiting or not, call this anyway
 		
 		double x = location.x;
 		double y = location.y;
 		double laneWidth = Road.roadWidth/2;
-		final double offset = 1; // HH 15.7.14 offset to move location outside of junction
+		final double offset = 1; // Offset to move location outside of junction
 		
 		Double2D exitCoords = new Double2D(-1,-1);
 		Double2D tempCoords = new Double2D(0,0);
 		int loopCount = 0;
 		
-		// HH 24.11.14 Actually need to know which direction the Car is facing in order to
+		// Actually need to know which direction the Car is facing in order to
 		// ensure that it can leave the junction at a dead-end, but that it cannot 
 		// perform a u-turn to exit from a dead-end at which it has only just joined.
 		UGV_Direction carDir = Utility.getDirection(theCar.getDirection());
@@ -432,29 +476,36 @@ public class Junction extends Entity
 		while (exitCoords.x == -1 && exitCoords.y == -1 && loopCount < 1000) {
 		
 			// Choose a number at random, will specify the nth available direction (in the ordering)
+			// - this is used to effect the random choice, although it has to correspond to the 
+			// direction chosen being available (that's why we need lots of iterations, to 
+			// maximise our chances of finding a match)
 			int dir = sim.random.nextInt(4) + 1; // there will always be a minimum of 1 direction
 			
-			// HH 16.10.14 - To fix a bug, with newly entering vehicles doing immediate UTurns, swapped
-			// the && selected == UGV_Direction.NORTH and && selected == UGV_Direction.SOUTH in the code
-			// below. 24.11.14 - This was not really a bug fix, it probably introduced a different bug and
-			// only half-addressed the perceived one.
-			if ((lengthDir[T_EAST] > 0 || (dirCount == 1 && lengthDir[T_EAST] == 0 && carDir == UGV_Direction.EAST)) && dir == 1) {
-				tempCoords = new Double2D(x+laneWidth, y-(laneWidth/2));
+			// If we've chosen dir=1, and there is an EB arm, or this is a EB dead-end which the vehicle is heading towards, choose EB
+			if ((lengthDir[T_EAST] > 0 || (dirCount == 1 && lengthDir[T_EAST] == 0 && carDir == UGV_Direction.EAST)) && dir == 1) 
+			{
+				tempCoords = new Double2D(x+laneWidth, y-(laneWidth/2)); // Mid-point of exit lane
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x + offset, tempCoords.y);
 				}
-			} else if ((lengthDir[T_SOUTH] > 0 || (dirCount == 1 && lengthDir[T_SOUTH] == 0 & carDir == UGV_Direction.SOUTH)) && dir == 2) {
-				tempCoords = new Double2D(x+(laneWidth/2), y+laneWidth);
+			// If we've chosen dir=2, and there is an SB arm, or this is a SB dead-end which the vehicle is heading towards, choose SB	
+			} else if ((lengthDir[T_SOUTH] > 0 || (dirCount == 1 && lengthDir[T_SOUTH] == 0 & carDir == UGV_Direction.SOUTH)) && dir == 2) 
+			{
+				tempCoords = new Double2D(x+(laneWidth/2), y+laneWidth); // Mid-point of exit lane
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y + offset);
 				}
-			} else if ((lengthDir[T_WEST] > 0 || (dirCount == 1 && lengthDir[T_WEST] == 0 && carDir == UGV_Direction.WEST)) && dir == 3) {
-				tempCoords = new Double2D(x-laneWidth, y+(laneWidth/2));
+			// If we've chosen dir=3, and there is an WB arm, or this is an WB dead-end which the vehicle is heading towards, choose WB	
+			} else if ((lengthDir[T_WEST] > 0 || (dirCount == 1 && lengthDir[T_WEST] == 0 && carDir == UGV_Direction.WEST)) && dir == 3) 
+			{
+				tempCoords = new Double2D(x-laneWidth, y+(laneWidth/2)); // Mid-point of exit lane
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x - offset, tempCoords.y);
 				}
-			} else if ((lengthDir[T_NORTH] > 0 || (dirCount == 1 && lengthDir[T_NORTH] == 0 && carDir == UGV_Direction.NORTH)) && dir == 4) {
-				tempCoords = new Double2D(x-(laneWidth/2), y-laneWidth);
+			// If we've chosen dir=4, and there is an NB arm, or this is a NB dead-end which the vehicle is heading towards, choose NB
+			} else if ((lengthDir[T_NORTH] > 0 || (dirCount == 1 && lengthDir[T_NORTH] == 0 && carDir == UGV_Direction.NORTH)) && dir == 4) 
+			{
+				tempCoords = new Double2D(x-(laneWidth/2), y-laneWidth); // Mid-point of exit lane
 				if (exitCoords.x == -1 && exitCoords.y == -1) {
 					exitCoords = new Double2D(tempCoords.x, tempCoords.y - offset);
 				}
@@ -463,12 +514,13 @@ public class Junction extends Entity
 			loopCount ++;
 		}
 				
-		return new jctExitInfo(exitCoords, this.ID);
+		return new jctExitInfo(exitCoords, this.ID); // Return the offset exit location and the ID of the junction
 	}
 	
 	/** 
-	 * HH 23.12.14 Update to include a check on the id of the vehicle that is trying to clear the lock on the junction
-	 * @param inID (long - )
+	 * Unoccupy the junction: includes a check on the id of the vehicle that is trying to clear the lock on the junction
+	 * to make sure it's the vehicle that we think is in the junction.
+	 * @param inID (long - ID of the vehicle trying to unoccupy the junction)
 	 */
 	public void unOccupy(long inID)
 	{
@@ -480,16 +532,18 @@ public class Junction extends Entity
 	}
 	
 	/**
-	 * HH 23.12.14 For logging
-	 * @return long ()
+	 * Return the ID of the vehicle occupying the junction (for logging purposes)
+	 * @return long (return the ID of the vehicle occupying the junction)
 	 */
 	public long getOccupierID() {
 		return occupierID;
 	}
 	
 	/**
-	 * This method...
-	 * @return boolean ()
+	 * This method iterates through the junction arm length array and counts any non-zero length
+	 * junction arms.  If there is only one, this signifies a dead-end and true is returned.  Any
+	 * other count implies no dead-end and false is returned.
+	 * @return boolean (return true if the junction is a dead-end)
 	 */
 	public boolean isDeadEnd()
 	{
@@ -519,17 +573,18 @@ public class Junction extends Entity
 	}
 	
 	/**
-	 * HH 9.9.14 getDeadEndEntry() - Return the coordinate pair representing the 
-	 * entry point that should be used to add a new vehicle to the network.
-	 * @return Double2D ()
+	 * Return the coordinate pair representing the entry point that should be used to add a new 
+	 * DumbCar vehicle to the network in a dead-end
+	 * @return Double2D (coordinates of location (just inside junction) where the new DumbCar should be 
+	 * added to the network)
 	 */
 	public Double2D getDeadEndEntry()
 	{
 		double x = location.x;
 		double y = location.y;
-		double laneWidth = Road.roadWidth/2 - 0.1; // HH 30.9.14 Introduced a small offset to prevent vehicles being added just outside net
+		double laneWidth = Road.roadWidth/2 - 0.1; // A small offset to prevent vehicles being added just outside net
 		
-		// HH 29.9.14 - Add the vehicles at the outside edge of the junction so that
+		// Add the vehicles at the outside edge of the junction so that
 		// they can choose a new direction
 		if (lengthDir[T_EAST] > 0) {
 			return new Double2D(x-laneWidth, y-(laneWidth/2));

@@ -48,29 +48,29 @@ public class Entity implements Steppable, Constants
 
 	/**
 	 * A meethod which sets the stored location to the supplied coordinates
-	 * @param location (Double2D - )
+	 * @param location (Double2D - new location for the Entity)
 	 */
 	public void setLocation(Double2D location) {
 		this.location = location;
 	}
 
 	/**
-	 * This method...
-	 * @return boolean ()
+	 * This method reports whether the Entity is schedulable.
+	 * @return boolean (returns true if the Entity is schedulable)
 	 */
 	public boolean isSchedulable() {
 		return isSchedulable;
 	}
 	
 	/**
-	 * This method...
-	 * @return int ()
+	 * This method returns the type of the entity e.g. TCAR
+	 * @return int (the index of the enumerated type which represents this entity)
 	 */
 	public int getType() {return type;}
 
 	/**
-	 * This method...
-	 * @return int ()
+	 * This method returns the unique identifier assigned to the Entity.
+	 * @return int (unique ID of the Entity)
 	 */
 	public int getID() {return ID;}
 }

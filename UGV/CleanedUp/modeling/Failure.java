@@ -4,8 +4,9 @@
 package modeling;
 
 /**
- * @author hh940 HH 15.7.14
- *
+ * This class allows us to create Failure Objects which can be visualised in the UI.
+ * 
+ * @author hh940 
  */
 public class Failure extends Entity {
 
@@ -13,8 +14,8 @@ public class Failure extends Entity {
 
 	/**
 	 * Constructor.
-	 * @param idNo (int - )
-	 * @param typeNo (int - )
+	 * @param idNo (int - unique identifier)
+	 * @param typeNo (int - integer identifier for type of crash e.g. TFAILURE)
 	 */
 	public Failure(int idNo, int typeNo) {
 		super(idNo, typeNo);

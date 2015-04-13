@@ -368,7 +368,7 @@ public abstract class Car extends Entity implements Oriented2D
 		targetID = newID; // TO DO - Add some range checking here...
 	}
 		
-	/*
+	/**
 	 * Store location of vehicle at previous time step.
 	 * @param inPrevLoc (Double2D - previous location of vehicle)
 	 */
@@ -745,7 +745,7 @@ public abstract class Car extends Entity implements Oriented2D
 		return wp; // return WP so we can set eTarget to point to it
 	}
 	
-	/*
+	/**
 	 *  Using a search method that is based on a lidar type sensor operation, test various locations
 	 *  at increasing distance from the sensor location (search resolution defined by inSensitivity), 
 	 *  and then sweeping with an angular search pattern defined by inAngle (moving from inAngle/2 to 
@@ -1034,19 +1034,19 @@ public abstract class Car extends Entity implements Oriented2D
 			endAngle = 0; // End looking straight ahead
 		}
 		
-		// New Fault #8 (FAULT #17) - Force the angle loop to start half-way through
+		// New Fault #8 - Force the angle loop to start half-way through
 		if (sim.getFault(8) == true && this.getType() == TUGV) { 
 			startAngle = 0;
 			sim.setFault(8); 
 		} 
 
-		// New Fault #9 (FAULT #18) - Force the angle loop to end half-way through
+		// New Fault #9 - Force the angle loop to end half-way through
 		if (sim.getFault(9) == true && this.getType() == TUGV) { 
 			endAngle = 0;
 			sim.setFault(9); 
 		} 
 		
-		// New Fault #10 (FAULT #19) - Force the angle sensor to 'reduce' range resolution (double iterator step)
+		// New Fault #10 - Force the angle sensor to 'reduce' range resolution (double iterator step)
 		if (sim.getFault(10) == true && this.getType() == TUGV) { 
 			resolution = resolution*2;
 			sim.setFault(10); 
@@ -1067,7 +1067,7 @@ public abstract class Car extends Entity implements Oriented2D
 			// to give the sensor direction.
 			newBearing = Utility.correctAngle(Utility.getDirectionDeg(getDirection()) + i); 
 			
-			// New Fault #13 (FAULT #23) - Force the sensor to 'reduce' distance resolution (double iterator step)
+			// New Fault #13 - Force the sensor to 'reduce' distance resolution (double iterator step)
 			if (sim.getFault(13) == true && this.getType() == TUGV) { 
 				rangeSensitivity = inSensitivity*2;
 				sim.setFault(13); 
@@ -1077,13 +1077,13 @@ public abstract class Car extends Entity implements Oriented2D
 			// of length rangeSensitivity
 			amountAdd = new Double2D(Utility.xMovement(newBearing, rangeSensitivity), Utility.yMovement(newBearing, rangeSensitivity));
 			
-			// New Fault #11 (FAULT #21) - Force the distance loop to start half-way through
+			// New Fault #11 - Force the distance loop to start half-way through
 			if (sim.getFault(11) == true && this.getType() == TUGV) { 
 				startRange = inRange/2;
 				sim.setFault(11); 
 			} 
 
-			// New Fault #12 (FAULT #22) - Force the distance loop to end half-way through
+			// New Fault #12 - Force the distance loop to end half-way through
 			if (sim.getFault(12) == true && this.getType() == TUGV) { 
 				endRange = inRange/2;
 				sim.setFault(12); 

@@ -1,18 +1,16 @@
 package modeling;
 
 /**
- *
- * @author rl576
- * 
- * HH - 10.7.14 - modified to provide an additional constructor to allow a U-turn waypoint
+ * @author rl576/hh940
  */
 public class Waypoint extends Entity
 {
 	private static final long serialVersionUID = 1L;
 	
-	private int nextPoint; //the id of the point to go to after this waypoint
+	private int nextPoint; // the id of the point to go to after this waypoint
 	
-	/** Constructor for Waypoint
+	/** 
+	 * Constructor for Waypoint
 	 * @param ID (int - the id of the waypoint)
 	 * @param next (int - the id of the point that should be travelled to after this waypoint is reached)
 	 */
@@ -26,7 +24,7 @@ public class Waypoint extends Entity
 	 * Additional Constructor for Waypoint used to enforce a U-turn
 	 * @param ID (int - the id of the waypoint)
 	 * @param next (int - the id of the point that should be travelled to after this waypoint is reached)
-	 * @param type (int - the integer type)
+	 * @param type (int - the integer type for the desired waypoint e.g. TUTURNWP)
 	 */
 	public Waypoint(int ID, int next, int type)
 	{

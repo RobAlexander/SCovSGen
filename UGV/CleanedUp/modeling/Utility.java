@@ -12,7 +12,10 @@ import modeling.Constants.UGV_Direction;
 import sim.util.Double2D;
 
 /**
- * @author Heather
+ * @author hh940
+ * 
+ * Class of static methods that were removed from other classes to make them
+ * appear more accessible, generic, and more sensibly grouped.
  *
  */
 public class Utility {
@@ -25,158 +28,11 @@ public class Utility {
 	}
 	
 	/**
-	 * Utility method to return the 'centre' of an area - as defined by (max+min)/2 for
-	 * both x and y directions
-	 * @param Area inArea ()
-	 * @return Double2D ()
-	 */
-	public static Double2D getAreaCentre(Area inArea)
-	{
-		double xMax = -1;
-		double yMax = -1;
-		double xMin = -1;
-		double yMin = -1;
-		double[] results = new double[6];
-		int retVal;
-		
-		PathIterator tempIterator = inArea.getPathIterator(null);
-		
-		while (!tempIterator.isDone())
-		{
-			retVal = tempIterator.currentSegment(results);
-			
-			// See what type of segment we have, and look at the appropriate coords
-			switch (retVal)
-			{
-			case PathIterator.SEG_MOVETO :
-		    {
-		        // Compare the values that we have just found to the current max and min
-                if ((results[0] >= 0 && results[0] < xMin) || xMin < 0) {xMin = results[0];}
-                if ((results[0] >= 0 && results[0] > xMax) || xMax < 0) {xMax = results[0];}
-                if ((results[1] >= 0 && results[1] < yMin) || yMin < 0) {yMin = results[1];}
-                if ((results[1] >= 0 && results[1] > yMax) || yMax < 0) {yMax = results[1];}
-                 
-		        tempIterator.next(); // Next point
-                break;
-		    }
-
-		case PathIterator.SEG_LINETO :
-			    {
-			        // Compare the values that we have just found to the current max and min
-                    if ((results[0] >= 0 && results[0] < xMin) || xMin < 0) {xMin = results[0];}
-                    if ((results[0] >= 0 && results[0] > xMax) || xMax < 0) {xMax = results[0];}
-                    if ((results[1] >= 0 && results[1] < yMin) || yMin < 0) {yMin = results[1];}
-                    if ((results[1] >= 0 && results[1] > yMax) || yMax < 0) {yMax = results[1];}
-                     
-			        tempIterator.next(); // Next point
-                    break;
-			    }
-
-			case PathIterator.SEG_CLOSE :   
-			    {
-			        tempIterator.next(); // Next point
-			        break;	
-			    }
-			default :    
-			    {
-			    	System.out.println("Utility.getAreaCentre: Unknown PathIterator code:  " + retVal + ".");
-			    	break;
-			    }
-			}
-		}
-		
-		return new Double2D((xMax+xMin)/2, (yMax+yMin)/2);
-	}
-
-	/**
-	 * Utility method to return the 'largest' vertex of an area - as defined by Max(x+y) for
-	 * all points (x,y)	
-	 * @param Area inArea ()
-	 * @return Double2D ()
-	 */
-	public static Double2D getAreaMaxPt(Area inArea)
-	{
-		double xMax = -1;
-		double yMax = -1;
-		double maxTotal = 0;
-		double[] results = new double[6];
-		int retVal;
-		
-		PathIterator tempIterator = inArea.getPathIterator(null);
-		
-		while (!tempIterator.isDone())
-		{
-			retVal = tempIterator.currentSegment(results);
-			
-			// See what type of segment we have, and look at the appropriate coords
-			switch (retVal)
-			{
-			case PathIterator.SEG_MOVETO :
-		    {
-		    	if (maxTotal == 0 && results[0] >= 0 && results[1] >= 0)
-		    	{
-		    		xMax = results[0];
-		    		yMax = results[1];
-		    		maxTotal = xMax + yMax;
-		    	}
-		    	else if (results[0] >= 0 && results[1] >= 0)
-		    	{
-		    		if (results[0] + results[1] > maxTotal)
-		    		{
-		    			xMax = results[0];
-			    		yMax = results[1];
-			    		maxTotal = xMax + yMax;
-		    		}
-		    	}
-                
-		        tempIterator.next(); // Next point
-		    	break;
-		    }
-
-		case PathIterator.SEG_LINETO :
-			    {
-			    	if (maxTotal == 0 && results[0] >= 0 && results[1] >= 0)
-			    	{
-			    		xMax = results[0];
-			    		yMax = results[1];
-			    		maxTotal = xMax + yMax;
-			    	}
-			    	else if (results[0] >= 0 && results[1] >= 0)
-			    	{
-			    		if (results[0] + results[1] > maxTotal)
-			    		{
-			    			xMax = results[0];
-				    		yMax = results[1];
-				    		maxTotal = xMax + yMax;
-			    		}
-			    	}
-                    
-			        tempIterator.next(); // Next point
-			    	break;
-			    }
-
-			case PathIterator.SEG_CLOSE :   
-			    {
-			    	tempIterator.next(); // Next point
-			    	break;	
-			    }
-			default :    
-		        {
-		    	    System.out.println("Utility.getAreaMaxPt: Unknown PathIterator code:  " + retVal + ".");
-		    	    break;
-		        }
-			}
-		}
-		
-		return new Double2D(xMax, yMax);
-	}
-	
-	/**
 	 * As the basic 'contains' method does not include points which are located *on* the eastern and
-	 * southern boundaries of the rectangular shape
-	 * @param Rectangle2D.Double testRect ()
-	 * @param Double2D testPt ()
-	 * @return boolean ()
+	 * southern boundaries of the rectangular shape, this method does.
+	 * @param testRect (Rectangle2D.Double - the rectangle we are testing for containing the point)
+	 * @param testPt (Double2D - the coordinates we are testing for intersection with the rectangle)
+	 * @return boolean (return true if testPt is contained within testRect)
 	 */
 	public static boolean betterContains(Rectangle2D.Double testRect, Double2D testPt)
 	{
@@ -209,11 +65,11 @@ public class Utility {
 		return false; // if we get here, it's definitely not contained
 	}
 	
-	// HH 21.11.14 - Seven static direction methods (below) moved from UGV/Car class.
+	// ***** Seven static direction methods (below) moved from UGV/Car class *****
 	
 	/** 
-	 * Work out which direction the vehicle is pointing in, based on its heading
-	 * @param double bearing ()
+	 * Work out which compass direction the vehicle is pointing in, based on its heading
+	 * @param bearing (double - the direction the vehicle is pointing in)
 	 * @return UGV_Direction (either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle)
 	 */
 	public static UGV_Direction getDirection(double bearing)
@@ -230,10 +86,11 @@ public class Utility {
 	}
 
 	/** 
-	 * Work out which direction the vehicle is pointing in, based on its heading,
+	 * Work out which compass direction the vehicle is pointing in, based on its heading,
 	 * but return the degrees-equivalent for this compass direction
-	 * @param double bearing ()
-	 * @return int (either NORTH, EAST, SOUTH, or WEST to indicate approximate direction of vehicle)
+	 * @param bearing (double - the direction the vehicle is pointing in)
+	 * @return int (either NORTH (180), EAST (90), SOUTH (0), or WEST (270) to indicate 
+	 *              approximate direction of vehicle)
 	 */
 	public static int getDirectionDeg(double bearing)
 	{
@@ -253,8 +110,8 @@ public class Utility {
 	 * Designed to compliment Road.getLane which returns similar coded directions.
 	 * Used to check that the target is on the side of the road which aligns with the
 	 * direction of travel of the UGV (for clarity when the UGV is performing an O/T).
-	 * @param double bearing ()
-	 * @return int ()
+	 * @param bearing (double - the direction the vehicle is pointing in)
+	 * @return int (return 1 for N or E; 2 for S or W)
 	 */
 	public static int getDirectionInt(double bearing)
 	{
@@ -289,10 +146,10 @@ public class Utility {
 	
 	/** 
 	 * A method which changes a bearing to be in the range of 0 (inclusive) to 360 (exclusive)
-	 * @param double b (the bearing to be corrected)
+	 * @param b (double - the bearing to be corrected)
 	 * @return double (a bearing equivalent to b which has been converted to be in the correct range)
 	 */
-	protected static double correctAngle(double b) // HH 7.5.14 - Changed from private to protected
+	protected static double correctAngle(double b)
 	{
 		if (b >= 360)
 		{
@@ -310,12 +167,11 @@ public class Utility {
 	/**
 	 * Returns the current orientation of the object in radians (as per
 	 * OrientedPortrayal2D) for the supplied bearing
-	 * @param double inBearing ()
-	 * @return double ()
+	 * @param inBearing (double - the direction the vehicle is pointing in)
+	 * @return double (the orientation2D of the vehicle in radians)
 	 */
 	public static double getOrientation2D(double inBearing)
 	{
-		
 		// For some reason, the orientation of the vehicle seems to be displayed 
 		// relative to zero degrees along the increasing x axis.  As a result, we need to flip 
 		// the compass over the 45/225 degree bisection to convert between the two systems.
@@ -325,50 +181,45 @@ public class Utility {
 	/**
 	 * Calculates the bearing the vehicle should be travelling on to move directly
 	 * from a location to another.
-	 * @param point1 (Double2D - )
-	 * @param point2 (Double2D - )
-	 * @return double ()
+	 * TODO Might want to insert some test routines for this as the maths is a little
+	 * counter-intuitive
+	 * @param point1 (Double2D - coordinates of start point)
+	 * @param point2 (Double2D - coordinates of end point)
+	 * @return double (return the bearing to travel from point1 to point2)
 	 */
 	public static double calculateAngle(Double2D point1, Double2D point2) 
 	{
-		Double2D vector = point2.subtract(point1);
+		Double2D vector = point2.subtract(point1); // find difference between points
 		double angle;
+		
 		if(vector.y != 0)
 		{
 			angle = Math.toDegrees(Math.atan(vector.x / vector.y));
 			
-			if(vector.x >0)
+			// Deal with signs cancelling etc., to ensure that the angle returned is relative to the
+			// increasing y-axis
+			if(vector.x > 0)
 			{
-				if (vector.y <0) 
+				if (vector.y < 0) 
 				{	
-					angle +=180;
-					
+					angle += 180;
 				} 
-				
-			}
-			else
-			{
-				if (vector.y <0) 
+			} else {
+				if (vector.y < 0) 
 				{	
-					angle +=180;
-					
-				}
-				else
-				{
-					angle +=360;
+					angle += 180;
+				} else {
+					angle += 360;
 				}
 			}
 			
+		} else { // vector.y == 0 
 			
-		
-		} else {
-			//the car is either in line with the target horizontally or vertically
-			if (vector.x >0)
+			// The car is either in line with the target horizontally or vertically
+			if (vector.x > 0)
 			{
 			    angle = 90;			    
-			}
-			else
-			{
+			} else {
 				angle = 270;
 			}
 		}
@@ -378,10 +229,10 @@ public class Utility {
 
     /**
      * A function which based on the direction the car is facing and the speed it
-	 * is travelling at 
-	 * it returns a value for how much the x position should change in one step. 
-	 * @param angle (double - )
-	 * @param speed (double - the speed)
+	 * is travelling at returns a value for how much the x position should change in one step. 
+	 * TODO - Insert some test scripts for this of standard cases and boundary conditions
+	 * @param angle (double - direction in which the car is pointing)
+	 * @param speed (double - the speed of the vehicle)
      * @return double (the change in x coordinate of the car in the world)
      */
 	public static double xMovement(double angle, double speed) 
@@ -403,8 +254,8 @@ public class Utility {
 	
 	/**
 	 * The y axis equivalent of the xMovement method
-	 * @param angle (double - )
-	 * @param speed (double - )
+	 * @param angle (double - direction in which the car is pointing)
+	 * @param speed (double - the speed of the vehicle)
 	 * @return double (the change in y coordinate of the car in the world)
 	 */
 	public static double yMovement(double angle, double speed)
@@ -424,8 +275,10 @@ public class Utility {
     }
 	
 	/**
-	 * This method...
-	 * @return String ()
+	 * This method converts the current time to a string for use in the log files, etc.
+	 * TODO: this method might benefit from some refinement and testing, it's possible that
+	 * it muddles up AM/PM.
+	 * @return String (the current time represented as a string)
 	 */
 	public static String timeToString() {
 		

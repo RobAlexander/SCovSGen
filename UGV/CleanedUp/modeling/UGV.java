@@ -87,6 +87,8 @@ public class UGV extends Car {
 	/**
 	 * Based on modeling.Car.step (Robert Lee) - functionality changed to force vehicle to restrict movement to
 	 * remain on road network.
+	 * NOTE: The overtaking behaviour in this method is unstable and requires a complete rethink as many of
+	 * the branches of choice in the code are very unlikely to be executed.  
 	 * (non-Javadoc)
 	 * @see modeling.Car#step(sim.engine.SimState)
 	 * @param state (SimState - access to the simulation environment)

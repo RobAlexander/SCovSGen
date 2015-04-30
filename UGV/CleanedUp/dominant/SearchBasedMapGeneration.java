@@ -15,24 +15,27 @@ import modeling.Constants.coverageCriteriaInfo;
 import modeling.Utility;
 
 /**
- * @author hh940 HH 14.1.14
+ * @author hh940 
  *
- *	This method will use a guided search to produce a set (list) of external random seeds: each defining a unique map and initial set-up for 
- *  the UGV simulation.  This method builds the set incrementally by selecting seeds to generate maps which will improve the situation
- *  coverage of the set as a whole.  Candidate seeds are generated at random and each is used to produce a 'virtual map' - measurements are
- *  taken from this map, relating to defined coverage criteria e.g. DistanceTargetToObstacle, DistanceUGVToTarget, DistancePreviousJunctionToTarget
- *  and these are categorised (0-5) to assign the map to a 'box' in the situation space defined by the coverage criteria.  In the case above, this is a 
- *  3D space, defined by the 3 coverage criteria, each of which are divided into 6 categories (0-5) and therefore creating a space of 216 'boxes'.  The
- *  categories are designed to provide a spread across /sensible/ 'input' values for each criteria, and the theory is that by testing within each 
- *  category, we are 'covering' a wider range of possible situations.  As there are likely to be multiple criteria which define a situation, we
- *  want to try and cover each /combination/ of criteria categories (in the example above, this is the combination of 3 criteria).
+ * This class provides methods to support the Search Based map set generation, including the
+ * method to create the map set, and helper methods to determine which categories the map 
+ * falls into, for each of the Situation Coverage metrics.  Also contains a method to
+ * write the matrix containing the situation coverage to an output file.  
  */
 public class SearchBasedMapGeneration {
 
 	/**
-	 * This method...
-	 * @param int iterationLimit ()
-	 * @return double ()
+	 * This method will use a guided search to produce a set (list) of external random seeds: each defining a unique map and initial set-up for 
+	 *  the UGV simulation.  This method builds the set incrementally by selecting seeds to generate maps which will improve the situation
+	 *  coverage of the set as a whole.  Candidate seeds are generated at random and each is used to produce a 'virtual map' - measurements are
+	 *  taken from this map, relating to defined coverage criteria e.g. DistanceTargetToObstacle, DistanceUGVToTarget, DistancePreviousJunctionToTarget
+	 *  and these are categorised (0-5) to assign the map to a 'box' in the situation space defined by the coverage criteria.  In the case above, this is a 
+	 *  3D space, defined by the 3 coverage criteria, each of which are divided into 6 categories (0-5) and therefore creating a space of 216 'boxes'.  The
+	 *  categories are designed to provide a spread across /sensible/ 'input' values for each criteria, and the theory is that by testing within each 
+	 *  category, we are 'covering' a wider range of possible situations.  As there are likely to be multiple criteria which define a situation, we
+	 *  want to try and cover each /combination/ of criteria categories (in the example above, this is the combination of 3 criteria).
+	 * @param iterationLimit (int - used to name the output file)
+	 * @return double (return the percentage Situation Coverage achieved)
 	 */
 	public static double generateExternalSeeds(int iterationLimit) {
 		
@@ -61,7 +64,7 @@ public class SearchBasedMapGeneration {
 		String startTime = Utility.timeToString();
 		long lStartTime = java.lang.System.currentTimeMillis();
 		
-		// HH 14.1.15 : Existing copies of this file will be overwritten if the output folder is not empty
+		// Existing copies of this file will be overwritten if the output folder is not empty
 		File newOutputs = new File(Constants.outFilePath + "selectedExternalSeeds_" + iterationLimit + ".txt");
 		PrintStream ps;
 		
@@ -86,9 +89,9 @@ public class SearchBasedMapGeneration {
 			Res = mod.getCoverageCriteria(ExternalSeed, noIterations);
 			
 			// Categorise the criteria results returned from the simulation
-			c1 = Math.max(0, categorize(Res.distTargetToObs, 1)); // HH 21.1.15 - Little cheat to prevent -1 being returned and causing exception
-			c2 = Math.max(0, categorize(Res.distUGVToTarget, 2)); // HH 21.1.15 - Little cheat to prevent -1 being returned and causing exception
-			c3 = Math.max(0, categorize(Res.distPrevJctToTarget, 3)); // HH 21.1.15 - Little cheat to prevent -1 being returned and causing exception
+			c1 = Math.max(0, categorize(Res.distTargetToObs, 1)); // Little cheat to prevent -1 being returned and causing exception
+			c2 = Math.max(0, categorize(Res.distUGVToTarget, 2)); // Little cheat to prevent -1 being returned and causing exception
+			c3 = Math.max(0, categorize(Res.distPrevJctToTarget, 3)); // Little cheat to prevent -1 being returned and causing exception
 						
 			// Test whether the coverage count in the box has already reached the required number of  
 			// candidate seeds.  
@@ -130,9 +133,9 @@ public class SearchBasedMapGeneration {
 
 	/**
 	 * Convert the supplied coverage criterion to the category range 0-5 as required for determining situation coverage
-	 * @param double inCovCriterion ()
-	 * @param int critIdx ()
-	 * @return int ()
+	 * @param inCovCriterion (double - value of coverage criterion to convert to category )
+	 * @param critIdx (int - index of criterion, so we know how to scale it)
+	 * @return int (return category [0-5])
 	 */
 	public static int categorize(double inCovCriterion, int critIdx) {
 		
@@ -166,18 +169,18 @@ public class SearchBasedMapGeneration {
 	}
 	
 	/**
-	 * Dump the supplied coverageMatrix to file
-	 * @param int[][][] inMatrix ()
-	 * @param String inText ()
-	 * @param double tempPercentCov ()
-	 * @param int boxesCovered ()
-	 * @param long duration ()
-	 * @param int iterationLimit ()
+	 * Dump the supplied coverageMatrix to file, with associated logging information.
+	 * @param inMatrix (int[][][] - 3D matrix describing situation coverage)
+	 * @param inText (String - string to help construct output filename)
+	 * @param tempPercentCov (double - percentage Situation Coverage, to write to file)
+	 * @param boxesCovered (int - no. boxes covered, to write to file)
+	 * @param duration (long - length of search, to write to file)
+	 * @param iterationLimit (int - search effort permitted, constructs filename)
 	 */
 	public static void matrixToFile(int[][][] inMatrix, String inText, double tempPercentCov, int boxesCovered, long duration, int iterationLimit) {
 		
 		// Open a file for output
-		// HH 14.1.15 : Existing copies of this file will be overwritten if the output folder is not empty
+		// Existing copies of this file will be overwritten if the output folder is not empty
 		File newOutputs = new File(Constants.outFilePath + "sitCovMatrix_" + inText + "_" + iterationLimit + ".txt");
 		PrintStream ps;
 		String tempString = "";
@@ -218,7 +221,7 @@ public class SearchBasedMapGeneration {
 			ps.println("");
 		}
 		
-		// HH 15.1.15 Add the situation coverage measurement to the bottom of the file
+		// Add the situation coverage measurement to the bottom of the file
 		ps.println("Situation Coverage = " + boxesCovered + "/" + Constants.NO_BOXES + " = " + tempPercentCov + ".");
 		ps.println("Duration of Search = " + duration + ".");
 		

@@ -11,7 +11,7 @@ import modeling.Constants;
 import modeling.Utility;
 
 /**
- * @author hh940 HH 15.1.15
+ * @author hh940
  * 
  * This Class is a wrapper for running a whole experiment to compare the situation coverage and 
  * fault-finding performance of two methods of situation generation: random, and search-based.
@@ -19,9 +19,12 @@ import modeling.Utility;
 public class RunCompareMapSetCoverageDist {
 
 	/**
-	 * @param args
+	 * Evaluate the distribution of coverage of the situation set for the Search Based and
+	 * Random map sets.  These results are written as matrices to their respective files, and
+	 * a summary file is produced with information about how long the evaluation process took
+	 * for each of the map sets. 
+	 * @param args (String[] - not used) 
 	 */
-	
     public static void main(String[] args)
     {
     	// Open an overall log file so that we can capture the start and end times of the various loops
@@ -46,7 +49,7 @@ public class RunCompareMapSetCoverageDist {
 
     	// Log the finish time
     	long endTime = java.lang.System.currentTimeMillis();
-    	ps.println("Search Based Map Generation ending at time: " + endTime + ", " + Utility.timeToString() + ".");
+    	ps.println("Search Based Map Evaluation ending at time: " + endTime + ", " + Utility.timeToString() + ".");
     	
     	startTime = java.lang.System.currentTimeMillis();
     	ps.println("Random Map Evaluation starting at time: " + startTime + ", " + Utility.timeToString() + ".");
@@ -55,7 +58,7 @@ public class RunCompareMapSetCoverageDist {
     	CalculateSituationCoverageFromFile.calcSitCovDist(20000, false);
 
     	endTime = java.lang.System.currentTimeMillis();
-    	ps.println("Random Map Generation ending at time: " + endTime + ", " + Utility.timeToString() + ".");
+    	ps.println("Random Map Evaluation ending at time: " + endTime + ", " + Utility.timeToString() + ".");
     	
     	ps.close();
     }

@@ -190,7 +190,7 @@ public class AccidentDetector implements Constants,Steppable {
 				sim.recordCrossLine(intersect);
 			}
 			
-			// Check for line crossing - Kerb line to N or W
+			// Check for line crossing - NB or EB Kerb line
 			Double2D intersectNE = detectLineCrossing(car1, sim.roads, LineType.NESIDE, sim.junctions);
 			if(intersectNE.x > -1)
 			{
@@ -200,7 +200,7 @@ public class AccidentDetector implements Constants,Steppable {
 				sim.recordCrossLine(intersectNE);
 			}
 			
-			// Check for line crossing - Kerb line to S or E
+			// Check for line crossing - SB or WB Kerb line
 			Double2D intersectSW = detectLineCrossing(car1, sim.roads, LineType.SWSIDE, sim.junctions);
 			if(intersectSW.x > -1)
 			{

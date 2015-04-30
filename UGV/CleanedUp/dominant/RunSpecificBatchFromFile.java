@@ -13,22 +13,31 @@ import java.io.PrintStream;
 import modeling.COModelWithoutRun;
 
 /**
- * @author HH 3/11/14
+ * @author HH940
  * 
- * This method has been created to allow us to supply a set of existing experiment runs as a text file, and
+ * This class has been created to allow us to supply a set of existing experiment runs as a text file, and
  * use the random seeds that define these runs to re-generate the network map.  The map can then be analysed
  * and supplementary measurements taken e.g. junction separation values, and distance between target and the
- * centre of the road. * 
+ * centre of the road.  Note that contrary to the name of the class, the main method does not actually run
+ * the simulation once it has generated the map.
  */
 public class RunSpecificBatchFromFile {
 
 	/**
-	 * This method...
-	 * @param String[] args
+	 * This method reads in a named file, with the format: "Internal Seed, External Seed, Percentage Faults," 
+	 * on each line.  A COModelWithoutRun is created, using the supplied parameters, and the start method
+	 * returns an output string containing certain metrics about the map.  This could be used to return 
+	 * Ahead of Time Situation Coverage measures.   Alternatively, after a series of full simulations, for which 
+	 * results have been obtained, it could be used to calculate some map measures that were not recorded at the 
+	 * time (which can be determined from the map without running the simulation).  To change the metrics which
+	 * are returened by the output string, the method(s) in COModelWithoutRun should be altered to give the 
+	 * desired behaviour.  After each map has been evaluated, the parameters are re-written to the output file, 
+	 * along with the output string.
+	 * @param args (String[] - not used)
 	 */
     public static void main(String[] args)
     {
-    	// HH Parameters that we need to read from file
+    	// Parameters that we need to read from file
     	double percentageFaults;
     	Long tempLong;
     	long InternalSeed;
@@ -37,13 +46,13 @@ public class RunSpecificBatchFromFile {
     	
     	FileReader UGVInputFile = null;
 		try {
-			UGVInputFile = new FileReader("UGVInput.csv");
+			UGVInputFile = new FileReader("UGVInput.csv"); // Name of the input file
 		} catch (FileNotFoundException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
     	
-    	// HH Read the input file and initialise the modelling parameters
+    	// Read the input file and initialise the modelling parameters
     	final BufferedReader UGVInputFileReader= new BufferedReader(UGVInputFile);
     	
     	String inputString = "";
@@ -56,7 +65,7 @@ public class RunSpecificBatchFromFile {
 			e1.printStackTrace();
 		}
     	
-		// HH 28.8.14 : NOTE - differences in percentages of faults must be > 1% or files will be overwritten
+		// NOTE - differences in percentages of faults must be > 1% or files will be overwritten
 		File newOutputs = new File("batchOutputs.txt");
 		PrintStream ps;
 		

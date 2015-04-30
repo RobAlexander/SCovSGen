@@ -11,24 +11,31 @@ import modeling.COModelWithoutUI;
 import modeling.Constants;
 
 /**
- * @author HH 15.1.15
+ * @author HH940
  * 
- * This class has been created to allow us to supply a set of existing experiment runs as a text file, and
- * use the external random seed that defines each run to re-generate the network map and run the model.  This 
- * is a variation of the RunSpecificBatchFromFile, which (despite its name) does not actually run the model. 
+ * This class has been created to allow us to supply a set of existing experiment runs (i.e. the Random Seeds 
+ * that define the runs) as a text file, and use the external random seed that defines each run to re-generate 
+ * the network map and run the model.  This is a variation of the RunSpecificBatchFromFile, which (despite its 
+ * name) does not actually run the model.  You can supply an array of specific faults to instantiate, one at a
+ * time, or set a percentage level of faults to inject into each run.  You can choose to run a single iteration
+ * of each experiment, or a batch of e.g. 3 runs per External Seed/Fault combination.
  */
 public class ActuallyRunSpecificBatchFromFile {
 
 	/**
-	 * This method...
-	 * @param int iterationLimit ()
-	 * @param boolean wantRandomFaults ()
-	 * @param int[] inSetFaultArray ()
+	 * This method reads External Random Seeds from a file and uses them to construct a simulation map.
+	 * The simulation can include seeded faults which can be specified in an array (to be instantiated
+	 * one at a time), or can be determined at random at a supplied percentage level.  The simulation
+	 * is run for the specified number of times.  This loop repeats for all seeds in the file, and then
+	 * for all faults specified in the fault array.
+	 * @param iterationLimit (int - identifier used to reconstruct input filename)
+	 * @param wantRandomFaults (boolean - true if you want random faults)
+	 * @param inSetFaultArray (int[] - for non-random faults, supply an array of faults to instantiate)
 	 */
     public static void runBatch(int iterationLimit, boolean wantRandomFaults, int[] inSetFaultArray)
     {
-    	// HH Parameters that we need to read from file
-    	double percentageFaults = (double)5/100; // HH 20.1.15 We need to insert some faults
+    	// Parameters that we need
+    	double percentageFaults = (double)5/100; // Set the percentage of faults that we want to insert
     	Long tempLong;
     	long ExternalSeed; 
     	COModelWithoutUI mod;
@@ -36,26 +43,25 @@ public class ActuallyRunSpecificBatchFromFile {
     	FileReader UGVInputFile = null;
     	String inputString = "";
 		
-		// HH 22.1.15 Set up the loop stuff
+		// Set up the loop stuff
 		int faultLoops = 1; // Default if we are going to set the faults randomly
 		if (wantRandomFaults == false)
 		{
 			faultLoops = inSetFaultArray.length;
 		}
 		
-		// HH 22.1.15 Run the loop
+		// Run the loop
 		for (int i=0; i<faultLoops; i++)
 		{
-			// HH 22.1.15 We're going to have to open the file and close it on each loop so that we get the full set of external
-			// seeds to run against each fault configuration.  Because the fault level is used to name the file, it's
-			// probably better to do it this way
+			// We're going to have to open the file and close it on each loop so that we get the full set of external
+			// seeds to run against each fault configuration.  
 			try {
 				UGVInputFile = new FileReader(Constants.outFilePath + "selectedExternalSeeds_" + iterationLimit + ".txt");
 			} catch (FileNotFoundException e2) {
 				e2.printStackTrace();
 			}
 	    	
-	    	// HH Read the input file and initialise the modelling parameters
+	    	// Read the input file and initialise the modelling parameters
 	    	final BufferedReader UGVInputFileReader = new BufferedReader(UGVInputFile);
 	    	
 	    	inputString = "";
@@ -67,7 +73,7 @@ public class ActuallyRunSpecificBatchFromFile {
 				e1.printStackTrace();
 			}
 			
-			// HH 22.1.15 Deal with the runs where we want to specify the fault index
+			// Deal with the runs where we want to specify the fault index
 			if (wantRandomFaults == true)
 			{
 				// Set up the simulation outside the loop so that we only need one file
@@ -79,7 +85,7 @@ public class ActuallyRunSpecificBatchFromFile {
 			
 			while (inputString != null)
 			{
-				// Split the line up to access the Internal Seed, External Seed and PercentageFaults
+				// Read the External Seed from file
 				tempLong = new Long(inputString);
 				ExternalSeed = tempLong.longValue();
 

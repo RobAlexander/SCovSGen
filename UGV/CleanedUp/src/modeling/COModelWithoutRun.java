@@ -60,7 +60,7 @@ public class COModelWithoutRun
 	
 	/** 
 	 * Alternative start method to be used with the search-based situation set generation; for testing
-	 * situation coverage (see dominant.SearchBasedMapGeneration class).  Method returns coverageCriteriaInfo
+	 * situation coverage (see simcontroller.SearchBasedMapGeneration class).  Method returns coverageCriteriaInfo
 	 * which can be used to guide the search
 	 * @param newExternalSeed (long - new external seed for map generation)
 	 * @param mapNo (long - unique identifier for results files, may include search effort, run index, R/SB differentiation)

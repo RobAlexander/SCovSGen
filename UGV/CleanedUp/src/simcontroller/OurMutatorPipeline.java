@@ -1,5 +1,5 @@
 
-package dominant;
+package simcontroller;
 import ec.vector.*;
 import ec.*;
 import ec.util.*;

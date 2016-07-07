@@ -25,7 +25,7 @@ pop.subpop.0.species.crossover-likelihood	= 1.0
 pop.subpop.0.species.mutation-prob	= 0.05
 
 
-pop.subpop.0.species.pipe = dominant.OurMutatorPipeline
+pop.subpop.0.species.pipe = simcontroller.OurMutatorPipeline
 
 pop.subpop.0.species.pipe.source.0 = ec.vector.breed.VectorCrossoverPipeline
 
@@ -33,4 +33,4 @@ pop.subpop.0.species.pipe.source.0.source.0 = ec.select.FitProportionateSelectio
 pop.subpop.0.species.pipe.source.0.source.1 = ec.select.FitProportionateSelection
 
 
-eval.problem            = dominant.MaxAccidents
+eval.problem            = simcontroller.MaxAccidents

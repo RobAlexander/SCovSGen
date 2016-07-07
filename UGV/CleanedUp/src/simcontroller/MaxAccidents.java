@@ -1,7 +1,7 @@
 /**
  * 
  */
-package dominant;
+package simcontroller;
 
 import modeling.COModel;
 import modeling.COModelBuilder;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package dominant;
+package simcontroller;
 
 import java.io.File;
 import java.io.FileNotFoundException;

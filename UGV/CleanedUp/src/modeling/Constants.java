@@ -131,7 +131,8 @@ public interface Constants
 	public static final int NO_RANDOM_RUNS = 20;
 	
 	// File path for the output files
-	public static final String outFilePath = "D:\\hh940\\UGVResultsBackup\\TEMP\\"; 
+	//TODO: move this to a config file
+	public static final String outFilePath = "D:\\temp\\SCovSgen output\\"; 
 	
 	// Situation Coverage Constants
 	

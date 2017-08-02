@@ -25,11 +25,13 @@ public class COModelWithoutUI
     public COModelWithoutUI(double percentageFaults, long mapNo, boolean inWantRandomFaults) 
     { 
     	sBuilder = new COModelBuilder(new COModel( System.nanoTime(), Constants.WorldXVal, Constants.WorldYVal, false, percentageFaults, mapNo, inWantRandomFaults));
-    	System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
+    	//System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
     }
  
     /** 
      * Dummy constructor to get around some initialisation errors in RunComparison.java
+     * 
+     * TODO: fix this in a more elegant way
      */
     public COModelWithoutUI()
     {
@@ -61,7 +63,7 @@ public class COModelWithoutUI
      */
 	public void start(long newExternalSeed)
 	{
-		System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
+		//System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
 		sBuilder.updateSeed(new SecureRandom().nextInt()); 
 		sBuilder.sim.reset();
 		

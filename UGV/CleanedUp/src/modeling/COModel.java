@@ -242,9 +242,7 @@ public class COModel extends SimState
     	} else {
     		// The supplied input for percentage faults was not inside the recognised range - this is serious enough to force an abort
     		this.schedule.clear();
-    		System.out.println("Terminating before start as percentage faults has been set outside the range [0..1]. "+ ". Game Over!");
-    		System.out.println(this.schedule.scheduleComplete());
-    		this.kill();
+    		throw new RuntimeException("Terminating before start as percentage faults has been set outside the range [0..1]");
     	}
     }
     

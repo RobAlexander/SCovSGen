@@ -27,7 +27,7 @@ public class COModelWithoutRun
     public COModelWithoutRun(double percentageFaults, int mapNo, long newInternalSeed) 
     { 
     	sBuilder = new COModelBuilder(new COModel(newInternalSeed, Constants.WorldXVal, Constants.WorldYVal, false, percentageFaults, mapNo, true));
-    	System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
+    	//System.out.println("COModelWithoutUI is being called!"+ "it's state(model)is: "+ sBuilder.getSim().toString());
     }
     
     /**
@@ -40,7 +40,7 @@ public class COModelWithoutRun
      */
 	public String start(long newExternalSeed)
 	{
-		System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
+		//System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
 		sBuilder.sim.reset();
 		sBuilder.sim.setExternalSeed(newExternalSeed);
 		sBuilder.generateSimulation();
@@ -68,7 +68,7 @@ public class COModelWithoutRun
 	 */
 	public coverageCriteriaInfo getCoverageCriteria(long newExternalSeed, long mapNo)
 	{
-		System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
+		//System.out.println("COModelWithoutUI.start is called  "+ sBuilder.sim);
 		sBuilder.sim.reset();
 		sBuilder.sim.setExternalSeed(newExternalSeed);
 		sBuilder.generateSimulation();
@@ -85,7 +85,7 @@ public class COModelWithoutRun
 		retVal.distPrevJctToTarget = myTargetInfo.fromPrevJct;
 		
 		// Report to the console that we have completed, and call finish() on the sim
-		System.out.println("COModelWithoutUI finished mapNo = " + mapNo + ".");
+		//System.out.println("COModelWithoutUI finished mapNo = " + mapNo + ".");
 		sBuilder.sim.finish();
 		return retVal;
 	}	

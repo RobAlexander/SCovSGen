@@ -1,7 +1,7 @@
 # SCovSGen
 An autonomous vehicle simulator with situation-coverage testing tools.
 
-# Installing and running
+## Installing and running
 The project includes Java source and an Eclipse project file.
 
 To compile and run, you will need to:
@@ -14,10 +14,10 @@ To compile and run, you will need to:
 
 Currently, the ECJ dependency is historical.
 
-# Code documentation
+## Code documentation
 Somewhat out-of-date code docs are in /docs/
 
-# Licence
+## Licence
 Copyright 2013-2017 University of York
 
 Licenced under 3-clause BSD (https://opensource.org/licenses/BSD-3-Clause):
